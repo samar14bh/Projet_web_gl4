@@ -1,0 +1,7 @@
+export enum MemberRole {
+  PRESIDENT = 'PRESIDENT',
+  TREASURER = 'TREASURER',
+  SECRETARY = 'SECRETARY',
+  MEMBER = 'MEMBER',
+  RH = 'RH',
+}
