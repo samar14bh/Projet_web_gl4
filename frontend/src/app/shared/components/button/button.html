@@ -1,0 +1,14 @@
+<button
+  [type]="type()"
+  [disabled]="disabled() || loading()"
+  [class]="buttonClasses()"
+  (click)="handleClick()"
+>
+  @if (loading()) {
+    <i class="bi bi-arrow-repeat spinner"></i>
+  }
+  @if (icon() && !loading()) {
+    <i [class]="'bi bi-' + icon()"></i>
+  }
+  <span>{{ label() }}</span>
+</button>

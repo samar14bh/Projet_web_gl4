@@ -1,0 +1,24 @@
+@if (isOpen()) {
+  <div class="modal-overlay" (click)="handleOverlayClick($event)">
+    <div class="modal-container" #modalContainer (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ title() }}</h2>
+        @if (showClose()) {
+          <button class="btn-close" (click)="close()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        }
+      </div>
+
+      <div class="modal-body">
+        <ng-content></ng-content>
+      </div>
+
+      @if (showFooter()) {
+        <div class="modal-footer">
+          <ng-content select="[modal-footer]"></ng-content>
+        </div>
+      }
+    </div>
+  </div>
+}
