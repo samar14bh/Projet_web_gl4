@@ -12,7 +12,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.enableCors();
+  app.enableCors({
+    origin: 'http://localhost:4200', // URL de ton frontend Angular
+    credentials: true,
+  });
   app.setGlobalPrefix('api');
   const config = new DocumentBuilder()
     .setTitle('Club Management API')

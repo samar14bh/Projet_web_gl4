@@ -24,7 +24,22 @@ export const routes: Routes = [
            path: 'events',
           loadComponent: () => import('./features/club-manager/events-manager/events-manager').then(m => m.EventsManagerComponent),
          title: 'Gérer les événements'
-       }
+       },
+      {
+        path: 'finances',  // ← NOUVELLE ROUTE
+        loadComponent: () => import('./features/club-manager/finances/finances').then(m => m.FinancesComponent),
+        title: 'Finances du club'
+      },
+      {
+        path: 'admin/dashboard',  // ← NOUVELLE ROUTE
+        loadComponent: () => import('./features/admin/dashboard/dashboard').then(m => m.AdminDashboardComponent),
+        title: 'Admin Dashboard'
+      },
+      {
+        path: 'admin/clubs',  // ← NOUVELLE ROUTE
+        loadComponent: () => import('./features/admin/manage-club/manage-club').then(m => m.ManageClubsComponent),
+        title: 'Gestion des clubs'
+      }
     ],
   },
   {
