@@ -10,6 +10,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FilterEventDto } from './dto/filter-event.dto';
 import { EventStatus, RegistrationStatus } from '../common/enums';
+import { Registration } from '../events/entities/registration.entity';
+
 
 /**
  * Service pour la gestion des événements
@@ -19,6 +21,8 @@ export class EventsService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
+    @InjectRepository(Registration)
+    private readonly registrationRepository: Repository<Registration>,
   ) {}
 
   /**
@@ -185,7 +189,8 @@ export class EventsService {
         (r) => r.status === RegistrationStatus.CANCELLED,
       ).length || 0;
 
-    const totalRevenue =  confirmedRegistrations * Number(event.subscriptionFees);
+    const totalRevenue =
+      confirmedRegistrations * Number(event.subscriptionFees);
     const capacityUsage = event.capacity
       ? (confirmedRegistrations / event.capacity) * 100
       : 0;
@@ -249,5 +254,63 @@ export class EventsService {
   async remove(id: number): Promise<void> {
     const event = await this.findOne(id);
     await this.eventRepository.remove(event);
+  }
+
+  /**
+   * Dupliquer un événement
+   */
+  /**
+   * Dupliquer un événement
+   */
+  async duplicateEvent(id: number): Promise<Event> {
+    // Récupérer l'événement original avec ses relations
+    const originalEvent = await this.eventRepository.findOne({
+      where: { id },
+      relations: ['club'],
+    });
+
+    if (!originalEvent) {
+      throw new NotFoundException(`Événement avec l'ID ${id} introuvable`);
+    }
+
+    // Créer une copie
+    const duplicatedEvent = this.eventRepository.create({
+      title: `${originalEvent.title} (Copie)`,
+      description: originalEvent.description,
+      coverImage: originalEvent.coverImage,
+      startDate: new Date(originalEvent.startDate),
+      endDate: new Date(originalEvent.endDate),
+      address: originalEvent.address,
+      capacity: originalEvent.capacity,
+      memberOnly: originalEvent.memberOnly,
+      status: EventStatus.UPCOMING,
+      sPaid: originalEvent.sPaid,
+      subscriptionFees: originalEvent.subscriptionFees,
+      club: originalEvent.club, // ← Relation club au lieu de clubId
+    });
+
+    return await this.eventRepository.save(duplicatedEvent);
+  }
+
+  /**
+   * Récupérer les inscriptions d'un événement
+   */
+  async getEventRegistrations(eventId: number): Promise<any[]> {
+    const registrations = await this.registrationRepository.find({
+      where: { event: { id: eventId } },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return registrations.map((reg) => ({
+      id: reg.id,
+      status: reg.status || 'registered',
+      date: reg.createdAt,
+      user: {
+        id: reg.user.id,
+        name: reg.user.name,
+        email: reg.user.email,
+      },
+    }));
   }
 }

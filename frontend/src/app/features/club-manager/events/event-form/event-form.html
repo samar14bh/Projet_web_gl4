@@ -1,0 +1,205 @@
+<div class="event-form-container">
+  <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+
+    <!-- Titre -->
+    <div class="form-group">
+      <label for="title" class="form-label">
+        Titre de l'événement <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="title"
+        formControlName="title"
+        class="form-input"
+        [class.error]="hasError('title')"
+        placeholder="Ex: Hackathon 2024"
+      />
+      @if (hasError('title')) {
+        <span class="error-message">{{ getErrorMessage('title') }}</span>
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description" class="form-label">Description</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="form-textarea"
+        rows="4"
+        placeholder="Description de l'événement..."
+      ></textarea>
+    </div>
+
+    <!-- Image de couverture -->
+    <div class="form-group">
+      <label for="coverImage" class="form-label">Image de couverture (URL)</label>
+      <input
+        type="url"
+        id="coverImage"
+        formControlName="coverImage"
+        class="form-input"
+        placeholder="https://example.com/image.jpg"
+      />
+    </div>
+
+    <!-- Dates -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="startDate" class="form-label">
+          Date de début <span class="required">*</span>
+        </label>
+        <input
+          type="datetime-local"
+          id="startDate"
+          formControlName="startDate"
+          class="form-input"
+          [class.error]="hasError('startDate')"
+        />
+        @if (hasError('startDate')) {
+          <span class="error-message">{{ getErrorMessage('startDate') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="endDate" class="form-label">
+          Date de fin <span class="required">*</span>
+        </label>
+        <input
+          type="datetime-local"
+          id="endDate"
+          formControlName="endDate"
+          class="form-input"
+          [class.error]="hasError('endDate')"
+        />
+        @if (hasError('endDate')) {
+          <span class="error-message">{{ getErrorMessage('endDate') }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Adresse -->
+    <div class="form-group">
+      <label for="address" class="form-label">Lieu</label>
+      <input
+        type="text"
+        id="address"
+        formControlName="address"
+        class="form-input"
+        placeholder="Ex: Amphithéâtre A, INSAT"
+      />
+    </div>
+
+    <!-- Capacité et Frais -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="capacity" class="form-label">Capacité (participants)</label>
+        <input
+          type="number"
+          id="capacity"
+          formControlName="capacity"
+          class="form-input"
+          [class.error]="hasError('capacity')"
+          min="1"
+          placeholder="Ex: 100"
+        />
+        @if (hasError('capacity')) {
+          <span class="error-message">{{ getErrorMessage('capacity') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="subscriptionFees" class="form-label">
+          Frais d'inscription (TND) <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          id="subscriptionFees"
+          formControlName="subscriptionFees"
+          class="form-input"
+          [class.error]="hasError('subscriptionFees')"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+        />
+        @if (hasError('subscriptionFees')) {
+          <span class="error-message">{{ getErrorMessage('subscriptionFees') }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Type et Statut -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="sPaid" class="form-label">
+          Type d'événement <span class="required">*</span>
+        </label>
+        <select
+          id="sPaid"
+          formControlName="sPaid"
+          class="form-select"
+          [class.error]="hasError('sPaid')"
+        >
+          @for (option of eventTypeOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status" class="form-label">
+          Statut <span class="required">*</span>
+        </label>
+        <select
+          id="status"
+          formControlName="status"
+          class="form-select"
+          [class.error]="hasError('status')"
+        >
+          @for (option of eventStatusOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Membre seulement -->
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          formControlName="memberOnly"
+          class="form-checkbox"
+        />
+        <span>Réservé aux membres du club uniquement</span>
+      </label>
+    </div>
+
+    <!-- Erreur de soumission -->
+    @if (submitError()) {
+      <div class="submit-error">
+        <i class="bi bi-exclamation-triangle"></i>
+        {{ submitError() }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <app-button
+        label="Annuler"
+        variant="ghost"
+        type="button"
+        (clicked)="cancel()"
+        [disabled]="isSubmitting()"
+      />
+      <app-button
+        [label]="submitButtonLabel()"
+        variant="primary"
+        type="submit"
+        icon="check-lg"
+        [loading]="isSubmitting()"
+        [disabled]="eventForm.invalid"
+      />
+    </div>
+  </form>
+</div>

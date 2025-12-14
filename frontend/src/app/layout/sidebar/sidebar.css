@@ -1,16 +1,8 @@
-.sidebar {
-  width: var(--sidebar-width);
-  height: 100vh;
-  background: white;
-  position: fixed;
-  left: 0;
-  top: 0;
+:host {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow-y: auto;
-  border-right: 1px solid var(--gray-200);
-  z-index: 1000;
-  animation: slideIn 0.4s ease;
 }
 
 .sidebar-header {
@@ -234,15 +226,4 @@
 
 .btn-upgrade:active {
   transform: translateY(0);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
 }

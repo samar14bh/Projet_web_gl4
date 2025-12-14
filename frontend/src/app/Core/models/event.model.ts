@@ -127,3 +127,19 @@ export interface EventStats {
   availableSpots: number;
   totalRevenue: number;
 }
+/**
+ * DTO pour mettre à jour un événement
+ */
+export interface UpdateEventDto {
+  title?: string;
+  description?: string;
+  coverImage?: string;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  address?: string;
+  capacity?: number;
+  memberOnly?: boolean;
+  status?: EventStatus;
+  sPaid?: EventType;
+  subscriptionFees?: number;
+}

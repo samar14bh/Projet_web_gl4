@@ -1,18 +1,130 @@
-.app-container {
+/* ============================================
+   MAIN LAYOUT - RESPONSIVE
+   ============================================ */
+
+.layout-container {
   display: flex;
   min-height: 100vh;
+  background: var(--bg-secondary, #f9fafb);
+  position: relative;
 }
 
-.main-wrapper {
-  flex: 1;
-  margin-left: var(--sidebar-width);
-  display: flex;
-  flex-direction: column;
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: white;
+  border-right: 1px solid var(--gray-200);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+
+/* ========== MAIN CONTENT ========== */
 
 .main-content {
   flex: 1;
-  margin-top: var(--topbar-height);
-  padding: 24px;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-width));
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+/* ========== BOUTON HAMBURGER ========== */
+
+.hamburger-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 48px;
+  height: 48px;
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  color: var(--gray-700);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburger-btn:hover {
   background: var(--gray-50);
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+  transform: scale(1.05);
+}
+
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+/* ========== SIDEBAR OVERLAY ========== */
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    left: -280px; /* Cache la sidebar */
+  }
+
+  .sidebar.open {
+    left: 0; /* Affiche la sidebar */
+    box-shadow: var(--shadow-xl);
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 80px;
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hamburger-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+
+  .main-content {
+    padding-top: 70px;
+  }
 }

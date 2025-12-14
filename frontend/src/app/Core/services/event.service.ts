@@ -7,7 +7,7 @@ import {
   EventFilters,
   PaginatedResponse,
   EventStats,
-  EventStatus,
+  EventStatus, UpdateEventDto,
 } from '../models/event.model';
 import { environment } from '../../../environments/environment';
 
@@ -62,7 +62,7 @@ export class EventService {
   /**
    * Mettre à jour un événement
    */
-  updateEvent(id: number, dto: Partial<CreateEventDto>): Observable<Event> {
+  updateEvent(id: number, dto: UpdateEventDto): Observable<Event> { // ← CHANGER ICI
     return this.http.patch<Event>(`${this.apiUrl}/${id}`, dto);
   }
 
@@ -78,5 +78,17 @@ export class EventService {
    */
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+  /**
+   * Dupliquer un événement
+   */
+  duplicateEvent(id: number): Observable<Event> {
+    return this.http.post<Event>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
+  /**
+   * Récupérer les inscriptions d'un événement
+   */
+  getEventRegistrations(eventId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${eventId}/registrations`);
   }
 }

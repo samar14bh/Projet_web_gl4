@@ -1,0 +1,105 @@
+<div class="registrations-modal">
+  <!-- Header -->
+  <div class="modal-header">
+    <div>
+      <h2>Inscriptions : {{ event().title }}</h2>
+      <p class="event-info">
+        <i class="bi bi-calendar"></i>
+        {{ formatDate(event().startDate) }}
+        <span class="separator">•</span>
+        <i class="bi bi-people"></i>
+        {{ stats().total }} inscrit(s)
+      </p>
+    </div>
+    <button class="close-btn" (click)="close()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-row">
+    <div class="stat-card" [class.active]="filterStatus() === 'all'" (click)="changeFilter('all')">
+      <div class="stat-value">{{ stats().total }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card success" [class.active]="filterStatus() === 'registered'" (click)="changeFilter('registered')">
+      <div class="stat-value">{{ stats().registered }}</div>
+      <div class="stat-label">Inscrits</div>
+    </div>
+    <div class="stat-card warning" [class.active]="filterStatus() === 'waitlist'" (click)="changeFilter('waitlist')">
+      <div class="stat-value">{{ stats().waitlist }}</div>
+      <div class="stat-label">Liste d'attente</div>
+    </div>
+    <div class="stat-card danger" [class.active]="filterStatus() === 'cancelled'" (click)="changeFilter('cancelled')">
+      <div class="stat-value">{{ stats().cancelled }}</div>
+      <div class="stat-label">Annulés</div>
+    </div>
+  </div>
+
+  <!-- Barre d'actions -->
+  <div class="actions-bar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Rechercher par nom ou email..."
+        [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </div>
+    <app-button
+      label="Exporter CSV"
+      variant="ghost"
+      icon="download"
+      (clicked)="exportCSV()"
+    />
+  </div>
+
+  <!-- Liste des inscriptions -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des inscriptions...</p>
+    </div>
+  } @else if (filteredRegistrations().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>Aucune inscription</h3>
+      <p>Aucun participant ne correspond à vos critères</p>
+    </div>
+  } @else {
+    <div class="registrations-table">
+      <table>
+        <thead>
+        <tr>
+          <th>Participant</th>
+          <th>Email</th>
+          <th>Statut</th>
+          <th>Date d'inscription</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (registration of filteredRegistrations(); track registration.id) {
+            <tr>
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar">
+                    {{ registration.user?.name?.charAt(0) || 'U' }}
+                  </div>
+                  <span class="user-name">{{ registration.user?.name || 'Utilisateur' }}</span>
+                </div>
+              </td>
+              <td class="email">{{ registration.user?.email }}</td>
+              <td>
+                <span class="status-badge" [class]="getStatusBadgeClass(registration.status)">
+                  {{ getStatusLabel(registration.status) }}
+                </span>
+              </td>
+              <td class="date">{{ formatDate(registration.date) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

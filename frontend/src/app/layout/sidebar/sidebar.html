@@ -1,80 +1,108 @@
-<div class="sidebar">
-  <div class="sidebar-header">
-    <div class="logo">
-      <i class="bi bi-grid-3x3-gap-fill"></i>
-      <span>MyAPP</span>
-    </div>
+<!-- Header -->
+<div class="sidebar-header">
+  <div class="logo">
+    <i class="bi bi-people-fill"></i>
+    <span>Club Manager</span>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav class="sidebar-nav">
+  <!-- Section Général -->
+  <div class="nav-section">
+    <div class="nav-section-title">Général</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-speedometer2"></i>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+    </ul>
   </div>
 
-  <nav class="sidebar-nav">
-    <div class="nav-section">
-      <h6 class="nav-section-title">Main Menu</h6>
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-grid-1x2"></i>
-            <span class="nav-label">Dashboard</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a routerLink="/analytics" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-graph-up-arrow"></i>
-            <span class="nav-label">Analytics</span>
-            <span class="badge">New</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a routerLink="/projects" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-kanban"></i>
-            <span class="nav-label">Projects</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a routerLink="/calendar" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-calendar4-week"></i>
-            <span class="nav-label">Calendar</span>
-          </a>
-        </li>
-      </ul>
-    </div>
+  <!-- Section Gestion du Club -->
+  <div class="nav-section">
+    <div class="nav-section-title">Gestion du Club</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/events" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-calendar-event"></i>
+          <span class="nav-label">Événements</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/finances" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-cash-coin"></i>
+          <span class="nav-label">Finances</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/members" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-people"></i>
+          <span class="nav-label">Membres</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/documents" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-folder"></i>
+          <span class="nav-label">Documents</span>
+        </a>
+      </li>
+    </ul>
+  </div>
 
-    <div class="nav-section">
-      <h6 class="nav-section-title">Workspace</h6>
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a routerLink="/team" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-people"></i>
-            <span class="nav-label">Team</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a routerLink="/messages" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-chat-dots"></i>
-            <span class="nav-label">Messages</span>
-            <span class="badge">5</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a routerLink="/files" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-folder2-open"></i>
-            <span class="nav-label">Files</span>
-          </a>
-        </li>
-      </ul>
-    </div>
+  <!-- Section Administration -->
+  <div class="nav-section">
+    <div class="nav-section-title">Administration</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-bar-chart"></i>
+          <span class="nav-label">Admin Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/admin/clubs" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-building"></i>
+          <span class="nav-label">Manage Clubs</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-person-gear"></i>
+          <span class="nav-label">Utilisateurs</span>
+        </a>
+      </li>
+    </ul>
+  </div>
 
-    <div class="nav-section">
-      <h6 class="nav-section-title">Settings</h6>
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a routerLink="/settings" routerLinkActive="active" class="nav-link">
-            <i class="bi bi-sliders"></i>
-            <span class="nav-label">Preferences</span>
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+  <!-- Section Paramètres -->
+  <div class="nav-section">
+    <div class="nav-section-title">Paramètres</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/settings" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-gear"></i>
+          <span class="nav-label">Paramètres</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/profile" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-person-circle"></i>
+          <span class="nav-label">Profil</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
 
-
+<!-- Footer -->
+<div class="sidebar-footer">
+  <div class="upgrade-card">
+    <i class="bi bi-star-fill"></i>
+    <h6>Passer à Pro</h6>
+    <p>Débloquez toutes les fonctionnalités premium</p>
+    <button class="btn-upgrade">Upgrade Now</button>
+  </div>
 </div>

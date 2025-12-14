@@ -94,4 +94,20 @@ export class EventsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.remove(id);
   }
+  /**
+   * POST /api/events/:id/duplicate
+   * Dupliquer un événement
+   */
+  @Post(':id/duplicate')
+  duplicate(@Param('id') id: string) {
+    return this.eventsService.duplicateEvent(+id);
+  }
+  /**
+   * GET /api/events/:id/registrations
+   * Récupérer les inscriptions d'un événement
+   */
+  @Get(':id/registrations')
+  getRegistrations(@Param('id') id: string) {
+    return this.eventsService.getEventRegistrations(+id);
+  }
 }

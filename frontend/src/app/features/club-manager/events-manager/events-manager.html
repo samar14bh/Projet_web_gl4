@@ -235,27 +235,33 @@
   }
 </div>
 
-<!-- Modal de création/édition -->
-<app-modal
-  [isOpen]="isModalOpen()"
-  [title]="selectedEvent() ? 'Modifier l\'événement' : 'Créer un événement'"
-  (closed)="closeModal()"
->
-  <div class="modal-content">
-    <p>Formulaire de création/édition (à implémenter dans la prochaine étape)</p>
-    <p>Événement sélectionné: {{ selectedEvent()?.title || 'Nouveau' }}</p>
-  </div>
+<!-- ... tout le code HTML reste identique jusqu'au modal ... -->
 
-  <div modal-footer>
-    <app-button
-      label="Annuler"
-      variant="ghost"
-      (clicked)="closeModal()"
-    />
-    <app-button
-      label="Enregistrer"
-      variant="primary"
-      icon="check-lg"
-    />
-  </div>
+<!-- Modal de création/édition (REMPLACER CE BLOC) -->
+<app-modal
+  [isOpen]="isFormModalOpen()"
+  [title]="selectedEvent() ? 'Modifier l\'événement' : 'Créer un événement'"
+  size="large"
+  (closed)="closeFormModal()"
+>
+  <!-- Formulaire d'événement -->
+  <app-event-form
+    [event]="selectedEvent()"
+    (onSuccess)="onFormSuccess($event)"
+    (onCancel)="onFormCancel()"
+  />
 </app-modal>
+<!-- Modal des inscriptions -->
+@if (isRegistrationsModalOpen() && selectedEventForRegistrations()) {
+  <app-modal
+    [isOpen]="isRegistrationsModalOpen()"
+    title=""
+    size="large"
+    (closed)="closeRegistrationsModal()"
+  >
+    <app-registrations-modal
+      [event]="selectedEventForRegistrations()!"
+      (onClose)="closeRegistrationsModal()"
+    />
+  </app-modal>
+}

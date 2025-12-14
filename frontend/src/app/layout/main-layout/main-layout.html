@@ -1,9 +1,29 @@
-<div class="app-container">
-  <app-sidebar></app-sidebar>
-  <div class="main-wrapper">
-    <app-navbar></app-navbar>
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
+<div class="layout-container">
+  <!-- Overlay mobile (pour fermer la sidebar en cliquant à côté) -->
+  <div
+    class="sidebar-overlay"
+    [class.active]="isSidebarOpen()"
+    (click)="closeSidebar()"
+  ></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.open]="isSidebarOpen()">
+    <app-sidebar />
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Bouton hamburger (visible uniquement sur mobile) -->
+    <button
+      class="hamburger-btn"
+      (click)="toggleSidebar()"
+      type="button"
+      aria-label="Toggle menu"
+    >
+      <i class="bi" [class.bi-list]="!isSidebarOpen()" [class.bi-x]="isSidebarOpen()"></i>
+    </button>
+
+    <!-- Contenu de la page -->
+    <router-outlet />
+  </main>
 </div>

@@ -4,18 +4,16 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { rxResource } from '@angular/core/rxjs-interop';
-import { EventService } from '../../../Core/services/event.service';
-import {
-  Event,
-  EventStatus,
-  EventFilters,
-  PaginatedResponse,
-} from '../../../Core/models/event.model';
-import { ButtonComponent } from '../../../shared/components/button/button';
-import { ModalComponent } from '../../../shared/components/modal/modal';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {EventService} from '../../../Core/services/event.service';
+import {Event, EventFilters} from '../../../Core/models/event.model';
+import {EventStatus} from '../../../Core/models/event.model';
+import {ButtonComponent} from '../../../shared/components/button/button';
+import {ModalComponent} from '../../../shared/components/modal/modal';
+import {EventFormComponent} from '../events/event-form/event-form';
+import {RegistrationsModalComponent} from '../events/registrations-modal/registrations-modal';
 
 /**
  * PAGE 15 : Gérer les événements
@@ -25,7 +23,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal';
 @Component({
   selector: 'app-events-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, EventFormComponent, RegistrationsModalComponent],
   templateUrl: './events-manager.html',
   styleUrl: './events-manager.css',
 })
@@ -48,12 +46,15 @@ export class EventsManagerComponent {
   pageSize = signal(10);
 
   // État du modal
-  isModalOpen = signal(false);
+  isFormModalOpen = signal(false);
   selectedEvent = signal<Event | null>(null);
 
   // États de chargement
   isDeleting = signal(false);
 
+  // Modal des inscriptions
+  isRegistrationsModalOpen = signal(false);
+  selectedEventForRegistrations = signal<Event | null>(null);
   // ========== COMPUTED SIGNALS ==========
 
   // Filtres combinés pour l'API
@@ -61,8 +62,6 @@ export class EventsManagerComponent {
     const tab = this.activeTab();
     const filters: EventFilters = {
       search: this.searchQuery() || undefined,
-      sortBy: this.sortBy(),
-      order: this.sortOrder(),
       page: this.currentPage(),
       limit: this.pageSize(),
     };
@@ -84,13 +83,9 @@ export class EventsManagerComponent {
 
   // ========== RESOURCE POUR LES ÉVÉNEMENTS (rxResource) ==========
 
-  /**
-   * rxResource gère automatiquement le chargement, les erreurs et les données
-   * C'est la façon moderne de gérer les observables en Angular 20 zoneless
-   */
   eventsResource = rxResource({
     params: this.filters,
-    stream: ({ params }) => this.eventService.getEvents(params),
+    stream: ({params}) => this.eventService.getEvents(params),
   });
 
   // Computed signals dérivés de la resource
@@ -101,32 +96,24 @@ export class EventsManagerComponent {
   hasError = computed(() => !!this.eventsResource.error());
   error = computed(() => this.eventsResource.error());
 
-  // ========== CONSTRUCTEUR ==========
-
-  constructor() {
-    // Plus besoin de charger manuellement, rxResource le fait automatiquement
-  }
-
-  /**
-   * Recharger les événements manuellement
-   * Utilisé après création/suppression/modification
-   */
-  reloadEvents(): void {
-    this.eventsResource.reload();
-  }
-
   // ========== ÉNUMÉRATIONS POUR LE TEMPLATE ==========
   EventStatus = EventStatus;
 
   // ========== MÉTHODES ==========
 
   /**
+   * Recharger les événements manuellement
+   */
+  reloadEvents(): void {
+    this.eventsResource.reload();
+  }
+
+  /**
    * Changer d'onglet
    */
   setActiveTab(tab: 'upcoming' | 'past' | 'drafts') {
     this.activeTab.set(tab);
-    this.currentPage.set(1); // Reset pagination
-    // rxResource se met à jour automatiquement quand filters() change
+    this.currentPage.set(1);
   }
 
   /**
@@ -135,7 +122,6 @@ export class EventsManagerComponent {
   onSearch(query: string) {
     this.searchQuery.set(query);
     this.currentPage.set(1);
-    // rxResource se met à jour automatiquement
   }
 
   /**
@@ -143,13 +129,11 @@ export class EventsManagerComponent {
    */
   changeSortBy(field: 'date' | 'title' | 'registrations') {
     if (this.sortBy() === field) {
-      // Toggle l'ordre si même champ
       this.sortOrder.update((order) => (order === 'asc' ? 'desc' : 'asc'));
     } else {
       this.sortBy.set(field);
       this.sortOrder.set('desc');
     }
-    // rxResource se met à jour automatiquement
   }
 
   /**
@@ -158,7 +142,6 @@ export class EventsManagerComponent {
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
-      // rxResource se met à jour automatiquement
     }
   }
 
@@ -167,7 +150,7 @@ export class EventsManagerComponent {
    */
   openCreateModal() {
     this.selectedEvent.set(null);
-    this.isModalOpen.set(true);
+    this.isFormModalOpen.set(true);
   }
 
   /**
@@ -175,21 +158,40 @@ export class EventsManagerComponent {
    */
   openEditModal(event: Event) {
     this.selectedEvent.set(event);
-    this.isModalOpen.set(true);
+    this.isFormModalOpen.set(true);
   }
 
   /**
-   * Fermer le modal
+   * Fermer le modal de formulaire
    */
-  closeModal() {
-    this.isModalOpen.set(false);
+  closeFormModal() {
+    this.isFormModalOpen.set(false);
     this.selectedEvent.set(null);
+  }
+
+  /**
+   * Succès de création/modification
+   */
+  onFormSuccess(event: Event) {
+    this.closeFormModal();
+    this.reloadEvents();
+    const message = this.selectedEvent()
+      ? `Événement "${event.title}" modifié avec succès !`
+      : `Événement "${event.title}" créé avec succès !`;
+    alert(message);
+  }
+
+  /**
+   * Annulation du formulaire
+   */
+  onFormCancel() {
+    this.closeFormModal();
   }
 
   /**
    * Supprimer un événement
    */
-  async deleteEvent(event: Event) {
+  deleteEvent(event: Event) {
     const confirmed = confirm(
       `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`
     );
@@ -198,32 +200,53 @@ export class EventsManagerComponent {
 
     this.isDeleting.set(true);
 
-    try {
-      await this.eventService.deleteEvent(event.id).toPromise();
-      // Recharger la liste avec rxResource
-      this.reloadEvents();
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de l\'événement');
-    } finally {
-      this.isDeleting.set(false);
-    }
+    this.eventService.deleteEvent(event.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.reloadEvents();
+        alert(`Événement "${event.title}" supprimé avec succès !`);
+      },
+      error: (error) => {
+        this.isDeleting.set(false);
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression de l\'événement');
+      },
+    });
   }
 
   /**
    * Dupliquer un événement
    */
+  /**
+   * Dupliquer un événement
+   */
   duplicateEvent(event: Event) {
-    // TODO: Implémenter la duplication
-    console.log('Dupliquer:', event);
+    this.eventService.duplicateEvent(event.id).subscribe({
+      next: (duplicatedEvent) => {
+        this.reloadEvents();
+        alert(`Événement "${duplicatedEvent.title}" dupliqué avec succès !`); // ← CORRIGÉ ICI
+      },
+      error: (error) => {
+        console.error('Erreur lors de la duplication:', error);
+        alert('Erreur lors de la duplication de l\'événement');
+      },
+    });
   }
 
   /**
    * Voir les inscrits
    */
   viewRegistrations(event: Event) {
-    // TODO: Ouvrir modal des inscrits
-    console.log('Voir inscrits:', event);
+    this.selectedEventForRegistrations.set(event);
+    this.isRegistrationsModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal des inscriptions
+   */
+  closeRegistrationsModal() {
+    this.isRegistrationsModalOpen.set(false);
+    this.selectedEventForRegistrations.set(null);
   }
 
   /**
@@ -232,6 +255,7 @@ export class EventsManagerComponent {
   scanQRCodes(event: Event) {
     // TODO: Ouvrir scanner QR
     console.log('Scanner QR:', event);
+    alert('Fonctionnalité "Scanner QR Code" à venir...');
   }
 
   /**
