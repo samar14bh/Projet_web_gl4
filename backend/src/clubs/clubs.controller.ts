@@ -9,9 +9,11 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
+import { Club } from './entities/club.entity';
 
 /**
  * Controller pour la gestion des clubs
@@ -84,4 +86,10 @@ export class ClubsController {
   remove(@Param('id') id: string) {
     return this.clubsService.remove(+id);
   }
+
+ @Get('top')
+  async findTopClubs(@Query('limit', ParseIntPipe) limit = 5): Promise<Club[]> {
+    return this.clubsService.findTopClubsByMembers(limit);
+  }
+
 }
