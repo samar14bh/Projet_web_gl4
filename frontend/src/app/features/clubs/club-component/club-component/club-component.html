@@ -1,0 +1,63 @@
+<div class="club-card">
+  <div class="club-cover">
+    <img [src]="club().coverImage" [alt]="club().name" loading="lazy" />
+ 
+  </div>
+
+  <div class="club-content">
+    <div class="club-header">
+      <img [src]="club().logo" [alt]="club().name" class="club-logo" loading="lazy" />
+      <div class="club-info">
+        <h3 class="club-name">{{ club().name }}</h3>
+        <span class="club-category">
+          <i class="bi bi-tag"></i>
+          {{ club().categoryName }}
+        </span>
+      </div>
+    </div>
+
+    <p class="club-description">{{ club().description }}</p>
+
+    <div class="club-stats">
+      <div class="club-stat">
+        <i class="bi bi-people"></i>
+        <span>{{ club().members || 0 }} membres</span>
+      </div>
+      <div class="club-stat">
+        <i class="bi bi-calendar-event"></i>
+        <span>{{ club().events || 0 }} événements</span>
+      </div>
+      <div class="club-stat">
+        <i class="bi bi-cash-coin"></i>
+        <span>{{ getMembershipLabel(club().membershipFeeAmount) }}</span>
+      </div>
+    </div>
+
+    <div class="club-meta">
+      <span class="club-date">
+        <i class="bi bi-calendar"></i>
+        Créé le {{ formatDate(club().creationDate) }}
+      </span>
+    
+    </div>
+  </div>
+
+  <div class="club-actions-user">
+    <button
+      class="action-btn view"
+      (click)="onViewDetails()"
+      title="Voir les détails"
+    >
+      <i class="bi bi-eye"></i>
+      Détails
+    </button>
+    <button
+      class="action-btn join"
+      (click)="onJoin()"
+      title="Rejoindre le club"
+    >
+      <i class="bi bi-person-plus"></i>
+      Rejoindre
+    </button>
+  </div>
+</div>
