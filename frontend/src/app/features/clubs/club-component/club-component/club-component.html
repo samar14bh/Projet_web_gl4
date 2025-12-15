@@ -1,7 +1,6 @@
 <div class="club-card">
   <div class="club-cover">
     <img [src]="club().coverImage" [alt]="club().name" loading="lazy" />
- 
   </div>
 
   <div class="club-content">
@@ -38,26 +37,25 @@
         <i class="bi bi-calendar"></i>
         Créé le {{ formatDate(club().creationDate) }}
       </span>
-    
     </div>
   </div>
 
   <div class="club-actions-user">
-    <button
+    <app-button
+      label="Détails"
       class="action-btn view"
       (click)="onViewDetails()"
-      title="Voir les détails"
-    >
-      <i class="bi bi-eye"></i>
-      Détails
-    </button>
-    <button
-      class="action-btn join"
-      (click)="onJoin()"
-      title="Rejoindre le club"
-    >
-      <i class="bi bi-person-plus"></i>
-      Rejoindre
-    </button>
+      title="Voir les détails">
+    </app-button>
+
+  
+    @if (showJoinButton()) {
+      <app-button
+        label="Rejoindre"
+        class="action-btn join"
+        (click)="onJoin()"
+        title="Rejoindre le club">
+      </app-button>
+    }
   </div>
 </div>
