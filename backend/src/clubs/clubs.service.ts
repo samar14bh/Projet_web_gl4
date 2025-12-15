@@ -292,23 +292,31 @@ export class ClubsService {
       .replace(/^-+|-+$/g, ''); // Supprimer les tirets en début et fin
   }
 
-   async findTopClubsByMembers(limit = 5): Promise<Club[]> {
-    const queryBuilder = this.clubRepository
-      .createQueryBuilder('club')
-      .leftJoinAndSelect('club.category', 'category')
-      .leftJoin('club.memberships', 'membership')
-      .addSelect('COUNT(membership.id)', 'memberCount')
-      .where('club.isActive = :isActive', { isActive: true })
-      .groupBy('club.id')
-      .addGroupBy('category.id')
-      .orderBy('memberCount', 'DESC')
-      .addOrderBy('club.createdAt', 'DESC')
-      .limit(limit);
+   async findTopClubsByMembers(limit = 5): Promise<any[]> {
+  const qb = this.clubRepository
+    .createQueryBuilder('club')
+    .leftJoin('club.category', 'category') // ⬅️ pas de select
+    .leftJoin('club.memberships', 'membership')
+    .leftJoin('club.events', 'event')
+    .addSelect('category.name', 'categoryName')
+    .addSelect('COUNT(DISTINCT membership.id)', 'members')
+    .addSelect('COUNT(DISTINCT event.id)', 'events')
+    .where('club.isActive = :isActive', { isActive: true })
+    .groupBy('club.id')
+    .addGroupBy('category.name')
+    .orderBy('members', 'DESC')
+    .limit(limit);
 
-    const result = await queryBuilder.getRawAndEntities();
-    return result.entities.map((club, index) => ({
-      ...club,
-      memberCount: parseInt(result.raw[index].memberCount) || 0,
-    }));
-  }
+  const { entities, raw } = await qb.getRawAndEntities();
+
+  return entities.map((club, index) => ({
+    ...club,
+
+    // ✅ uniquement le nom
+    categoryName: raw[index].categoryName ?? null,
+    members: Number(raw[index].members) || 0,
+    events: Number(raw[index].events) || 0,
+  }));
+}
+
 }

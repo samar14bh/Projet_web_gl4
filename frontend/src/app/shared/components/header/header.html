@@ -14,9 +14,14 @@
          routerLinkActive="active"
          class="nav-link">Connexion</a>
          
-      <a [routerLink]="['/register']" 
-         routerLinkActive="active"
-         class="nav-link cta-link">Inscription</a>
+      <app-button
+       [routerLink]="['/register']" 
+        label="Inscription"
+        class="action-btn join"
+        title="Inscription">
+      </app-button>
     </nav>
+
+     
   </div>
 </header>

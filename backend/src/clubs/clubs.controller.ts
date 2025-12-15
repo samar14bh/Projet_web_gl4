@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
@@ -49,7 +50,12 @@ export class ClubsController {
   getStats() {
     return this.clubsService.getStats();
   }
-
+ @Get('top')
+async findTopClubs(
+  @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+): Promise<Club[]> {
+  return this.clubsService.findTopClubsByMembers(limit);
+}
   /**
    * GET /api/clubs/:id
    * Récupérer un club par son ID
@@ -87,9 +93,6 @@ export class ClubsController {
     return this.clubsService.remove(+id);
   }
 
- @Get('top')
-  async findTopClubs(@Query('limit', ParseIntPipe) limit = 5): Promise<Club[]> {
-    return this.clubsService.findTopClubsByMembers(limit);
-  }
+
 
 }

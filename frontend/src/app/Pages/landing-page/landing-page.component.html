@@ -1,0 +1,115 @@
+<div class="landing-page">
+  <app-header></app-header>
+
+  <section class="hero-section">
+    <div class="hero-background"></div>
+    <div class="container hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          Découvrez et rejoignez des clubs
+        </h1>
+        <p class="hero-subtitle">
+          Participez à des activités qui vous passionnent et développez vos compétences au sein de notre communauté universitaire
+        </p>
+        
+         <app-button
+        label="Explorer les clubs"
+        class="action-btn join"
+        title="Explorer les clubs">
+      </app-button>
+      </div>
+      
+      <div class="hero-image">
+        <div class="image-card card-1">
+          <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=400&h=300&fit=crop" alt="Activité club">
+        </div>
+        <div class="image-card card-2">
+          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop" alt="Équipe club">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trigger avec directive réutilisable -->
+  <div appLazyLoading (visible)="onAboutVisible()" style="height: 10px;"></div>
+
+  <!-- Section À propos avec lazy loading -->
+  @if (showAboutSection()) {
+    <section id="about" class="about-section">
+      <div class="container">
+        <div class="about-content">
+          <h2 class="about-title">À propos de ClubHub</h2>
+          <div class="about-grid">
+            <div class="about-card">
+              <div class="about-icon">🤝</div>
+              <h3>Connectez-vous</h3>
+              <p>Rencontrez des étudiants partageant les mêmes centres d'intérêt.</p>
+            </div>
+            <div class="about-card">
+              <div class="about-icon">🚀</div>
+              <h3>Développez-vous</h3>
+              <p>Acquérez de nouvelles compétences et améliorez votre expérience.</p>
+            </div>
+            <div class="about-card">
+              <div class="about-icon">🎯</div>
+              <h3>Participez</h3>
+              <p>Engagez-vous dans des projets passionnants.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Trigger pour clubs -->
+  <div appLazyLoading (visible)="onClubsVisible()" style="height: 10px;"></div>
+
+  <!-- Section Clubs avec lazy loading -->
+  @if (showClubsSection()) {
+    @if (topClubsData().length > 0) {
+      <section class="clubs-section" id="clubs">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Clubs populaires</h2>
+            <p class="section-subtitle">Découvrez les clubs les plus actifs</p>
+          </div>
+
+          <div class="clubs-grid">
+            @for (club of topClubsData(); track club.id) {
+              <app-club-component 
+                [club]="club"
+                [showJoinButton]="false"
+                (viewDetails)="onViewDetails($event)"
+                (join)="onJoin($event)">
+              </app-club-component>
+            }
+          </div>
+        </div>
+      </section>
+    } @else {
+      <section class="clubs-section" id="clubs">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Clubs populaires</h2>
+            <p class="section-subtitle">Découvrez les clubs les plus actifs</p>
+          </div>
+          
+          <div class="no-clubs-message">
+            <p>Aucun club disponible pour le moment.</p>
+          </div>
+          
+          <div class="see-more">
+            <button class="secondary-button" (click)="navigateToClubs()">
+              Voir tous les clubs
+              <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+
+    <app-footer></app-footer>
+  }
+  
+
+</div>

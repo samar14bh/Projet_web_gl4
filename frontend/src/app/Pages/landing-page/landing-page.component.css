@@ -1,0 +1,185 @@
+.landing-page {
+  
+  
+  overflow-x: hidden;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding-top: 80px; overflow: hidden;
+}
+
+.hero-background {
+  position: absolute; top:0; left:0; right:0; bottom:0;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+  opacity: 0.05; z-index: -1;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: center;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.hero-title {
+  font-size: 56px; font-weight: 800; line-height:1.2; margin-bottom:24px;
+  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; animation: fadeIn 0.8s ease-out 0.2s backwards;
+}
+
+.hero-subtitle {
+  font-size: 20px; line-height:1.6; margin-bottom:32px;
+  animation: fadeIn 0.8s ease-out 0.4s backwards;
+}
+
+.cta-button {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  color: #fff; padding: 16px 40px; font-size:18px; font-weight:600;
+  border: none; border-radius:12px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+  animation: fadeIn 0.8s ease-out 0.6s backwards;
+}
+
+.cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+}
+
+.cta-button:hover .arrow { transform: translateX(4px); }
+
+.arrow { font-size:24px; transition: transform 0.3s ease; }
+
+.hero-image { position: relative; height:500px; }
+
+.image-card {
+  position: absolute; border-radius:20px; overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.15); transition: transform 0.3s ease;
+}
+
+.image-card img { width:100%; height:100%; object-fit:cover; }
+
+.image-card.card-1 { width:350px; height:280px; top:0; left:0; animation:fadeIn 0.8s ease-out 0.5s backwards; }
+.image-card.card-1:hover { transform: translateY(-10px) rotate(-2deg); }
+
+.image-card.card-2 { width:320px; height:240px; bottom:0; right:0; animation:fadeIn 0.8s ease-out 0.7s backwards; }
+.image-card.card-2:hover { transform: translateY(-10px) rotate(2deg); }
+
+.scroll-indicator {
+  position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  animation:bounce 2s infinite;
+}
+
+.scroll-text { font-size:14px; color: var(--primary-600); font-weight:500; }
+.scroll-arrow { font-size:24px; color: var(--primary-500); }
+
+/* Clubs Section */
+.clubs-section {
+  padding: 100px 0; 
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.section-header { text-align:center; margin-bottom:60px; }
+.section-title { font-size:42px; font-weight:800; margin-bottom:16px; color: var(--primary-800); }
+.section-subtitle { font-size:18px; color: var(--primary-600); }
+
+.clubs-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:32px; }
+
+.club-card {
+  background:#fff; border-radius:16px; overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor:pointer;
+}
+.club-card:hover {
+  transform: translateY(-8px);
+  box-shadow:0 12px 32px rgba(0,0,0,0.12);
+}
+
+.club-cover { position: relative; height:180px; overflow:hidden; }
+.club-cover img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease; }
+.club-card:hover .club-cover img { transform: scale(1.05); }
+
+.club-logo {
+  position:absolute; bottom:-30px; left:20px; width:60px; height:60px;
+  background:#fff; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+
+.club-info { padding:40px 20px 20px; }
+.club-name { font-size:20px; font-weight:700; margin-bottom:16px; color: var(--primary-800); }
+
+.club-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.club-category {
+  background: rgba(59,130,246,0.1); color: var(--primary-500);
+  padding:6px 12px; border-radius:6px; font-size:13px; font-weight:600;
+}
+.club-members { font-size:14px; color: var(--primary-600); display:flex; align-items:center; gap:6px; }
+.members-icon { font-size:16px; }
+
+.price-badge { display:inline-block; padding:8px 16px; border-radius:8px; font-size:14px; font-weight:600; }
+.price-badge.free { background: rgba(16,185,129,0.1); color:#10b981; }
+.price-badge.paid { background: rgba(236,72,153,0.1); color:#ec4899; }
+
+/* About Section */
+.about-section { padding:100px 0; background: var(--secondary-100); }
+.about-content { text-align:center; max-width:900px; margin:0 auto; animation: fadeIn 0.8s ease-out; }
+
+.about-title { font-size:42px; font-weight:800; margin-bottom:24px; color: var(--primary-800); position:relative; }
+.about-title::after {
+  content:''; display:block; width:60px; height:4px;
+  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+  margin:16px auto 0; border-radius:2px;
+}
+
+.about-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:32px; margin-top:60px; }
+.about-card {
+  background:#fff; padding:40px 24px; border-radius:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+}
+.about-card:hover { transform: translateY(-10px); box-shadow:0 16px 40px rgba(0,0,0,0.12); }
+
+.about-icon {
+  font-size:48px;
+  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+  color:#fff; width:80px; height:80px;
+  display:flex; align-items:center; justify-content:center; border-radius:50%;
+  box-shadow:0 8px 24px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+.about-card:hover .about-icon { transform: scale(1.2) rotate(10deg); }
+
+.about-card h3 { font-size:22px; font-weight:700; color: var(--primary-700); }
+.about-card p { font-size:16px; color: var(--primary-600); line-height:1.6; }
+
+
+
+/* Responsive */
+@media (max-width:768px){
+  .nav-menu { gap:16px; font-size:14px; }
+  .hero-content { grid-template-columns:1fr; gap:40px; }
+  .hero-title { font-size:40px; }
+  .hero-subtitle { font-size:18px; }
+  .hero-image { height:350px; }
+  .image-card.card-1 { width:280px; height:220px; }
+  .image-card.card-2 { width:250px; height:190px; }
+  .clubs-section { padding:60px 0; }
+  .section-title { font-size:32px; }
+  .clubs-grid { grid-template-columns:1fr; gap:24px; }
+  .about-grid { grid-template-columns:1fr; gap:24px; margin-top:40px; }
+  .about-title { font-size:32px; }
+  .about-card { padding:32px 20px; }
+  .about-icon { width:70px; height:70px; font-size:40px; }
+}
