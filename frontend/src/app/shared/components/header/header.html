@@ -1,0 +1,22 @@
+<header class="header">
+  <div class="container">
+    <div class="logo" (click)="navigateToHome()">
+      <span class="logo-text">ClubHub</span>
+    </div>
+    
+    <nav class="nav-menu">
+      <a [routerLink]="['/']" 
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact: true}"
+         class="nav-link">Accueil</a>
+         
+      <a [routerLink]="['/login']" 
+         routerLinkActive="active"
+         class="nav-link">Connexion</a>
+         
+      <a [routerLink]="['/register']" 
+         routerLinkActive="active"
+         class="nav-link cta-link">Inscription</a>
+    </nav>
+  </div>
+</header>
