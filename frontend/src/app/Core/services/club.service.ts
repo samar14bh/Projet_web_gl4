@@ -107,4 +107,8 @@ export class ClubService {
   deleteClub(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+  
+  getTopClubs(): Observable<Club[]> {
+  return this.http.get<Club[]>(`${this.apiUrl}/top`);
+}
 }

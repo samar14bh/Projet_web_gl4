@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ClubService } from '../../../../Core/services/club.service';
-import { Club, ClubFilters } from '../../../../Core/models/club.model';
+import { Club, ClubFilters, ClubsStats } from '../../../../Core/models/club.model';
 import { ClubComponent } from '../../club-component/club-component/club-component';
 
 
@@ -18,8 +18,8 @@ import { ClubComponent } from '../../club-component/club-component/club-componen
   selector: 'app-explore-clubs',
   standalone: true,
   imports: [CommonModule, FormsModule, ButtonComponent, ClubComponent], 
-  templateUrl: './explore-clubs.component.html',
-  styleUrl: './explore-clubs.component.css',
+  templateUrl: './explore-clubs.html',
+  styleUrl: './explore-clubs.css',
 })
 export class ExploreClubsComponent {
  
@@ -56,6 +56,7 @@ export class ExploreClubsComponent {
     stream: () => this.clubService.getClubsStats(),
   });
 
+
   clubs = computed(() => this.clubsResource.value()?.data || []);
   totalClubs = computed(() => this.clubsResource.value()?.total || 0);
   totalPages = computed(() => this.clubsResource.value()?.totalPages || 0);
@@ -63,12 +64,15 @@ export class ExploreClubsComponent {
   isLoading = computed(() => this.clubsResource.isLoading());
   hasError = computed(() => this.clubsResource.error() != null);
 
+
   stats = computed(() => this.publicStatsResource.value() || {
     total: 0,
+    active: 0,  
+    inactive: 0, 
     totalMembers: 0,
     totalEvents: 0,
-    categoriesCount: 0,
-  });
+    totalRevenue: 0, 
+  } as ClubsStats);
 
   categories = computed(() => this.categoriesResource.value() || []);
 
