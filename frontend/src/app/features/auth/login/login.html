@@ -1,0 +1,141 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="logo-section">
+        <h1 class="logo-title">Bienvenue</h1>
+        <p class="logo-subtitle">Connectez-vous à votre compte</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-message">
+          <div class="error-content">
+            <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            {{ errorMessage() }}
+          </div>
+        </div>
+      }
+
+      @if (showOtpInput()) {
+        <!-- Formulaire OTP -->
+        <form [formGroup]="otpForm" (ngSubmit)="onVerifyOtp()" class="otp-form">
+          <div class="otp-header">
+            <div class="otp-icon">
+              <svg class="otp-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <h3 class="otp-title">Vérification en 2 étapes</h3>
+            <p class="otp-subtitle">Code envoyé à {{ userEmail() }}</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Code OTP</label>
+            <input
+              type="text"
+              formControlName="otp"
+              maxlength="6"
+              placeholder="000000"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              (input)="onOtpInput($event)"
+              class="otp-input"
+              [class.input-error]="otpForm.get('otp')?.invalid && otpForm.get('otp')?.touched"
+              [class.input-valid]="otpForm.get('otp')?.valid"
+            />
+            @if (otpForm.get('otp')?.hasError('required') && otpForm.get('otp')?.touched) {
+              <p class="error-text">Code OTP requis</p>
+            }
+            @if (otpForm.get('otp')?.hasError('pattern') && otpForm.get('otp')?.touched) {
+              <p class="error-text">Le code doit contenir uniquement des chiffres</p>
+            }
+            @if (otpForm.get('otp')?.hasError('minlength') && otpForm.get('otp')?.touched) {
+              <p class="error-text">Le code doit contenir 6 chiffres</p>
+            }
+          </div>
+
+          <app-button
+            type="submit"
+            [disabled]="otpForm.invalid || isLoading()"
+            [loading]="isLoading()"
+            variant="primary"
+            size="lg"
+            fullWidth="true"
+            [label]="isLoading() ? 'Vérification...' : 'Vérifier le code'"
+          >
+          </app-button>
+
+          <a 
+            href="javascript:void(0)" 
+            (click)="cancelOtp()" 
+            class="back-link"
+          >
+            ← Retour
+          </a>
+        </form>
+      } @else {
+        <!-- Formulaire Login -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <div class="form-group">
+            <label class="form-label">Adresse email</label>
+            <div class="input-container">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+              </svg>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="votre@email.com"
+                class="form-input"
+                [class.input-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+              />
+            </div>
+            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+              <p class="error-text">Adresse email valide requise</p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mot de passe</label>
+            <div class="input-container">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <input
+                type="password"
+                formControlName="password"
+                placeholder="••••••••"
+                class="form-input"
+                [class.input-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+              />
+            </div>
+            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+              <p class="error-text">Mot de passe requis</p>
+            }
+          </div>
+
+          <app-button
+            type="submit"
+            [disabled]="loginForm.invalid || isLoading()"
+            [loading]="isLoading()"
+            variant="primary"
+            size="lg"
+            fullWidth="true"
+            [label]="isLoading() ? 'Connexion...' : 'Se connecter'"
+          >
+          </app-button>
+        </form>
+      }
+
+      <div class="register-section">
+        <p class="register-text">
+          Pas encore de compte ?
+          <a routerLink="/register" class="register-link">
+            Créer un compte
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

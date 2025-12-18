@@ -1,0 +1,204 @@
+<div class="register-container">
+  <div class="register-wrapper">
+    <div class="register-card">
+      <!-- Header -->
+      <div class="header-section">
+        <div class="header-icon">
+          <svg class="header-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+        </div>
+        <h1 class="header-title">Créer un compte</h1>
+        <p class="header-subtitle">Rejoignez notre communauté</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-message">
+          <div class="error-content">
+            <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            {{ errorMessage() }}
+          </div>
+        </div>
+      }
+
+      @if (successMessage()) {
+        <div class="success-message">
+          <div class="success-content">
+            <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            {{ successMessage() }}
+          </div>
+        </div>
+      }
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        <!-- Nom et Prénom -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Prénom</label>
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="prénom"
+              class="form-input"
+              [class.input-error]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched"
+            />
+            @if (registerForm.get('name')?.invalid && registerForm.get('name')?.touched) {
+              <p class="error-text">Prénom requis</p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              placeholder="nom"
+              class="form-input"
+              [class.input-error]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched"
+            />
+            @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
+              <p class="error-text">Nom requis</p>
+            }
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Adresse email</label>
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="exemple: jean.dupont@email.com"
+            class="form-input"
+            [class.input-error]="(registerForm.get('email')?.invalid && registerForm.get('email')?.touched) || registerForm.get('email')?.pending"
+          />
+          @if (registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched) {
+            <p class="error-text">Email requis</p>
+          }
+          @if (registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched) {
+            <p class="error-text">Email valide requis</p>
+          }
+          @if (registerForm.get('email')?.hasError('emailTaken') && registerForm.get('email')?.touched) {
+            <p class="error-text">Cet email est déjà utilisé</p>
+          }
+          @if (registerForm.get('email')?.pending) {
+            <p class="loading-text">Vérification de l'email...</p>
+          }
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="exemple: MonMotDePasse123"
+            class="form-input"
+            [class.input-error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          />
+          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+            <p class="error-text">Minimum 8 caractères requis</p>
+          }
+        </div>
+
+        <!-- Date de naissance et Filière -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Date de naissance</label>
+            <input
+              type="date"
+              formControlName="dateOfBirth"
+              class="form-input"
+              [class.input-error]="registerForm.get('dateOfBirth')?.invalid && registerForm.get('dateOfBirth')?.touched"
+            />
+            @if (registerForm.get('dateOfBirth')?.hasError('required') && registerForm.get('dateOfBirth')?.touched) {
+              <p class="error-text">Date requise</p>
+            }
+            @if (registerForm.get('dateOfBirth')?.hasError('minimumAge')) {
+              <p class="error-text">
+                Vous devez avoir au moins {{ registerForm.get('dateOfBirth')?.errors?.['minimumAge']?.requiredAge }} ans
+                (Vous avez {{ registerForm.get('dateOfBirth')?.errors?.['minimumAge']?.actualAge }} ans)
+              </p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Filière d'études</label>
+            <select
+              formControlName="major"
+              class="form-select"
+              [class.input-error]="registerForm.get('major')?.invalid && registerForm.get('major')?.touched"
+            >
+              <option value="">Sélectionnez votre filière</option>
+              @for (major of studyMajors; track major.value) {
+                <option [value]="major.value">{{ major.label }}</option>
+              }
+            </select>
+            @if (registerForm.get('major')?.invalid && registerForm.get('major')?.touched) {
+              <p class="error-text">Filière requise</p>
+            }
+          </div>
+        </div>
+
+        <!-- Photo de profil -->
+        <div class="form-group">
+          <label class="form-label">Photo de profil (optionnelle)</label>
+          <div class="file-upload-container">
+            @if (imagePreview()) {
+              <img [src]="imagePreview()" alt="Preview" class="image-preview" />
+            }
+            <label class="file-upload-label">
+              <div class="file-upload-area">
+                <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="file-upload-text">
+                  @if (selectedFileName()) {
+                    {{ selectedFileName() }}
+                  } @else {
+                    Choisir une image
+                  }
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,image/gif"
+                (change)="onFileSelected($event)"
+                class="file-input"
+              />
+            </label>
+          </div>
+          @if (fileError()) {
+            <p class="error-text">{{ fileError() }}</p>
+          }
+          <p class="file-hint">JPG, PNG ou GIF - Max 5 MB</p>
+        </div>
+
+        <!-- Submit Button -->
+        <app-button
+          type="submit"
+          [disabled]="registerForm.invalid || isLoading()"
+          [loading]="isLoading()"
+          variant="primary"
+          size="lg"
+          fullWidth="true"
+          [label]="isLoading() ? 'Création du compte...' : 'Créer mon compte'"
+        >
+        </app-button>
+      </form>
+
+      <div class="login-link-section">
+        <p class="login-link-text">
+          Déjà un compte ?
+          <a routerLink="/login" class="login-link">
+            Se connecter
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
