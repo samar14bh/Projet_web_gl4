@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withFetch(), // Nécessaire pour EventService
-      withInterceptors([authInterceptor]) // <-- À l'intérieur de provideHttpClient()
+      withInterceptors([authInterceptor]) 
     ),
   ]
 };

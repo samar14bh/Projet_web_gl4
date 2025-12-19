@@ -123,31 +123,31 @@ export class AuthService {
     );
   }
 
-  logout(): Observable<any> {
-    const token = this.accessToken();
-    
-    if (!token) {
-      console.warn('[AUTH] Tentative de logout sans token');
-      this.clearAuth();
-      return throwError(() => new Error('Aucun token disponible'));
-    }
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-    
-    return this.http.post(`${this.API_URL}/logout`, {}, { headers }).pipe(
-      tap(() => {
-        this.clearAuth();
-      }),
-      catchError(err => {
-        
-        this.clearAuth();
-        return throwError(() => err);
-      })
-    );
+  logout(): Observable<void> {
+  const token = this.accessToken();
+  
+  if (!token) {
+    console.warn('[AUTH] Tentative de logout sans token');
+    this.clearAuth();
+    this.router.navigate(['/login']);
+    return of(void 0); 
   }
+  
+  return this.http.post<void>(`${this.API_URL}/logout`, {}).pipe(
+    tap(() => {
+      console.log('[AUTH] Logout réussi');
+      this.clearAuth();
+      this.router.navigate(['/login']);
+    }),
+    catchError(err => {
+      console.error('[AUTH] Erreur lors du logout:', err);
+
+      this.clearAuth();
+      this.router.navigate(['/login']);
+      return throwError(() => err);
+    })
+  );
+}
 
   private handleAuthResponse(response: AuthResponse): void {
     this.accessToken.set(response.accessToken);
