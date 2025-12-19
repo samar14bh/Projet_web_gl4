@@ -59,6 +59,7 @@ export class UserSeeder {
         lastName: userData.lastName,
         major: userData.major,
         dateOfBirth: new Date(userData.dateOfBirth),
+        emailVerified:true
       });
       const savedUser = await this.userRepository.save(user);
       createdUsers.push(savedUser as GeneralUser);
