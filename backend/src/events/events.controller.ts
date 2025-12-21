@@ -71,7 +71,7 @@ export class EventsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Query() filter: FilterEventDto,
   ): Promise<PaginatedResult<UserEventDto>> {
-    return this.eventsService.getEventsByUser(userId, filter);
+    return this.eventsService.findUserEvents(userId, filter, true);
   }
 
   /**
@@ -85,7 +85,18 @@ export class EventsController {
     return this.eventsService.getEventDetails(eventId, userId);
   }
 
-  // --- PARAMETRIC ROUTES ---
+  /**
+   * GET /api/events/discovery/:userId
+   */
+  @Get('discovery/:userId')
+  async getEventsDiscovery(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query() filter: FilterEventDto,
+  ): Promise<PaginatedResult<UserEventDto>> {
+    return this.eventsService.findUserEvents(userId, filter, false);
+  }
+
+
 
   /**
    * GET /api/events/:id

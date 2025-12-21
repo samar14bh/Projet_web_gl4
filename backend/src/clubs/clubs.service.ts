@@ -15,6 +15,7 @@ import {
   Transaction,
   TransactionType,
 } from '../transactions/entities/transaction.entity';
+import { PaginatedResult } from '../common/pagination/pagination.dto';
 
 /**
  * Service pour gérer les clubs
@@ -30,7 +31,7 @@ export class ClubsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-  ) {}
+  ) { }
 
   /**
    * Créer un nouveau club
@@ -252,6 +253,64 @@ export class ClubsService {
   }
 
   /**
+   * Récupérer les clubs pour les utilisateurs (paginés et filtrés)
+   */
+  async getUserClubs(userId: number, filters: FilterClubDto): Promise<PaginatedResult<any>> {
+    const { status, categoryId, search, sortBy, sortOrder, page = 1, limit = 10 } = filters;
+
+    const queryBuilder = this.clubRepository
+      .createQueryBuilder('club')
+      .innerJoin('club.memberships', 'membership')
+      .andWhere('membership.user_id = :userId', { userId })
+      .leftJoinAndSelect('club.category', 'category');
+
+    if (status && status !== ClubStatus.ALL) {
+      queryBuilder.andWhere('club.isActive = :isActive', { isActive: status === ClubStatus.ACTIVE });
+    } else {
+      queryBuilder.andWhere('club.isActive = :isActive', { isActive: true });
+    }
+
+    if (categoryId) {
+      queryBuilder.andWhere('club.category_id = :categoryId', { categoryId });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(club.name LIKE :search OR club.description LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    queryBuilder.orderBy('club.name', sortOrder?.toUpperCase() as any || 'ASC');
+
+    const skip = (Math.max(1, page) - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const [clubs, total] = await queryBuilder.getManyAndCount();
+
+    const enrichedData = await Promise.all(
+      clubs.map(async (club) => {
+        const stats = await this.getClubStats(club.id);
+        return {
+          ...club,
+          categoryName: club.category?.name,
+          members: stats.members,
+          events: stats.events,
+          revenue: stats.revenue,
+          isMember: true,
+        };
+      }),
+    );
+
+    return {
+      data: enrichedData,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    };
+  }
+
+  /**
    * Récupérer les statistiques d'un club
    */
   private async getClubStats(clubId: number) {
@@ -290,5 +349,40 @@ export class ClubsService {
       .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
       .replace(/[^a-z0-9]+/g, '-') // Remplacer les caractères spéciaux par des tirets
       .replace(/^-+|-+$/g, ''); // Supprimer les tirets en début et fin
+  }
+
+
+  async getClubMembershipDetails(userId: number, clubId: number) {
+    const club = await this.findOne(clubId);
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+      },
+    });
+
+    return {
+      club,
+      membership,
+    };
+  }
+
+  async leaveClub(userId: number, clubId: number): Promise<void> {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException(`Vous n'êtes pas membre de ce club`);
+    }
+
+    await this.membershipRepository.remove(membership);
   }
 }

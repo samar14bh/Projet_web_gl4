@@ -1,10 +1,10 @@
 <div class="event-details-page">
     <div *ngIf="isLoading()" class="d-flex justify-content-center align-items-center loading-container">
-       <app-loader message="loading event information" ></app-loader>
+        <app-loader message="loading event information"></app-loader>
     </div>
 
     <div *ngIf="error()" class="container pt-5">
-       <app-error errorMessage="error loading event details  please try again later!"></app-error>
+        <app-error [errorMessage]="'error loading event details please try again later!'"></app-error>
     </div>
 
     <ng-container *ngIf="event() as e">
@@ -101,7 +101,8 @@
                         </div>
 
                         <div class="d-grid gap-3">
-                            <button *ngIf="e.subscriptionFees > 0 && e.paymentStatus !== 'paid' && e.attendanceStatus!='absent'"
+                            <button
+                                *ngIf="e.subscriptionFees > 0 && e.paymentStatus !== 'paid' && e.attendanceStatus!='absent'"
                                 (click)="openPaymentModal()"
                                 class="btn btn-primary action-btn text-uppercase shadow-lg">
                                 <i class="bi bi-credit-card-2-front-fill me-2"></i> Payer l'inscription

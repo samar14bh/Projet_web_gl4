@@ -5,12 +5,12 @@ import { DefaultImagePipe } from '../../../shared/pipes/default-image.pipe';
 import { RegistrationStatus } from '../../../Core/models/event.model';
 import { PaymentModal } from '../../../features/payment-modal/payment-modal';
 import { Loader } from '../../../shared/components/loader/loader';
-import { Error as AppError } from '../../../shared/components/error/error';
+import { Error } from '../../../shared/components/error/error';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, DefaultImagePipe, PaymentModal, Loader, AppError],
+  imports: [CommonModule, DefaultImagePipe, PaymentModal, Loader, Error],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
 })

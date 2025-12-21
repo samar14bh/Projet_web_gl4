@@ -9,9 +9,11 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
+import { PaginatedResult } from '../common/pagination/pagination.dto';
 
 /**
  * Controller pour la gestion des clubs
@@ -19,7 +21,7 @@ import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
  */
 @Controller('clubs')
 export class ClubsController {
-  constructor(private readonly clubsService: ClubsService) {}
+  constructor(private readonly clubsService: ClubsService) { }
 
   /**
    * POST /api/clubs
@@ -40,12 +42,49 @@ export class ClubsController {
   }
 
   /**
+   * GET /api/clubs/user-clubs
+   * Récupérer les clubs pour les utilisateurs (paginés et filtrés)
+   */
+  @Get('user-clubs/:userId')
+  getUserClubs(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query() filters: FilterClubDto
+  ): Promise<PaginatedResult<any>> {
+    return this.clubsService.getUserClubs(userId, filters);
+  }
+
+  /**
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
   @Get('stats')
   getStats() {
     return this.clubsService.getStats();
+  }
+
+  /**
+   * GET /api/clubs/:id/membership/:userId
+   * Récupérer les détails d'adhésion d'un utilisateur à un club
+   */
+  @Get(':id/membership/:userId')
+  getClubMembershipDetails(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.getClubMembershipDetails(userId, id);
+  }
+
+  /**
+   * DELETE /api/clubs/:id/leave/:userId
+   * Quitter un club
+   */
+  @Delete(':id/leave/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leaveClub(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.leaveClub(userId, id);
   }
 
   /**

@@ -1,9 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserEventDto } from '../../../Core/dtos/user-event.dto';
 import { EventService } from '../../../Core/services/event.service';
 import { Router } from '@angular/router';
-import {PaymentModal} from '../../payment-modal/payment-modal';
+import { PaymentModal } from '../../payment-modal/payment-modal';
 
 @Component({
   selector: 'app-user-events-card',
@@ -14,12 +14,10 @@ import {PaymentModal} from '../../payment-modal/payment-modal';
 })
 export class UserEventsCard {
   @Input() event!: UserEventDto;
-   showPaymentModal: boolean=false;
+  showPaymentModal: boolean = false;
 
-  constructor(
-    private readonly eventService: EventService,
-    private readonly router: Router
-  ) { }
+  private readonly eventService = inject(EventService);
+  private readonly router = inject(Router);
 
   viewEventDetails() {
     this.router.navigate(['/user-event-details', 1, this.event.id]);
@@ -39,19 +37,7 @@ export class UserEventsCard {
   }
 
   async viewReceipt() {
-    try {
-      const blob = await this.eventService.downloadReceipt(this.event.id).toPromise();
-      if (!blob) return;
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `recu-${this.event.title.replace(/\s+/g, '-')}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      alert('Erreur lors du téléchargement du reçu');
-    }
+    console.log("will be dev")
   }
 
 

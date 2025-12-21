@@ -131,15 +131,35 @@ export class EventService {
 
 
   cancelRegistration(eventId: number) {
-    return this.http.post(`${this.apiUrl}/events/${eventId}/cancel`, {});
+    return this.http.post(`${this.apiUrl}/${eventId}/cancel`, {});
   }
 
   downloadReceipt(eventId: number) {
-    return this.http.get(`${this.apiUrl}/events/${eventId}/receipt`, { responseType: 'blob' });
+    return this.http.get(`${this.apiUrl}/${eventId}/receipt`, { responseType: 'blob' });
   }
 
   getEventDetails(userId: () => number, eventId: () => number) {
     return httpResource<UserEventDto>(() => `${this.apiUrl}/user-event-details/${userId()}?eventId=${eventId()}`);
+  }
+
+  /**
+   * Discovery: Récupérer tous les événements avec le statut pour un utilisateur
+   */
+  getEventsDiscovery(
+    userId: number,
+    filters: EventFilters = {}
+  ): Observable<PaginatedResult<UserEventDto>> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.append(key, String(value));
+      }
+    });
+
+    return this.http.get<PaginatedResult<UserEventDto>>(
+      `${this.apiUrl}/discovery/${userId}`,
+      { params }
+    );
   }
 }
 

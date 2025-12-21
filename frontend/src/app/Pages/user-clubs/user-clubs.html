@@ -1,0 +1,77 @@
+<div class="page-container">
+    <header class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Mes Clubs</h1>
+            <p class="page-subtitle">Gérez vos adhésions et suivez l'activité de vos clubs.</p>
+        </div>
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearch($event)"
+                    placeholder="Rechercher un club...">
+            </div>
+        </div>
+    </header>
+
+    <main class="content-section">
+        @if (clubsResource.isLoading()) {
+        <app-loader message="Chargement de vos clubs..."></app-loader>
+        } @else if (clubsResource.error()) {
+        <app-error [errorMessage]="'Une erreur est survenue lors du chargement des clubs.'"
+            returnLink="/dashboard"></app-error>
+        } @else {
+        @if (clubsResource.value()?.data && clubsResource.value()!.data.length > 0) {
+        <div class="clubs-list">
+            @for (club of clubsResource.value()!.data; track club.id) {
+            <div class="club-item">
+                <div class="club-logo-container">
+                    <img [src]="club.logo | defaultImage:'club-logo'" [alt]="club.name" class="club-logo">
+                </div>
+                <div class="club-info">
+                    <div class="club-main">
+                        <h3 class="club-name">{{ club.name }}</h3>
+                        <span class="category-badge">{{ club.categoryName || 'Général' }}</span>
+                    </div>
+                    <p class="club-description">{{ club.description | slice:0:120 }}{{ club.description.length > 120 ?
+                        '...' : '' }}</p>
+                    <div class="club-stats">
+                        <div class="stat">
+                            <span class="stat-value">{{ club.members || 0 }}</span>
+                            <span class="stat-label">Membres</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ club.events || 0 }}</span>
+                            <span class="stat-label">Événements</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="club-actions">
+                    <button class="btn btn-primary" (click)="goToClub(club.id)">Accéder au club</button>
+                    <span class="membership-status">
+                        <i class="fas fa-check-circle"></i> Membre
+                    </span>
+                </div>
+            </div>
+            }
+        </div>
+
+        <div class="pagination-container">
+            <app-pagination [currentPage]="currentPage()"
+                [totalPages]="Math.ceil((clubsResource.value()?.total ?? 0) / pageSize)"
+                (pageChange)="goToPage($event)"></app-pagination>
+        </div>
+        } @else {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-users-slash"></i>
+            </div>
+            <h3>Aucun club trouvé</h3>
+            <p>Vous n'êtes membre d'aucun club correspondant à votre recherche.</p>
+            <button class="btn btn-outline" (click)="onSearch('')" *ngIf="searchQuery()">
+                Effacer la recherche
+            </button>
+        </div>
+        }
+        }
+    </main>
+</div>

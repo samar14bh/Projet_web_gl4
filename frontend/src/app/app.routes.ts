@@ -23,6 +23,21 @@ export const routes: Routes = [
           import('./Pages/UserEvents/user-events/user-events').then(m => m.UserEvents)
       },
       {
+        path: 'discover-events/:clubId',
+        loadComponent: () =>
+          import('./Pages/UserEvents/user-events/user-events').then(m => m.UserEvents)
+      },
+      {
+        path: 'my-clubs',
+        loadComponent: () =>
+          import('./Pages/user-clubs/user-clubs').then(m => m.UserClubs)
+      },
+      {
+        path: 'my-clubs/:clubId',
+        loadComponent: () =>
+          import('./Pages/club-details/club-details').then(m => m.ClubDetails)
+      },
+      {
         path: 'user-event-details/:userId/:eventId',
         loadComponent: () => import('./Pages/UserEvents/event-details/event-details').then(m => m.EventDetails)
       },

@@ -4,8 +4,8 @@ import { EventStatus, RegistrationStatus } from '../../common/enums';
 
 export class EventMapper {
     static toUserEventDto(event: Event, userId: number): UserEventDto {
-        const userReg = event.registrations.find(
-            (r) => r.user?.id === userId && r.status !== RegistrationStatus.CANCELLED,
+        const userReg = event.registrations?.find(
+            (r) => r.user?.id === userId && r.status !== RegistrationStatus.CANCELLED
         );
 
         const now = new Date();

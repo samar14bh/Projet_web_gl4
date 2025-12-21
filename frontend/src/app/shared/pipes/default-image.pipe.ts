@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class DefaultImagePipe implements PipeTransform {
 
-    transform(value: string | undefined | null, type: 'event' | 'user' | 'club' = 'event'): string {
+    transform(value: string | undefined | null, type: 'event' | 'user' | 'club' | 'club-logo' = 'event'): string {
         if (value && value.trim() !== '') {
             return value;
         }
@@ -14,6 +14,8 @@ export class DefaultImagePipe implements PipeTransform {
         switch (type) {
             case 'event':
                 return 'assets/images/default-event.jpg';
+            case 'club-logo':
+                return 'assets/images/default-club-logo.jpg';
             case 'user':
                 return 'assets/images/default-user.jpg';
             case 'club':

@@ -1,7 +1,9 @@
 import {
   Component,
   computed,
+  effect,
   inject,
+  input,
   resource,
   signal,
 } from '@angular/core';
@@ -15,7 +17,7 @@ import { Loader } from '../../../shared/components/loader/loader';
 import { EventStatus, EventType } from '../../../Core/models/event.model';
 import { UserEventsCard } from '../../../features/events/user-events-card/user-events-card';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
-import { Error as AppError } from '../../../shared/components/error/error';
+import { Error } from '../../../shared/components/error/error';
 
 type FilterType = 'all' | 'upcoming' | 'past';
 
@@ -24,13 +26,13 @@ interface FilterState {
   status: EventStatus | '';
   type: EventType | '';
   sortBy: 'date' | 'title' | 'registrations';
-  sortOrder: 'asc' | 'desc';
+  order: 'asc' | 'desc';
 }
 
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, Loader, UserEventsCard, PaginationComponent, AppError],
+  imports: [CommonModule, FormsModule, DatePipe, Loader, UserEventsCard, PaginationComponent, Error],
   templateUrl: './user-events.html',
   styleUrl: './user-events.css',
 })
@@ -38,6 +40,9 @@ export class UserEvents {
   private readonly eventService = inject(EventService);
   private readonly USER_ID = 1;
   readonly pageSize = 6;
+
+  // Optional clubId to switch to "Discovery" mode
+  readonly clubId = input<string>();
 
   readonly currentPage = signal(1);
   readonly activeFilter = signal<FilterType>('all');
@@ -48,7 +53,7 @@ export class UserEvents {
     status: '',
     type: '',
     sortBy: 'date',
-    sortOrder: 'asc',
+    order: 'asc',
   });
 
 
@@ -65,30 +70,33 @@ export class UserEvents {
   readonly eventsResource = resource({
     params: () => ({
       userId: this.USER_ID,
+      clubId: this.clubId() ? parseInt(this.clubId()!) : undefined,
       page: this.currentPage(),
       limit: this.pageSize,
       search: this.filterState().search || undefined,
       status: this.filterState().status || undefined,
       type: this.filterState().type || undefined,
       sortBy: this.filterState().sortBy,
-      sortOrder: this.filterState().sortOrder,
+      order: this.filterState().order,
     }),
-    loader: async ({ params, abortSignal }) => {
+    loader: async ({ params }) => {
       try {
-        return (
-          (await this.eventService
-            .getUserEvents(
-              params.userId,
-              params.page,
-              params.limit,
-              params.search,
-              params.status,
-              params.type,
-              params.sortBy,
-              params.sortOrder
-            )
-            .toPromise()) ?? this.emptyResult()
-        );
+        const { userId, ...filters } = params;
+
+        const fetchMethod = params.clubId
+          ? this.eventService.getEventsDiscovery(userId, filters as any)
+          : this.eventService.getUserEvents(
+            userId,
+            params.page,
+            params.limit,
+            params.search,
+            params.status,
+            params.type,
+            params.sortBy,
+            params.order
+          );
+
+        return (await fetchMethod.toPromise()) ?? this.emptyResult();
       } catch {
         return this.emptyResult();
       }
@@ -133,7 +141,7 @@ export class UserEvents {
       status: '',
       type: '',
       sortBy: 'date',
-      sortOrder: 'asc',
+      order: 'asc',
     });
     this.activeFilter.set('all');
     this.currentPage.set(1);

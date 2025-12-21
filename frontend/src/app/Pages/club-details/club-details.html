@@ -1,0 +1,149 @@
+<div class="club-details-page">
+    @if (membershipResource.isLoading()) {
+    <div class="loading-overlay">
+        <app-loader message="Chargement des détails du club..."></app-loader>
+    </div>
+    } @else if (membershipResource.error()) {
+    <div class="error-container">
+        <app-error [errorMessage]="'Une erreur est survenue lors du chargement des détails du club.'"></app-error>
+    </div>
+    } @else {
+    @if (membershipResource.value()?.club; as c) {
+    <div class="hero-section">
+        <div class="hero-background"
+            [style.backgroundImage]="'url(' + (c.coverImage || 'assets/images/default-event.jpg') + ')'"></div>
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <div class="back-link">
+                <a routerLink="/my-clubs" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Retour à mes clubs
+                </a>
+            </div>
+            <div class="club-header">
+                <div class="club-logo-wrapper shadow-lg">
+                    <img [src]="c.logo | defaultImage:'club-logo'" [alt]="c.name">
+                </div>
+                <div class="club-title-info">
+                    <span class="category-badge">{{ c.categoryName || 'Général' }}</span>
+                    <h1>{{ c.name }}</h1>
+                    <div class="quick-stats">
+                        <span><i class="fas fa-users"></i> {{ c.members || 0 }} Membres</span>
+                        <span><i class="fas fa-calendar-alt"></i> {{ c.events || 0 }} Événements</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container main-content">
+        <div class="content-grid">
+            <div class="main-column">
+                <section class="glass-card about-section">
+                    <h2 class="section-title">À propos du club</h2>
+                    <p class="description">{{ c.description || 'Aucune description disponible.' }}</p>
+                </section>
+
+                <section class="glass-card features-section">
+                    <h2 class="section-title">Activités & Services</h2>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-star"></i></div>
+                            <div class="feature-text">
+                                <h3>Avantages Membres</h3>
+                                <p>Accès prioritaire aux événements et tarifs réduits.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
+                            <div class="feature-text">
+                                <h3>Newsletter</h3>
+                                <p>Restez informé des dernières nouvelles du club.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="events-section mt-5">
+                    <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="section-title mb-0">Événements du club</h2>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3" (click)="onDiscoverEvents()">
+                            <i class="fas fa-plus me-1"></i> Découvrir plus
+                        </button>
+                    </div>
+
+                    @if (clubEventsResource.isLoading()) {
+                    <div class="loading-state py-5 text-center">
+                        <app-loader message="Chargement des événements..."></app-loader>
+                    </div>
+                    } @else if (clubEventsResource.value()?.data && clubEventsResource.value()!.data.length > 0) {
+                    <div class="events-grid-details">
+                        @for (event of clubEventsResource.value()!.data.slice(0, 3); track event.id) {
+                        <app-user-events-card [event]="event"></app-user-events-card>
+                        }
+                    </div>
+                    } @else {
+                    <div class="empty-events text-center py-5 glass-card">
+                        <i class="fas fa-calendar-times fs-1 mb-3 text-muted"></i>
+                        <p class="mb-0 text-muted">Aucun événement à venir trouvé.</p>
+                    </div>
+                    }
+                </section>
+
+            </div>
+
+            <aside class="sidebar-column">
+                <div class="glass-card membership-card">
+                    <h2 class="section-title">Mon Adhésion</h2>
+                    @if (membershipResource.value()?.membership; as m) {
+                    <div class="membership-info">
+                        <div class="status-badge" [class.status-active]="true">
+                            <i class="fas fa-check-circle"></i> Membre Actif
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Rôle</span>
+                            <span class="value">{{ m.role }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Membre depuis</span>
+                            <span class="value">{{ m.dateDebut | date:'longDate' }}</span>
+                        </div>
+                        @if (m.dateFin) {
+                        <div class="info-row">
+                            <span class="label">Expire le</span>
+                            <span class="value text-warning">{{ m.dateFin | date:'longDate' }}</span>
+                        </div>
+                        }
+                    </div>
+                    } @else {
+                    <div class="non-member-info">
+                        <p>Vous n'êtes pas encore membre de ce club ou votre adhésion a expiré.</p>
+                    </div>
+                    }
+                    <div class="action-buttons">
+                        <button class="btn btn-outline-primary w-100 mb-2" (click)="onContactMember()">
+                            <i class="fas fa-comments"></i> Contacter un membre
+                        </button>
+                        <button class="btn btn-outline-danger w-100" (click)="onLeaveClub()">
+                            <i class="fas fa-door-open"></i> Quitter le club
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card help-card">
+                    <h3>Besoin d'aide ?</h3>
+                    <p>Si vous avez des questions sur votre adhésion, contactez le bureau du club.</p>
+                    <a href="mailto:support@clubconnect.com" class="support-link">support@clubconnect.com</a>
+                </div>
+            </aside>
+        </div>
+    </main>
+    }
+    }
+
+    <div class="modal-overlay" *ngIf="showContactModal()" (click)="showContactModal.set(false)">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <app-contact [clubName]="membershipResource.value()?.club?.name || 'le club'"
+                (close)="showContactModal.set(false)" (submitted)="onSendMessage($event)"></app-contact>
+        </div>
+    </div>
+</div>

@@ -91,7 +91,7 @@ export class EventsService {
     }
 
     if (clubId) {
-      queryBuilder.andWhere('event.clubId = :clubId', { clubId });
+      queryBuilder.andWhere('event.club_Id = :clubId', { clubId });
     }
 
     if (search) {
@@ -328,26 +328,35 @@ export class EventsService {
     });
     return !!registration;
   }
-  async getEventsByUser(
+  async findUserEvents(
     userId: number,
     filter: FilterEventDto,
+    registeredOnly: boolean = false
   ): Promise<PaginatedResult<UserEventDto>> {
-
     const query = this.eventRepository
       .createQueryBuilder('event')
-      .innerJoin(
-        'event.registrations',
-        'userRegistration',
-        'userRegistration.user.id = :userId',
-        { userId },
-      )
-      .leftJoinAndSelect('event.club', 'club')
-      .leftJoinAndSelect('event.registrations', 'registrations');
+      .leftJoinAndSelect('event.club', 'club');
 
+    if (registeredOnly) {
+      query.innerJoinAndSelect(
+        'event.registrations',
+        'registrations',
+        'registrations.user.id = :userId',
+        { userId },
+      );
+    } else {
+      query.leftJoinAndSelect(
+        'event.registrations',
+        'registrations',
+        'registrations.user.id = :userId',
+        { userId },
+      );
+    }
+
+    query.leftJoinAndSelect('registrations.user', 'user');
 
     this.applyFilters(query, filter);
     this.applySorting(query, filter);
-
 
     const page = filter.page ?? 1;
     const limit = filter.limit ?? 10;
@@ -358,13 +367,8 @@ export class EventsService {
       .take(limit)
       .getManyAndCount();
 
-
-    const data: UserEventDto[] = events.map(event =>
-      EventMapper.toUserEventDto(event, userId)
-    );
-
     return {
-      data,
+      data: events.map(event => EventMapper.toUserEventDto(event, userId)),
       total,
       page,
       limit,
@@ -374,10 +378,14 @@ export class EventsService {
     const event = await this.eventRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.club', 'club')
-      .leftJoinAndSelect('event.registrations', 'registrations')
+      .leftJoinAndSelect('event.registrations', 'registrations', 'registrations.user.id = :userId', { userId })
       .leftJoinAndSelect('registrations.user', 'user')
       .where('event.id = :eventId', { eventId })
       .getOne();
+
+    if (event) {
+      console.log(`Event Details Loaded: ${event.title}, Regs: ${event.registrations?.length}`);
+    }
 
     if (!event) {
       throw new NotFoundException(`Événement avec l'ID ${eventId} introuvable`);
@@ -385,6 +393,9 @@ export class EventsService {
 
     return EventMapper.toUserEventDto(event, userId);
   }
+
+
+
 
   private applyFilters(
     query: SelectQueryBuilder<Event>,
@@ -399,7 +410,7 @@ export class EventsService {
     }
 
     if (filter.clubId) {
-      query.andWhere('event.clubId = :clubId', { clubId: filter.clubId });
+      query.andWhere('event.club_Id = :clubId', { clubId: filter.clubId });
     }
 
     if (filter.search) {

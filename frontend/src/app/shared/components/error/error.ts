@@ -1,13 +1,21 @@
-import { Component, input } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-error',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './error.html',
   styleUrl: './error.css',
 })
 export class Error {
+  private readonly location = inject(Location);
 
   errorMessage = input('An unexpected error has occurred.')
+  returnLink = input<string>('');
 
+  goBack() {
+    this.location.back();
+  }
 }
