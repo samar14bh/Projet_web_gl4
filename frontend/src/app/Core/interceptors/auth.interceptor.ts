@@ -8,14 +8,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // URLs publiques qui ne nécessitent pas de token
   const publicUrls = [
     '/register',
     '/register-with-image',
     '/login',
     '/verify-email',
     '/check-email',
-    '/refresh'
+    '/refresh',
+    '/home'
   ];
 
 
