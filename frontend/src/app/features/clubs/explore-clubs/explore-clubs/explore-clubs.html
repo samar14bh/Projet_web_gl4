@@ -42,23 +42,43 @@
     </div>
   }
 
+  <!-- Filtres -->
   <div class="filters-section">
     <div class="filters-right">
       <div class="search-box">
         <i class="bi bi-search"></i>
-        <input type="text" placeholder="Rechercher..." [value]="searchQuery()" (input)="onSearch($any($event.target).value)" class="search-input" />
+        <input 
+          type="text" 
+          placeholder="Rechercher..." 
+          [value]="searchQuery()" 
+          (input)="onSearch($any($event.target).value)" 
+          class="search-input" 
+        />
       </div>
-      <select class="filter-select" [value]="selectedCategory()" (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)">
+      <select 
+        class="filter-select" 
+        [value]="selectedCategory()" 
+        (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)"
+      >
         <option value="all">Toutes les catégories</option>
-        @for (category of categories(); track category.id) { <option [value]="category.id">{{ category.name }}</option> }
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
       </select>
-      <select class="filter-select" [value]="sortBy()" (change)="changeSortBy($any($event.target).value)">
+      <select 
+        class="filter-select" 
+        [value]="sortBy()" 
+        (change)="changeSortBy($any($event.target).value)"
+      >
         <option value="name">Trier par nom</option>
         <option value="members">Trier par membres</option>
+        <option value="events">Trier par événements</option>
+        <option value="createdAt">Trier par date de création</option>
       </select>
     </div>
   </div>
 
+  <!-- Liste des clubs -->
   @if (isLoading()) {
     <div class="loading-state">
       <div class="spinner"></div>
@@ -69,31 +89,61 @@
       <i class="bi bi-exclamation-triangle"></i>
       <h3>Erreur de chargement</h3>
       <p>Impossible de charger les clubs</p>
-      <app-button label="Réessayer" variant="secondary" (clicked)="refreshData()" />
+      <app-button 
+        label="Réessayer" 
+        variant="secondary" 
+        (clicked)="refreshData()" 
+      />
     </div>
   } @else if (clubs().length === 0) {
     <div class="empty-state">
       <i class="bi bi-inbox"></i>
       <h3>Aucun club trouvé</h3>
-      <app-button label="Réinitialiser" variant="secondary" (clicked)="changeCategory('all'); onSearch('')" />
+      <p>Aucun club ne correspond à vos critères de recherche.</p>
+      <app-button 
+        label="Réinitialiser" 
+        variant="secondary" 
+        (clicked)="changeCategory('all'); onSearch('')" 
+      />
     </div>
   } @else {
     <div class="clubs-grid">
       @for (club of clubs(); track club.id) {
         <app-club-component
           [club]="club"
-          (viewDetails)="viewClubDetails($event)" (join)="joinClub($event)"
+          [showJoinButton]="true"
+          [joinButtonLabel]="getButtonText(club.id)"
+          [joinButtonVariant]="getButtonVariant(club.id)"
+          [joinButtonDisabled]="isButtonDisabled(club.id)"
+          [isAuthenticated]="isAuthenticated()"
+          (viewDetails)="viewClubDetails($event)"
+          (join)="handleClubAction($event)"
+          (loginRequired)="router.navigate(['/login'])"
         />
       }
     </div>
 
+    <!-- Pagination -->
     @if (totalPages() > 1) {
       <div class="pagination">
-        <button class="pagination-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage() === 1" 
+          (click)="goToPage(currentPage() - 1)"
+        >
           <i class="bi bi-chevron-left"></i> Précédent
         </button>
-        <div class="pagination-info">Page {{ currentPage() }} sur {{ totalPages() }}</div>
-        <button class="pagination-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+        
+        <div class="pagination-info">
+          Page {{ currentPage() }} sur {{ totalPages() }}
+          <span class="pagination-total">({{ totalClubs() }} clubs)</span>
+        </div>
+        
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage() === totalPages()" 
+          (click)="goToPage(currentPage() + 1)"
+        >
           Suivant <i class="bi bi-chevron-right"></i>
         </button>
       </div>

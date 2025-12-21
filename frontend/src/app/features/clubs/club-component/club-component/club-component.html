@@ -44,18 +44,30 @@
     <app-button
       label="Détails"
       class="action-btn view"
-      (click)="onViewDetails()"
+      (clicked)="onViewDetails()"
       title="Voir les détails">
     </app-button>
 
-  
     @if (showJoinButton()) {
-      <app-button
-        label="Rejoindre"
-        class="action-btn join"
-        (click)="onJoin()"
-        title="Rejoindre le club">
-      </app-button>
+      @if (!isAuthenticated()) {
+        <app-button
+          label="Se connecter"
+          variant="secondary"
+          class="action-btn join"
+          (clicked)="loginRequired.emit()"
+          title="Se connecter pour rejoindre">
+        </app-button>
+      } @else {
+    
+        <app-button
+          [label]="joinButtonLabel()"
+          [variant]="joinButtonVariant()"
+          [disabled]="joinButtonDisabled()"
+          class="action-btn join"
+          (clicked)="onJoin()"
+          [title]="joinButtonLabel()">
+        </app-button>
+      }
     }
   </div>
 </div>

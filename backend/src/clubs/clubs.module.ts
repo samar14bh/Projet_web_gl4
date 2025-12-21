@@ -8,6 +8,7 @@ import { Category } from './entities/category.entity';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Event } from '../events/entities/event.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { Application } from 'src/memberships/entities/application.entity';
 
 /**
  * Module pour la gestion des clubs et catégories
@@ -20,6 +21,7 @@ import { Transaction } from '../transactions/entities/transaction.entity';
       Membership,
       Event,
       Transaction,
+      Application
     ]),
   ],
   controllers: [ClubsController, CategoriesController],

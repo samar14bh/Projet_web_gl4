@@ -11,16 +11,26 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 })
 export class ClubComponent {
   club = input.required<Club>();
+  
+  showJoinButton = input<boolean>(true);
+  joinButtonLabel = input<string>('Rejoindre');
+  joinButtonVariant = input<'primary' | 'secondary' | 'danger' | 'ghost'>('primary');
+  joinButtonDisabled = input<boolean>(false);
+  isAuthenticated = input<boolean>(false);
   viewDetails = output<Club>();
   join = output<Club>();
-  showJoinButton = input<boolean>(true); // Par défaut à true
+  loginRequired = output<void>();
 
   onViewDetails() {
     this.viewDetails.emit(this.club());
   }
 
   onJoin() {
-    this.join.emit(this.club());
+    if (!this.isAuthenticated()) {
+      this.loginRequired.emit();
+    } else {
+      this.join.emit(this.club());
+    }
   }
 
   formatDate(date: Date): string {
