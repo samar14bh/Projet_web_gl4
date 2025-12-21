@@ -1,0 +1,50 @@
+<div class="verify-success-container">
+  <div class="verify-success-card">
+    <!-- Animation de succès -->
+    <div class="success-icon-container">
+      <div class="success-icon">
+        <svg class="success-icon-svg" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <!-- Effet de halo -->
+      <div class="success-icon-halo"></div>
+    </div>
+
+    <h1 class="success-title">Compte activé avec succès ! 🎉</h1>
+    
+    <div class="success-content">
+      <p class="success-message">
+        Félicitations ! Votre adresse email a été vérifiée.
+      </p>
+      <p class="success-subtext">
+        Vous pouvez maintenant accéder à toutes les fonctionnalités de votre compte.
+      </p>
+    </div>
+
+    <div class="actions-container">
+      <app-button
+        [type]="'button'"
+        [variant]="'primary'"
+        [size]="'lg'"
+        (click)="goToLogin()"
+        class="login-button"
+        label=" Se connecter à mon compte"
+      >
+       
+      </app-button>
+      
+   
+    </div>
+
+    <!-- Détails supplémentaires -->
+    <div class="countdown-section">
+      <p class="countdown-text">
+        <svg class="countdown-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        Vous serez redirigé automatiquement dans {{ countdown() }} seconde{{ countdown() > 1 ? 's' : '' }}...
+      </p>
+    </div>
+  </div>
+</div>

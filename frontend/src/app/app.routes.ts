@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
+import { Dashboard } from "./Pages/dashboard/dashboard";
+import { PageNotFound } from "./Pages/page-not-found/page-not-found";
+import { roleGuard } from './Core/guards/role.guard';
 
 /**
  * Configuration des routes de l'application
@@ -11,8 +14,12 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'club-manager/dashboard',
+        redirectTo: 'home',
         pathMatch: 'full'
+      },
+    {
+        path: 'dashboard',
+        loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
       },
       {
         path: 'events',
@@ -35,6 +42,45 @@ export const routes: Routes = [
         title: 'Gestion des clubs'
       },
       {
+        path: 'clubs',  
+        loadComponent: () => import('./features/clubs/explore-clubs/explore-clubs/explore-clubs').then(m => m.ExploreClubsComponent),
+        title: 'Explorer les clubs',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }  
+      },
+      {
+        path: 'home',
+        loadComponent: () => import('./Pages/landing-page/landing-page').then(m => m.LandingPageComponent),
+        title: 'ClubHub - Découvrez et rejoignez des clubs'
+     },
+     
+      {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login')
+      .then(m => m.LoginComponent)
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./features/auth/register/register')
+      .then(m => m.RegisterComponent)
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./features/auth/verify-email/verify-email')
+      .then(m => m.VerifyEmailComponent)
+  },
+   {
+        path: 'register-success',  
+        loadComponent: () => import('./features/auth/register/register-success')
+          .then(m => m.RegisterSuccessComponent),
+        title: 'Inscription réussie'
+      },
+       {
+        path: 'verify-success',
+        loadComponent: () => import('./features/auth/verify-success/verify-success')
+          .then(m => m.VerifySuccessComponent),
+        title: 'Inscription réussie'
+      },
         path: 'my-payments',  // ← PAGE 10
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'

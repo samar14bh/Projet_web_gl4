@@ -1,0 +1,77 @@
+<div class="verify-email-container">
+  <div class="verify-email-card">
+    @if (isLoading()) {
+      <div class="loading-section">
+        <div class="spinner"></div>
+        <h2 class="loading-title">Vérification en cours...</h2>
+        <p class="loading-text">Veuillez patienter</p>
+      </div>
+    } 
+    
+    @else if (success()) {
+      <div class="success-section">
+        <div class="success-icon">
+          <svg class="success-svg" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Félicitations !</h2>
+        <p class="success-text">Votre compte a été activé avec succès.</p>
+        <p class="success-subtext">Vous pouvez maintenant vous connecter et profiter de toutes les fonctionnalités.</p>
+        
+        <app-button
+          [type]="'button'"
+          [variant]="'primary'"
+          [size]="'lg'"
+          (click)="goToLogin()"
+          class="success-button"
+            label="→ Aller à la connexion"
+        >
+        
+        </app-button>
+      </div>
+    } 
+    
+    @else {
+      <div class="error-section">
+        <div class="error-icon">
+          <svg class="error-svg" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <h2 class="error-title">Oups !</h2>
+        <p class="error-message">{{ errorMessage() }}</p>
+        
+        @if (showResendButton()) {
+          <div class="resend-section">
+            <p class="resend-text">Vous pouvez demander un nouveau lien :</p>
+            <app-button
+              [type]="'button'"
+              [variant]="'primary'"
+              [loading]="isLoading()"
+              [disabled]="isLoading()"
+              (click)="resendVerificationEmail()"
+              class="resend-button"
+              label=" Renvoyer le lien"
+            >
+              <svg class="resend-icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+              </svg>
+             
+            </app-button>
+          </div>
+        }
+        
+        <app-button
+          [type]="'button'"
+          [variant]="'secondary'"
+          [routerLink]="'/login'"
+          class="back-button"
+          label=" ← Retour à la connexion"
+        >
+         
+        </app-button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,106 @@
+<div class="verification-container">
+  <div class="verification-card">
+    <!-- Animation de succès -->
+    <div class="success-animation">
+      <div class="success-pulse"></div>
+      <div class="success-icon-container">
+        <svg class="success-icon" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="title">Inscription réussie !</h1>
+    
+    <!-- Avertissement email -->
+    <div class="email-alert">
+      <div class="alert-icon">
+        <svg viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <div class="alert-content">
+        <p class="alert-title">Vérifiez votre email</p>
+        <p class="alert-text">
+          Un email de vérification a été envoyé à <span class="email-highlight">{{ userEmail() }}</span>.
+          Cliquez sur le lien dans l'email pour activer votre compte.
+        </p>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions-container">
+      <h3 class="instructions-title">
+        <svg class="mail-icon" viewBox="0 0 20 20">
+          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+        </svg>
+        Prochaines étapes
+      </h3>
+      <ul class="steps-list">
+        <li class="step-item">
+          <div class="step-number">1</div>
+          <span class="step-text">Vérifiez votre boîte de réception (et les spams)</span>
+        </li>
+        <li class="step-item">
+          <div class="step-number">2</div>
+          <span class="step-text">Cliquez sur le lien "Vérifier mon email"</span>
+        </li>
+        <li class="step-item">
+          <div class="step-number">3</div>
+          <span class="step-text">Connectez-vous avec vos identifiants</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-container">
+      <button 
+        (click)="resendEmail()"
+        [disabled]="isLoading() || resendDisabled()"
+        [class.disabled]="isLoading() || resendDisabled()"
+        class="resend-button"
+      >
+        @if (isLoading()) {
+          <span class="button-loading">
+            <svg class="spinner" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Envoi en cours...
+          </span>
+        } @else {
+          <span>
+            @if (resendDisabled()) { <!-- CORRECTION ICI : resendDisabled() au lieu de resendDisabled -->
+              Renvoyer dans {{ countdown() }}s
+            } @else {
+              Renvoyer l'email de vérification
+            }
+          </span>
+        }
+      </button>
+
+      
+    </div>
+
+    <!-- Message de feedback -->
+    @if (message()) {
+      <div class="feedback-message" [class]="messageType() === 'success' ? 'success' : 'error'">
+        <svg viewBox="0 0 20 20">
+          @if (messageType() === 'success') {
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          } @else {
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          }
+        </svg>
+        {{ message() }}
+      </div>
+    }
+
+    <!-- Note -->
+    <p class="note">
+      L'email peut prendre quelques minutes. Vérifiez aussi votre dossier spam.<br>
+      Si vous ne recevez rien, contactez le support.
+    </p>
+  </div>
+</div>
