@@ -11,7 +11,7 @@ export class MembershipSeeder {
   constructor(
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
-  ) {}
+  ) { }
 
   async seed(users: GeneralUser[], clubs: Club[]): Promise<Membership[]> {
     const memberships: any[] = [];
@@ -78,6 +78,15 @@ export class MembershipSeeder {
       { user: findUser('ali.ben.mohamed@insat.tn'), club: clubs[0], dateDebut: sixMonthsAgo, dateFin: sixMonthsFuture, role: MemberRole.MEMBER },
       { user: findUser('ines.ben.amor@insat.tn'), club: clubs[2], dateDebut: fiveMonthsAgo, dateFin: sevenMonthsFuture, role: MemberRole.MEMBER },
       { user: findUser('hamza.ben.youssef@insat.tn'), club: clubs[1], dateDebut: fourMonthsAgo, dateFin: eightMonthsFuture, role: MemberRole.MEMBER },
+    );
+
+    // ========== DEMANDES EN ATTENTE (PENDING) ==========
+    memberships.push(
+      { user: findUser('rami.bouaziz@insat.tn'), club: clubs[0], dateDebut: now, dateFin: null, role: MemberRole.MEMBER, status: 'PENDING' },
+      { user: findUser('nour.chebbi@insat.tn'), club: clubs[0], dateDebut: now, dateFin: null, role: MemberRole.MEMBER, status: 'PENDING' },
+      { user: findUser('amira.jlassi@insat.tn'), club: clubs[0], dateDebut: now, dateFin: null, role: MemberRole.MEMBER, status: 'PENDING' },
+      { user: findUser('mohamed.gharbi@insat.tn'), club: clubs[1], dateDebut: now, dateFin: null, role: MemberRole.MEMBER, status: 'PENDING' },
+      { user: findUser('karim.hamdi@insat.tn'), club: clubs[2], dateDebut: now, dateFin: null, role: MemberRole.MEMBER, status: 'PENDING' },
     );
 
     // Créer tous les memberships

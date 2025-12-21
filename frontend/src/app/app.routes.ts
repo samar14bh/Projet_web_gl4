@@ -81,10 +81,29 @@ export const routes: Routes = [
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
       },
+        path: 'my-payments',  // ← PAGE 10
+        loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
+        title: 'Mes paiements'
+      },
+      {
+        path: 'club-manager/dashboard',  // ← PAGE 12
+        loadComponent: () => import('./features/club-manager/dashboard/dashboard').then(m => m.ClubManagerDashboardComponent),
+        title: 'Dashboard Responsable'
+      },
+      {
+        path: 'club-manager/manage-club',  // ← PAGE 13
+        loadComponent: () => import('./features/club-manager/manage-club/manage-club').then(m => m.ManageClubComponent),
+        title: 'Gérer mon club'
+      },
+      {
+        path: 'club-manager/manage-members',  // ← PAGE 14
+        loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
+        title: 'Gérer les membres'
+      }
     ],
   },
   {
     path: '**',
-    component: PageNotFound
+    redirectTo: 'club-manager/dashboard'
   }
 ];

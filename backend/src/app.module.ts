@@ -5,10 +5,12 @@ import { EventsModule } from './events/events.module';
 import { TransactionsModule } from './transactions/transaction.module';
 import { AdminModule } from './admin/admin.module';
 import { ClubsModule } from './clubs/clubs.module';
+import { MembershipsModule } from './memberships/memberships.module';
 import { SeedModule } from './database/seeds/seed.module';
 import { DashboardModule } from './member-dasboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { PaymentsModule } from './payments/payments.module';
 
 // ... tes autres imports
 
@@ -32,12 +34,14 @@ import { MailModule } from './mail/mail.module';
     TransactionsModule,
     AdminModule,
     ClubsModule,
+    MembershipsModule,
     SeedModule,
     DashboardModule,
     AuthModule,
     MailModule
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
