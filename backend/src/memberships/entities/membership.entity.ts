@@ -13,6 +13,7 @@ import { Club } from '../../clubs/entities/club.entity';
 import { MemberRole } from '../../common/enums';
 import { Application } from './application.entity';
 import { Payment } from '../../payments/entities/payment.entity';
+import { Status } from '../../common/enums';
 
 @Entity('memberships')
 export class Membership {
@@ -31,6 +32,13 @@ export class Membership {
     default: MemberRole.MEMBER,
   })
   role: MemberRole;
+
+  @Column({
+    type: 'enum',
+    enum: Status,
+    default: Status.PENDING,
+  })
+  status: Status;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

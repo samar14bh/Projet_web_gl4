@@ -19,7 +19,7 @@ import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
  */
 @Controller('clubs')
 export class ClubsController {
-  constructor(private readonly clubsService: ClubsService) {}
+  constructor(private readonly clubsService: ClubsService) { }
 
   /**
    * POST /api/clubs
@@ -55,6 +55,29 @@ export class ClubsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clubsService.findOne(+id);
+  }
+
+  /**
+   * GET /api/clubs/:id/stats
+   * Récupérer les statistiques détaillées d'un club (pour dashboard)
+   */
+  @Get(':id/stats')
+  getClubStats(@Param('id') id: string) {
+    return this.clubsService.getClubDetailedStats(+id);
+  }
+
+  /**
+   * GET /api/clubs/:id/members
+   * Récupérer les membres d'un club
+   */
+  @Get(':id/members')
+  getClubMembers(
+    @Param('id') id: string,
+    @Query('status') status?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.clubsService.getClubMembers(+id, { status, page, limit });
   }
 
   /**

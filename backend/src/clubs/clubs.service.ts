@@ -30,7 +30,7 @@ export class ClubsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-  ) {}
+  ) { }
 
   /**
    * Créer un nouveau club
@@ -248,6 +248,135 @@ export class ClubsService {
       totalMembers,
       totalEvents,
       totalRevenue,
+    };
+  }
+
+  /**
+   * Récupérer les statistiques détaillées d'un club pour le dashboard
+   */
+  async getClubDetailedStats(clubId: number) {
+    // Vérifier que le club existe
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+    }
+
+    // Membres actifs (APPROVED ou CONFIRMED)
+    const activeMembers = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club = :clubId', { clubId })
+      .andWhere('membership.status IN (:...statuses)', { statuses: ['APPROVED', 'CONFIRMED'] })
+      .andWhere('(membership.dateFin IS NULL OR membership.dateFin >= :now)', { now: new Date() })
+      .getCount();
+
+    // Total membres
+    const totalMembers = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club = :clubId', { clubId })
+      .getCount();
+
+    // Demandes en attente
+    const pendingRequests = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club = :clubId', { clubId })
+      .andWhere('membership.status = :status', { status: 'PENDING' })
+      .getCount();
+
+    // Événements à venir
+    const upcomingEvents = await this.eventRepository
+      .createQueryBuilder('event')
+      .where('event.club = :clubId', { clubId })
+      .andWhere('event.startDate >= :now', { now: new Date() })
+      .getCount();
+
+    // Total événements
+    const totalEvents = await this.eventRepository
+      .createQueryBuilder('event')
+      .where('event.club = :clubId', { clubId })
+      .getCount();
+
+    // Revenus total
+    const totalRevenueResult = await this.transactionRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.amount)', 'total')
+      .where('transaction.clubId = :clubId', { clubId })
+      .andWhere('transaction.type = :type', { type: TransactionType.REVENUE })
+      .getRawOne();
+    const totalRevenue = parseFloat(totalRevenueResult?.total || '0');
+
+    // Revenus du mois en cours
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyRevenueResult = await this.transactionRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.amount)', 'total')
+      .where('transaction.clubId = :clubId', { clubId })
+      .andWhere('transaction.type = :type', { type: TransactionType.REVENUE })
+      .andWhere('transaction.date >= :firstDay', { firstDay: firstDayOfMonth })
+      .getRawOne();
+    const monthlyRevenue = parseFloat(monthlyRevenueResult?.total || '0');
+
+    return {
+      activeMembers,
+      totalMembers,
+      pendingRequests,
+      upcomingEvents,
+      totalEvents,
+      totalRevenue,
+      monthlyRevenue,
+    };
+  }
+
+  /**
+   * Récupérer les membres d'un club avec filtres
+   */
+  async getClubMembers(
+    clubId: number,
+    filters: { status?: string; page?: number; limit?: number },
+  ) {
+    // Vérifier que le club existe
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+    }
+
+    const { status, page = 1, limit = 10 } = filters;
+
+    const queryBuilder = this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.user', 'user')
+      .where('membership.club_id = :clubId', { clubId });
+
+    if (status) {
+      queryBuilder.andWhere('membership.status = :status', { status });
+    }
+
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+    queryBuilder.orderBy('membership.dateDebut', 'DESC');
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    // Formatter les données pour le frontend
+    const formattedData = data.map((membership) => ({
+      id: membership.id,
+      name: membership.user?.name || '',
+      lastName: membership.user?.lastName || '',
+      email: membership.user?.email || '',
+      status: membership.status,
+      role: membership.role,
+      dateDebut: membership.dateDebut,
+      dateFin: membership.dateFin,
+    }));
+
+    return {
+      data: formattedData,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
   }
 

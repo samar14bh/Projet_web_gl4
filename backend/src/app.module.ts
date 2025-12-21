@@ -5,7 +5,9 @@ import { EventsModule } from './events/events.module';
 import { TransactionsModule } from './transactions/transaction.module';
 import { AdminModule } from './admin/admin.module';
 import { ClubsModule } from './clubs/clubs.module';
+import { MembershipsModule } from './memberships/memberships.module';
 import { SeedModule } from './database/seeds/seed.module';
+import { PaymentsModule } from './payments/payments.module';
 
 // ... tes autres imports
 
@@ -29,9 +31,11 @@ import { SeedModule } from './database/seeds/seed.module';
     TransactionsModule,
     AdminModule,
     ClubsModule,
+    MembershipsModule,
     SeedModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

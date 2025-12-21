@@ -1,23 +1,25 @@
 :root {
   /* Primary Colors – Deep Cobalt Blue */
-  --primary-50:  #eff6ff;
+  --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
   --primary-300: #93c5fd;
   --primary-400: #60a5fa;
-  --primary-500: #3b82f6;   /* Cobalt blue */
+  --primary-500: #3b82f6;
+  /* Cobalt blue */
   --primary-600: #2563eb;
   --primary-700: #1d4ed8;
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
 
   /* Secondary Colors – Sky Blue */
-  --secondary-50:  #f0f9ff;
+  --secondary-50: #f0f9ff;
   --secondary-100: #e0f2fe;
   --secondary-200: #bae6fd;
   --secondary-300: #7dd3fc;
   --secondary-400: #38bdf8;
-  --secondary-500: #0ea5e9;  /* Sky blue */
+  --secondary-500: #0ea5e9;
+  /* Sky blue */
   --secondary-600: #0284c7;
   --secondary-700: #0369a1;
   --secondary-800: #075985;
@@ -29,7 +31,7 @@
   --accent-600: #e11d48;
 
   /* Neutral Colors – Cool Slate */
-  --gray-50:  #f8fafc;
+  --gray-50: #f8fafc;
   --gray-100: #f1f5f9;
   --gray-200: #e2e8f0;
   --gray-300: #cbd5e1;
@@ -43,8 +45,8 @@
   /* Semantic Colors */
   --success: #10b981;
   --warning: #f59e0b;
-  --danger:  #ef4444;
-  --info:    #3b82f6;
+  --danger: #ef4444;
+  --info: #3b82f6;
 
   /* Layout */
   --sidebar-width: 280px;
@@ -66,12 +68,13 @@
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Gradients – Blue harmonies */
-  --gradient-primary:   linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   --gradient-secondary: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-  --gradient-accent:    linear-gradient(135deg, #71a1fb 0%, #626fdd 100%);
-  --gradient-cosmic:    linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --gradient-sunset:    linear-gradient(135deg, #38bdf8 0%, #71b6fb 50%, #3f4ef4 100%);
+  --gradient-accent: linear-gradient(135deg, #71a1fb 0%, #626fdd 100%);
+  --gradient-cosmic: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --gradient-sunset: linear-gradient(135deg, #38bdf8 0%, #71b6fb 50%, #3f4ef4 100%);
 }
+
 * {
   margin: 0;
   padding: 0;
@@ -106,21 +109,47 @@ body {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
