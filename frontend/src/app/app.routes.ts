@@ -80,7 +80,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
-      },
+      },{
         path: 'my-payments',  // ← PAGE 10
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'
@@ -101,7 +101,7 @@ export const routes: Routes = [
         title: 'Gérer les membres'
       }
     ],
-  },
+  },  
   {
     path: '**',
     redirectTo: 'club-manager/dashboard'

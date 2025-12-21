@@ -38,7 +38,7 @@ import { PaymentsModule } from './payments/payments.module';
     SeedModule,
     DashboardModule,
     AuthModule,
-    MailModule
+    MailModule,
     PaymentsModule,
   ],
   controllers: [],
