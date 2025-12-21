@@ -14,13 +14,13 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'home',
         pathMatch: 'full'
       },
-    /*  {
+    {
         path: 'dashboard',
         loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
-      },*/
+      },
       {
         path: 'events',
         loadComponent: () => import('./features/club-manager/events-manager/events-manager').then(m => m.EventsManagerComponent),
@@ -53,13 +53,7 @@ export const routes: Routes = [
         loadComponent: () => import('./Pages/landing-page/landing-page').then(m => m.LandingPageComponent),
         title: 'ClubHub - Découvrez et rejoignez des clubs'
      },
-     {
-        path: 'dashboard',
-        loadComponent: () => import('./features/member/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
-        title: 'Tableau de bord',
-        canActivate: [roleGuard],
-        data: { role: 'USER' }  
-      },
+     
       {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login')
