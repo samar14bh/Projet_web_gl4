@@ -4,13 +4,17 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FilterEventDto } from './dto/filter-event.dto';
 import { EventStatus, RegistrationStatus } from '../common/enums';
 import { Registration } from '../events/entities/registration.entity';
+import { PaginatedResult } from "../common/pagination/pagination.dto";
+import { paginate } from "../common/pagination/paginate";
+import { UserEventDto } from "./dto/user-event.dto";
+import { EventMapper } from "./mapper/event.mapper";
 
 
 /**
@@ -23,7 +27,8 @@ export class EventsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
-  ) {}
+  ) {
+  }
 
   /**
    * Créer un nouvel événement
@@ -312,5 +317,135 @@ export class EventsService {
         email: reg.user.email,
       },
     }));
+  }
+
+  async isRegistered(userId: number, eventId: number): Promise<boolean> {
+    const registration = await this.registrationRepository.findOne({
+      where: {
+        user: { id: userId },
+        event: { id: eventId },
+      },
+    });
+    return !!registration;
+  }
+  async getEventsByUser(
+    userId: number,
+    filter: FilterEventDto,
+  ): Promise<PaginatedResult<UserEventDto>> {
+
+    const query = this.eventRepository
+      .createQueryBuilder('event')
+      .innerJoin(
+        'event.registrations',
+        'userRegistration',
+        'userRegistration.user.id = :userId',
+        { userId },
+      )
+      .leftJoinAndSelect('event.club', 'club')
+      .leftJoinAndSelect('event.registrations', 'registrations');
+
+
+    this.applyFilters(query, filter);
+    this.applySorting(query, filter);
+
+
+    const page = filter.page ?? 1;
+    const limit = filter.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const [events, total] = await query
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+
+    const data: UserEventDto[] = events.map(event =>
+      EventMapper.toUserEventDto(event, userId)
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
+  }
+  async getEventDetails(eventId: number, userId: number): Promise<UserEventDto> {
+    const event = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.club', 'club')
+      .leftJoinAndSelect('event.registrations', 'registrations')
+      .leftJoinAndSelect('registrations.user', 'user')
+      .where('event.id = :eventId', { eventId })
+      .getOne();
+
+    if (!event) {
+      throw new NotFoundException(`Événement avec l'ID ${eventId} introuvable`);
+    }
+
+    return EventMapper.toUserEventDto(event, userId);
+  }
+
+  private applyFilters(
+    query: SelectQueryBuilder<Event>,
+    filter: FilterEventDto,
+  ): void {
+    if (filter.status) {
+      query.andWhere('event.status = :status', { status: filter.status });
+    }
+
+    if (filter.type) {
+      query.andWhere('event.sPaid = :type', { type: filter.type });
+    }
+
+    if (filter.clubId) {
+      query.andWhere('event.clubId = :clubId', { clubId: filter.clubId });
+    }
+
+    if (filter.search) {
+      query.andWhere(
+        '(event.title LIKE :search OR event.description LIKE :search)',
+        { search: `%${filter.search}%` },
+      );
+    }
+
+    if (filter.startDateFrom) {
+      query.andWhere('event.startDate >= :startDateFrom', {
+        startDateFrom: new Date(filter.startDateFrom),
+      });
+    }
+
+    if (filter.startDateTo) {
+      query.andWhere('event.startDate <= :startDateTo', {
+        startDateTo: new Date(filter.startDateTo),
+      });
+    }
+  }
+
+  private applySorting(
+    query: SelectQueryBuilder<Event>,
+    filter: FilterEventDto,
+  ): void {
+    const sortColumnMap: Record<string, string> = {
+      date: 'event.startDate',
+      title: 'event.title',
+      registrations: 'COUNT(registrations.id)',
+    };
+
+    const orderBy = filter.sortBy
+      ? sortColumnMap[filter.sortBy]
+      : 'event.startDate';
+
+    const order: 'ASC' | 'DESC' =
+      (filter.order?.toUpperCase() as 'ASC' | 'DESC') || 'ASC';
+
+    if (filter.sortBy === 'registrations') {
+      query
+        .groupBy('event.id')
+        .addGroupBy('club.id')
+        .orderBy(orderBy, order);
+    } else {
+      query.orderBy(orderBy, order);
+    }
   }
 }

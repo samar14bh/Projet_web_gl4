@@ -20,6 +20,7 @@ export enum RegistrationStatus {
   REGISTERED = 'REGISTERED',
   WAITLIST = 'WAITLIST',
   CANCELLED = 'CANCELLED',
+  PAID = 'PAID',
 }
 
 /**
@@ -39,6 +40,7 @@ export interface Registration {
   id: number;
   date: Date;
   status: RegistrationStatus;
+  isPresent?: boolean;
   user: {
     id: number;
     name: string;
@@ -142,4 +144,11 @@ export interface UpdateEventDto {
   status?: EventStatus;
   sPaid?: EventType;
   subscriptionFees?: number;
+}
+
+
+export interface EventWithUserRegistration extends Event {
+  userRegistration?: Registration;
+  paymentStatus?: 'paid' | 'pending' | 'refunded';
+  attendanceStatus?: 'present' | 'absent';
 }

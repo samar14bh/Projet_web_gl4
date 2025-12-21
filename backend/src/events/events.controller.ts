@@ -9,13 +9,15 @@ import {
   Query,
   ParseIntPipe,
   HttpCode,
-  HttpStatus,
+  HttpStatus, Req,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FilterEventDto } from './dto/filter-event.dto';
 import { EventStatus } from '../common/enums';
+import { PaginatedResult } from "../common/pagination/pagination.dto";
+import { UserEventDto } from "./dto/user-event.dto";
 
 /**
  * Controller pour la gestion des événements
@@ -23,7 +25,7 @@ import { EventStatus } from '../common/enums';
  */
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(private readonly eventsService: EventsService) { }
 
   /**
    * POST /api/events
@@ -43,6 +45,48 @@ export class EventsController {
     return this.eventsService.findAll(filters);
   }
 
+  // --- CUSTOM USER ROUTES (Must be above :id) ---
+
+  /**
+   * GET /api/events/is-registered
+   */
+  @Get('is-registered')
+  async isRegistered(
+    @Query('userId') userId: number,
+    @Query('eventId') eventId: number,
+  ) {
+    const isRegistered = await this.eventsService.isRegistered(
+      Number(userId),
+      Number(eventId),
+    );
+
+    return { isRegistered };
+  }
+
+  /**
+   * GET /api/events/user-events/:userId
+   */
+  @Get('user-events/:userId')
+  async getUserEvents(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query() filter: FilterEventDto,
+  ): Promise<PaginatedResult<UserEventDto>> {
+    return this.eventsService.getEventsByUser(userId, filter);
+  }
+
+  /**
+   * GET /api/events/user-event-details/:userId
+   */
+  @Get('user-event-details/:userId')
+  async getUserEventDetails(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('eventId', ParseIntPipe) eventId: number,
+  ): Promise<UserEventDto> {
+    return this.eventsService.getEventDetails(eventId, userId);
+  }
+
+  // --- PARAMETRIC ROUTES ---
+
   /**
    * GET /api/events/:id
    * Récupérer un événement par son ID
@@ -54,7 +98,6 @@ export class EventsController {
 
   /**
    * GET /api/events/:id/stats
-   * Récupérer les statistiques d'un événement
    */
   @Get(':id/stats')
   getStats(@Param('id', ParseIntPipe) id: number) {
@@ -63,7 +106,6 @@ export class EventsController {
 
   /**
    * PATCH /api/events/:id
-   * Mettre à jour un événement
    */
   @Patch(':id')
   update(
@@ -75,7 +117,6 @@ export class EventsController {
 
   /**
    * PATCH /api/events/:id/status
-   * Mettre à jour le statut d'un événement
    */
   @Patch(':id/status')
   updateStatus(
@@ -87,24 +128,23 @@ export class EventsController {
 
   /**
    * DELETE /api/events/:id
-   * Supprimer un événement
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.remove(id);
   }
+
   /**
    * POST /api/events/:id/duplicate
-   * Dupliquer un événement
    */
   @Post(':id/duplicate')
   duplicate(@Param('id') id: string) {
     return this.eventsService.duplicateEvent(+id);
   }
+
   /**
    * GET /api/events/:id/registrations
-   * Récupérer les inscriptions d'un événement
    */
   @Get(':id/registrations')
   getRegistrations(@Param('id') id: string) {
