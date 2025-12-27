@@ -1,7 +1,6 @@
 import {
   Component,
   computed,
-  effect,
   inject,
   input,
   resource,
@@ -10,14 +9,14 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { PaginatedResult } from '../../../Core/models/paginated-result.model';
-import { UserEventDto } from '../../../Core/dtos/user-event.dto';
-import { EventService } from '../../../Core/services/event.service';
-import { Loader } from '../../../shared/components/loader/loader';
-import { EventStatus, EventType } from '../../../Core/models/event.model';
-import { UserEventsCard } from '../../../features/events/user-events-card/user-events-card';
-import { PaginationComponent } from '../../../shared/components/pagination/pagination';
-import { Error } from '../../../shared/components/error/error';
+import { PaginatedResult } from '../../Core/models/paginated-result.model';
+import { UserEventDto } from '../../Core/dtos/user-event.dto';
+import { EventService } from '../../Core/services/event.service';
+import { Loader } from '../../shared/components/loader/loader';
+import { EventStatus, EventType } from '../../Core/models/event.model';
+import { UserEventsCard } from '../../features/events/user-events-card/user-events-card';
+import { PaginationComponent } from '../../shared/components/pagination/pagination';
+import { Error } from '../../shared/components/error/error';
 
 type FilterType = 'all' | 'upcoming' | 'past';
 
@@ -32,14 +31,14 @@ interface FilterState {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, Loader, UserEventsCard, PaginationComponent, Error],
+  imports: [CommonModule, FormsModule,Loader, UserEventsCard, PaginationComponent, Error],
   templateUrl: './user-events.html',
   styleUrl: './user-events.css',
 })
 export class UserEvents {
   private readonly eventService = inject(EventService);
   private readonly USER_ID = 1;
-  readonly pageSize = 6;
+  readonly pageSize = 3;
 
   // Optional clubId to switch to "Discovery" mode
   readonly clubId = input<string>();

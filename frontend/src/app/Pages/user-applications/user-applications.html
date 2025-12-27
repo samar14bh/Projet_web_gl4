@@ -1,0 +1,25 @@
+<div class="container py-4">
+  <ng-container *ngIf="applications.value() as apps">
+    @if (applications.isLoading()) {
+      <div class="application-list-container">
+        <div class="loading-state">
+         <app-loader message="Loading your applications..."></app-loader>
+        </div>
+      </div>
+    }
+
+    @else if (applications.error()) {
+      <div class="application-list-container">
+       <app-error [errorMessage]="'An error occurred while loading your applications. Please try again later.'"
+                  returnLink="/dashboard"></app-error>
+      </div>
+    }
+
+    @else {
+      <app-application-list
+        [applications]="apps"
+        (viewDetails)="onViewDetails($event)"
+      />
+    }
+  </ng-container>
+</div>

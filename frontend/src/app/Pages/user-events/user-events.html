@@ -5,8 +5,7 @@
       <h1>{{ clubId() ? 'Découvrir les Événements' : 'Mes Événements' }}</h1>
     </div>
     <p class="header-subtitle">
-      {{ clubId() ? 'Explorez les activités proposées par ce club' : 'Gérez vos inscriptions et découvrez vos
-      événements' }}
+      {{ clubId() ? 'Explorez les activités proposées par ce club' : 'Gérez vos inscriptions et découvrez vos événements' }}
     </p>
   </div>
 </div>
@@ -126,8 +125,7 @@
     </p>
 
     <p *ngIf="!hasActiveFilters()">
-      {{ clubId() ? 'Aucun événement n\'est actuellement disponible pour ce club' : 'Vous n\'êtes inscrit à aucun
-      événement pour le moment' }}
+      {{ clubId() ? 'Aucun événement n\'est actuellement disponible pour ce club' : 'Vous n\'êtes inscrit à aucun événement pour le moment' }}
     </p>
 
     <button *ngIf="hasActiveFilters()" class="clear-btn" (click)="clearAllFilters()">

@@ -1,11 +1,11 @@
 import { Component, inject, input, numberAttribute, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EventService } from '../../../Core/services/event.service';
-import { DefaultImagePipe } from '../../../shared/pipes/default-image.pipe';
-import { RegistrationStatus } from '../../../Core/models/event.model';
-import { PaymentModal } from '../../../features/payment-modal/payment-modal';
-import { Loader } from '../../../shared/components/loader/loader';
-import { Error } from '../../../shared/components/error/error';
+import { EventService } from '../../Core/services/event.service';
+import { DefaultImagePipe } from '../../shared/pipes/default-image.pipe';
+import { RegistrationStatus } from '../../Core/models/event.model';
+import { PaymentModal } from '../../features/payment-modal/payment-modal';
+import { Loader } from '../../shared/components/loader/loader';
+import { Error } from '../../shared/components/error/error';
 
 @Component({
   selector: 'app-event-details',

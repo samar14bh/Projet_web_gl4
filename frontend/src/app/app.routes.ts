@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
-import { Dashboard } from "./Pages/dashboard/dashboard";
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
-import { UserEvents } from './Pages/UserEvents/user-events/user-events';
+
 
 /**
  * Configuration des routes de l'application
@@ -20,12 +19,12 @@ export const routes: Routes = [
       {
         path: 'my-events',
         loadComponent: () =>
-          import('./Pages/UserEvents/user-events/user-events').then(m => m.UserEvents)
+          import('./Pages/user-events/user-events').then(m => m.UserEvents)
       },
       {
         path: 'discover-events/:clubId',
         loadComponent: () =>
-          import('./Pages/UserEvents/user-events/user-events').then(m => m.UserEvents)
+          import('./Pages/user-events/user-events').then(m => m.UserEvents)
       },
       {
         path: 'my-clubs',
@@ -39,7 +38,7 @@ export const routes: Routes = [
       },
       {
         path: 'user-event-details/:userId/:eventId',
-        loadComponent: () => import('./Pages/UserEvents/event-details/event-details').then(m => m.EventDetails)
+        loadComponent: () => import('./Pages/event-details/event-details').then(m => m.EventDetails)
       },
 
 
@@ -67,6 +66,29 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/manage-club/manage-club').then(m => m.ManageClubsComponent),
         title: 'Gestion des clubs'
       },
+      {
+        path: 'join-club/:clubId',
+        loadComponent: () =>
+          import('./features/member/join-club-form/join-club-form')
+            .then(m => m.JoinClubForm),
+        title: 'Join Club'
+      },
+      {
+        path: 'my-applications',
+        loadComponent: () =>
+          import('./Pages/user-applications/user-applications')
+            .then(m => m.UserApplications),
+        title: 'My Applications'
+      },
+      {
+        path: 'applications/:applicationId',
+        loadComponent: () =>
+          import('./Pages/application-response/application-response')
+            .then(m => m.ApplicationResponse),
+        title: 'Application Details'
+      }
+
+
 
     ],
   },

@@ -1,0 +1,114 @@
+<section class="application-page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Application Review</h1>
+      <p>Detailed overview of the request</p>
+    </div>
+  </header>
+
+  <!-- STATES -->
+  <div *ngIf="application.isLoading()" class="state">
+    <app-loader message="Loading application details..."></app-loader>
+  </div>
+
+  <div *ngIf="application.error()" class="state error">
+    <app-error message="Failed to load application details. Please try again."></app-error>
+  </div>
+
+  <!-- CARD -->
+  <article *ngIf="application.value() as app" class="stack-card">
+
+    <!-- HEADER -->
+    <div class="card-head">
+      <div>
+        <h2>{{ app.clubName }}</h2>
+        <span class="status-pill" [ngClass]="app.status.toLowerCase()">
+          {{ app.status }}
+        </span>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <!-- APPLICATION -->
+      <section class="block accent">
+        <h3>Application Details</h3>
+
+        <div class="content-grid">
+          <div>
+            <small>Why Join</small>
+            <p>{{ app.whyJoin }}</p>
+          </div>
+
+          <div>
+            <small>Goals</small>
+            <p>{{ app.goalsInClub }}</p>
+          </div>
+
+          <div *ngIf="app.previousClub">
+            <small>Previous Club</small>
+            <p>{{ app.previousClub }}</p>
+          </div>
+
+          <div>
+            <small>Member Elsewhere</small>
+            <p>{{ app.isMemberOfOtherClub ? 'Yes' : 'No' }}</p>
+          </div>
+
+          <div *ngIf="app.skills">
+            <small>Skills</small>
+            <p>{{ app.skills }}</p>
+          </div>
+
+          <div *ngIf="app.expectations">
+            <small>Expectations</small>
+            <p>{{ app.expectations }}</p>
+          </div>
+
+          <div *ngIf="app.availability">
+            <small>Availability</small>
+            <p>{{ app.availability }}</p>
+          </div>
+
+          <div *ngIf="app.additionalComments" class="full">
+            <small>Additional Notes</small>
+            <p>{{ app.additionalComments }}</p>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="block highlight">
+        <h3>Admin Feedback</h3>
+
+        <p *ngIf="app.adminResponse; else noResponse">
+          {{ app.adminResponse }}
+        </p>
+
+        <ng-template #noResponse>
+          <p class="placeholder">
+            No response has been added by the admin yet.
+          </p>
+        </ng-template>
+      </section>
+
+
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="card-footer">
+      <span>Created {{ app.createdAt | date:'medium' }}</span>
+      <span>Updated {{ app.updatedAt | date:'medium' }}</span>
+    </footer>
+
+  </article>
+
+  <p *ngIf="application.value() === null && !application.isLoading()" class="empty">
+    Application not found
+  </p>
+
+</section>

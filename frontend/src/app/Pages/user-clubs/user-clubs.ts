@@ -21,7 +21,7 @@ export class UserClubs {
   private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
   private readonly USER_ID = 1;
-  readonly pageSize = 10;
+  readonly pageSize = 3;
   readonly Math = Math;
 
   readonly currentPage = signal(1);
