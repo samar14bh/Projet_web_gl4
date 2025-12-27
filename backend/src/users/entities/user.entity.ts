@@ -42,4 +42,17 @@ export class User extends GeneralUser {
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
+
+   @Column({ type: 'boolean', default: false, name: 'email_verified' })
+  emailVerified: boolean;
+
+  @Column({ type: 'varchar', nullable: true, name: 'email_verification_token', length: 255 })
+  emailVerificationToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'email_verification_expires' })
+  emailVerificationExpires: Date | null;
+
+ 
+
+ 
 }

@@ -6,6 +6,9 @@ import { TransactionsModule } from './transactions/transaction.module';
 import { AdminModule } from './admin/admin.module';
 import { ClubsModule } from './clubs/clubs.module';
 import { SeedModule } from './database/seeds/seed.module';
+import { DashboardModule } from './member-dasboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
 
 // ... tes autres imports
 
@@ -30,6 +33,9 @@ import { SeedModule } from './database/seeds/seed.module';
     AdminModule,
     ClubsModule,
     SeedModule,
+    DashboardModule,
+    AuthModule,
+    MailModule
   ],
   controllers: [],
   providers: [],

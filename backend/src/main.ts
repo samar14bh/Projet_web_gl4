@@ -2,8 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+<<<<<<< HEAD
 import 'reflect-metadata';
 
+=======
+import * as express from 'express';
+import { join } from 'path';
+>>>>>>> origin/main
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +23,8 @@ async function bootstrap() {
     origin: 'http://localhost:4200', // URL de ton frontend Angular
     credentials: true,
   });
+ app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+
   app.setGlobalPrefix('api');
   const config = new DocumentBuilder()
     .setTitle('Club Management API')

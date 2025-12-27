@@ -1,0 +1,233 @@
+.verify-success-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+  padding: 1rem;
+}
+
+.verify-success-card {
+  max-width: 28rem;
+  width: 100%;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.verify-success-card:hover {
+  transform: scale(1.02);
+}
+
+/* Success Icon */
+.success-icon-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.success-icon {
+  width: 6rem;
+  height: 6rem;
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  animation: bounce 2s infinite;
+}
+
+.success-icon-svg {
+  width: 3rem;
+  height: 3rem;
+  color: white;
+}
+
+.success-icon-halo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6rem;
+  height: 6rem;
+  background-color: #34d399;
+  border-radius: 50%;
+  opacity: 0.2;
+  filter: blur(1rem);
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+/* Title */
+.success-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+/* Success Content */
+.success-content {
+  margin-bottom: 2rem;
+}
+
+.success-message {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+}
+
+.success-subtext {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Actions Container */
+.actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.login-button,
+.home-button {
+  width: 100%;
+}
+
+.login-button {
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* Countdown Section */
+.countdown-section {
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.countdown-text {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.countdown-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.verify-success-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .verify-success-card {
+    padding: 1.5rem;
+  }
+  
+  .success-title {
+    font-size: 1.875rem;
+  }
+  
+  .success-icon {
+    width: 5rem;
+    height: 5rem;
+  }
+  
+  .success-icon-svg {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .success-icon-halo {
+    width: 5rem;
+    height: 5rem;
+  }
+  
+  .success-message {
+    font-size: 1rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .verify-success-container {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  }
+  
+  .verify-success-card {
+    background: #1f2937;
+    border: 1px solid #374151;
+  }
+  
+  .success-title {
+    color: #f9fafb;
+  }
+  
+  .success-message {
+    color: #d1d5db;
+  }
+  
+  .success-subtext {
+    color: #9ca3af;
+  }
+  
+  .countdown-section {
+    border-top-color: #374151;
+  }
+  
+  .countdown-text {
+    color: #9ca3af;
+  }
+}

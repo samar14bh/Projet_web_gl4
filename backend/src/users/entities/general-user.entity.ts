@@ -8,15 +8,15 @@ import {
 } from 'typeorm';
 
 @Entity('general_users')
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+@TableInheritance({ column: { type: 'varchar', name: 'type', length: 191 } }) 
 export class GeneralUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ unique: true}) 
   email: string;
 
-  @Column()
+  @Column() 
   password: string;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -24,4 +24,9 @@ export class GeneralUser {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ type: 'text', nullable: true, name: 'refresh_token' })
+  refreshToken: string | null;
+
+  
 }

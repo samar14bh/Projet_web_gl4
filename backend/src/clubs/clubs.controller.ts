@@ -10,10 +10,18 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+<<<<<<< HEAD
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { PaginatedResult } from '../common/pagination/pagination.dto';
+=======
+  DefaultValuePipe,
+} from '@nestjs/common';
+import { ClubsService } from './clubs.service';
+import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
+import { Club } from './entities/club.entity';
+>>>>>>> origin/main
 
 /**
  * Controller pour la gestion des clubs
@@ -57,10 +65,23 @@ export class ClubsController {
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
+  @Get(':clubId/user/:userId/status')
+async getUserClubStatus(
+  @Param('clubId', ParseIntPipe) clubId: number,
+  @Param('userId', ParseIntPipe) userId: number,
+): Promise<string> {
+  return this.clubsService.getUserClubStatus(clubId, userId);
+}
   @Get('stats')
   getStats() {
     return this.clubsService.getStats();
   }
+ @Get('top')
+async findTopClubs(
+  @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+): Promise<Club[]> {
+  return this.clubsService.findTopClubsByMembers(limit);
+}
 
   /**
    * GET /api/clubs/:id/membership/:userId
@@ -123,4 +144,7 @@ export class ClubsController {
   remove(@Param('id') id: string) {
     return this.clubsService.remove(+id);
   }
+
+
+
 }
