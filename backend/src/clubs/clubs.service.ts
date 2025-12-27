@@ -15,12 +15,10 @@ import {
   Transaction,
   TransactionType,
 } from '../transactions/entities/transaction.entity';
-<<<<<<< HEAD
 import { PaginatedResult } from '../common/pagination/pagination.dto';
-=======
+
 import { Application } from 'src/memberships/entities/application.entity';
 import { Status } from 'src/common/enums';
->>>>>>> origin/main
 
 /**
  * Service pour gérer les clubs
@@ -36,14 +34,12 @@ export class ClubsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-<<<<<<< HEAD
+    @InjectRepository(Application)
+    private readonly applicationRepository: Repository<Application>,
   ) { }
-=======
-  @InjectRepository(Application) 
-  private readonly applicationRepository: Repository<Application>,
+
     
-  ) {}
->>>>>>> origin/main
+
 
   /**
    * Créer un nouveau club
@@ -363,7 +359,6 @@ export class ClubsService {
       .replace(/^-+|-+$/g, ''); // Supprimer les tirets en début et fin
   }
 
-<<<<<<< HEAD
 
   async getClubMembershipDetails(userId: number, clubId: number) {
     const club = await this.findOne(clubId);
@@ -398,7 +393,6 @@ export class ClubsService {
 
     await this.membershipRepository.remove(membership);
   }
-=======
    async findTopClubsByMembers(limit = 5): Promise<any[]> {
   const qb = this.clubRepository
     .createQueryBuilder('club')
@@ -479,5 +473,4 @@ async getUserClubStatus(clubId: number, userId: number): Promise<string> {
 
   return "Non membre";
 }
->>>>>>> origin/main
 }

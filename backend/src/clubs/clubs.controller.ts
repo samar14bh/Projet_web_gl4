@@ -9,19 +9,14 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  ParseIntPipe,
-<<<<<<< HEAD
+  ParseIntPipe, DefaultValuePipe,
+
 } from '@nestjs/common';
-import { ClubsService } from './clubs.service';
-import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { PaginatedResult } from '../common/pagination/pagination.dto';
-=======
-  DefaultValuePipe,
-} from '@nestjs/common';
+
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { Club } from './entities/club.entity';
->>>>>>> origin/main
 
 /**
  * Controller pour la gestion des clubs
