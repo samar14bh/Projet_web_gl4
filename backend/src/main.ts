@@ -2,13 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-<<<<<<< HEAD
 import 'reflect-metadata';
 
-=======
 import * as express from 'express';
 import { join } from 'path';
->>>>>>> origin/main
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

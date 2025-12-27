@@ -29,8 +29,10 @@
   margin-left: var(--sidebar-width);
   min-height: 100vh;
   width: calc(100% - var(--sidebar-width));
+  padding-top: 60px; /* <-- Push content below navbar */
   transition: margin-left 0.3s ease, width 0.3s ease;
 }
+
 
 /* ========== BOUTON HAMBURGER ========== */
 
@@ -112,6 +114,23 @@
 
   .hamburger-btn {
     display: flex !important;
+  }
+}
+app-navbar {
+  display: block;
+  width: 100%;
+  height: 60px; /* adjust as needed */
+  background: white; /* or your navbar background */
+  border-bottom: 1px solid var(--gray-200);
+  position: fixed; /* stays on top */
+  top: 0;
+  left: var(--sidebar-width); /* shift right if sidebar is open on desktop */
+  z-index: 1002;
+}
+
+@media (max-width: 768px) {
+  app-navbar {
+    left: 0;
   }
 }
 
