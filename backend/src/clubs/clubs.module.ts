@@ -8,6 +8,10 @@ import { Category } from './entities/category.entity';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Event } from '../events/entities/event.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import {MembershipsController} from "./memberships.controller";
+import {MembershipsService} from "./memberships.service";
+import {Application} from "../memberships/entities/application.entity";
+import {User} from "../users/entities/user.entity";
 
 /**
  * Module pour la gestion des clubs et catégories
@@ -20,10 +24,12 @@ import { Transaction } from '../transactions/entities/transaction.entity';
       Membership,
       Event,
       Transaction,
+        Application,
+        User
     ]),
   ],
-  controllers: [ClubsController, CategoriesController],
-  providers: [ClubsService],
+  controllers: [ClubsController, CategoriesController,MembershipsController],
+  providers: [ClubsService,MembershipsService],
   exports: [ClubsService],
 })
 export class ClubsModule {}
