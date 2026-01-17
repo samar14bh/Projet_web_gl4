@@ -1,0 +1,37 @@
+<div class="event-card-grid">
+  <div class="event-card-header">
+    <div class="event-price-badge" [class.free]="event().isFree">
+      {{ formattedPrice() }}
+    </div>
+  </div>
+
+  <h3 class="event-title">{{ event().title }}</h3>
+
+  <div class="event-club">
+    @if (event().clubLogo) {
+      <img [src]="event().clubLogo" class="club-logo" alt="logo">
+    }
+    <span class="club-name">{{ event().clubName }}</span>
+  </div>
+
+  <div class="event-info-grid">
+    <div class="info-item">
+      <i class="fas fa-clock"></i> 
+      <span>{{ event().formattedTime }}</span>
+    </div>
+    @if (event().address) {
+      <div class="info-item">
+        <i class="fas fa-location-dot"></i> 
+        <span class="event-address">{{ event().address }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="event-footer-grid">
+    <div class="payment-status" [class]="statusClass()">
+      <i class="fas" [ngClass]="statusIcon()"></i> 
+      {{ event().paymentStatus }}
+    </div>
+    <a [routerLink]="['/events', event().id]" class="btn-details">Détails</a>
+  </div>
+</div>

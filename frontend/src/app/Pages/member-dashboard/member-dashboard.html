@@ -1,0 +1,149 @@
+<div class="dashboard-container">
+  <section class="welcome-section">
+    <div class="welcome-card">
+      <div class="welcome-header">
+        <div class="user-profile-badge">
+          @if (currentUser()?.image) {
+            <img [src]="currentUser()?.image" [alt]="getUserFullName()" class="user-avatar-dashboard">
+          } @else {
+            <div class="user-initials-dashboard">
+              {{ getUserFullName() | slice:0:1 }}
+            </div>
+          }
+          <div class="welcome-text">
+            <h1>{{ welcomeMessage() }}</h1>
+            <p>Voici un aperçu de vos activités et événements à venir</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section">
+    <h2>Statistiques personnelles</h2>
+    @if (!isLoading()) {
+      @if (stats(); as statsData) {
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users-group"></i></div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ statsData.clubsCount }}</h3>
+              <p class="stat-label">Clubs rejoints</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ upcomingEventsCount() }}</h3>
+              <p class="stat-label">Événements inscrits</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ statsData.participationRate }}%</h3>
+              <p class="stat-label">Taux de présence</p>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="events-section">
+    <div class="section-header">
+      <div class="events-header-top">
+        <h2>Mes prochains événements <span class="events-count">({{ filteredEvents().length }})</span></h2>
+        
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input 
+            type="text" 
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            placeholder="Rechercher un événement..."
+            class="search-input"
+          >
+        </div>
+      </div>
+      
+      <div class="events-filters">
+        <div class="filter-group-container">
+          <span class="filter-label">Type :</span>
+          <div class="price-filter-group">
+            <button class="filter-btn" [class.active]="priceFilter() === 'all'" (click)="priceFilter.set('all')">Tous</button>
+            <button class="filter-btn" [class.active]="priceFilter() === 'free'" (click)="priceFilter.set('free')">Gratuits</button>
+            <button class="filter-btn" [class.active]="priceFilter() === 'paid'" (click)="priceFilter.set('paid')">Payants</button>
+          </div>
+        </div>
+
+        <div class="sort-options">
+          <span class="sort-label">Trier par :</span>
+          <div class="sort-buttons">
+            <button class="sort-btn" [class.active]="sortBy() === 'date'" (click)="changeSort('date')">
+              Date @if (sortBy() === 'date') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
+            </button>
+            <button class="sort-btn" [class.active]="sortBy() === 'title'" (click)="changeSort('title')">
+              Titre @if (sortBy() === 'title') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
+            </button>
+            <button class="sort-btn" [class.active]="sortBy() === 'price'" (click)="changeSort('price')">
+              Prix @if (sortBy() === 'price') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (!isLoading()) {
+      @if (filteredEvents().length > 0) {
+        <div class="events-grid three-columns">
+          @for (event of paginatedEvents(); track event.id) {
+            <app-event-card [event]="event" />
+          }
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button class="pagination-btn" [disabled]="currentPage() === 1" (click)="prevPage()">Précédent</button>
+            <div class="page-numbers">
+              @for (page of getPageNumbers(); track $index) {
+                <button class="page-number" [class.active]="page === currentPage()" (click)="page !== -1 && goToPage(page)">
+                  {{ page === -1 ? '...' : page }}
+                </button>
+              }
+            </div>
+            <button class="pagination-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Suivant</button>
+          </div>
+        }
+      } @else {
+        <div class="no-events">
+          <p>Aucun événement ne correspond à vos critères.</p>
+        </div>
+      }
+    }
+  </section>
+   <section class="suggestions-section">
+    <div class="section-header">
+      <h2>Clubs qui pourraient vous intéresser</h2>
+      <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
+    </div>
+
+    @if (recommendedClubs().length > 0) {
+      <div class="clubs-recommendations-grid">
+        @for (club of recommendedClubs(); track club.id) {
+          <app-club-component 
+            [club]="club"
+            [isAuthenticated]="true"
+            [showJoinButton]="true"
+            (viewDetails)="navigateToClub(club.id)"
+            (join)="navigateToClub(club.id)">
+          </app-club-component>
+        }
+      </div>
+    } @else {
+      <div class="empty-recommendations">
+        <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+      </div>
+    }
+  </section>
+</div>

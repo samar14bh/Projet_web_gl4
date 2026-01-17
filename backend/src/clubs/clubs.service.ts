@@ -377,4 +377,92 @@ async getUserClubStatus(clubId: number, userId: number): Promise<string> {
 
   return "Non membre";
 }
+
+ async getRecommendations(
+  userId: number,
+  limit: number = 3
+): Promise<any[]> {
+
+  if (!userId || isNaN(userId)) {
+    return [];
+  }
+
+  // 1️⃣ Clubs déjà rejoints
+  const memberships = await this.membershipRepository.find({
+    where: { user: { id: userId } },
+    relations: ['club', 'club.category'],
+  });
+
+  const joinedClubIds = memberships
+    .map(m => m.club?.id)
+    .filter((id): id is number => typeof id === 'number');
+
+  const preferredCategoryIds = [
+    ...new Set(
+      memberships
+        .map(m => m.club?.category?.id)
+        .filter((id): id is number => typeof id === 'number')
+    ),
+  ];
+
+  // 2️⃣ Query principale avec stats
+  let query = this.clubRepository
+    .createQueryBuilder('club')
+    .leftJoin('club.category', 'category')
+    .leftJoin('club.memberships', 'membership')
+    .select([
+      'club.id AS id',
+      'club.name AS name',
+      'club.description AS description',
+      'club.logo AS logo',               // 👈 Ajouté
+      'club.creation_date AS creationDate', // 👈 Ajouté
+      'club.isActive AS isActive',
+      'category.name AS categoryName',
+      'COUNT(membership.id) AS members',
+    ])
+    .where('club.isActive = :isActive', { isActive: true })
+    .groupBy('club.id')
+    .addGroupBy('category.name');
+
+  if (joinedClubIds.length > 0) {
+    query.andWhere('club.id NOT IN (:...joinedIds)', {
+      joinedIds: joinedClubIds,
+    });
+  }
+
+  if (preferredCategoryIds.length > 0) {
+    query.andWhere('category.id IN (:...catIds)', {
+      catIds: preferredCategoryIds,
+    });
+  }
+
+  let results = await query.limit(limit).getRawMany();
+
+  // 3️⃣ Fallback — clubs actifs non rejoints
+  if (results.length === 0) {
+    results = await this.clubRepository
+      .createQueryBuilder('club')
+      .leftJoin('club.category', 'category')
+      .leftJoin('club.memberships', 'membership')
+      .select([
+        'club.id AS id',
+        'club.name AS name',
+        'club.description AS description',
+        'club.logo AS logo',               
+        'club.creation_date AS creationDate', 
+        'category.name AS categoryName',
+        'COUNT(membership.id) AS members',
+        'club.cover_image AS coverImage'
+      ])
+      .where('club.isActive = true')
+      .groupBy('club.id')
+      .addGroupBy('category.name')
+      .limit(limit)
+      .getRawMany();
+  }
+
+  return results;
+}
+
+
 }
