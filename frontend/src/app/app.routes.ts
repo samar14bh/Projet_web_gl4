@@ -80,7 +80,9 @@ export const routes: Routes = [
       path: 'notifications',
       loadComponent: () => import('./Pages/notifications/notifications')
         .then(m => m.NotificationComponent),
-      title: 'Notifications'
+      title: 'Notifications',
+         canActivate: [roleGuard],
+        data: { role: 'USER' } 
     },
        {
         path: 'verify-success',
