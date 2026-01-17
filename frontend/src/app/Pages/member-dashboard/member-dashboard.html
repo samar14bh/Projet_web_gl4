@@ -91,28 +91,30 @@
             </button>
           </div>
         </div>
+
+        <button class="reset-btn" (click)="resetFilters()">Réinitialiser les filtres</button>
       </div>
     </div>
 
     @if (!isLoading()) {
       @if (filteredEvents().length > 0) {
         <div class="events-grid three-columns">
-          @for (event of paginatedEvents(); track event.id) {
+          @for (event of pagination.paginatedItems(); track event.id) {
             <app-event-card [event]="event" />
           }
         </div>
 
-        @if (totalPages() > 1) {
+        @if (pagination.totalPages() > 1) {
           <div class="pagination">
-            <button class="pagination-btn" [disabled]="currentPage() === 1" (click)="prevPage()">Précédent</button>
+            <button class="pagination-btn" [disabled]="pagination.currentPage() === 1" (click)="pagination.prevPage()">Précédent</button>
             <div class="page-numbers">
-              @for (page of getPageNumbers(); track $index) {
-                <button class="page-number" [class.active]="page === currentPage()" (click)="page !== -1 && goToPage(page)">
+              @for (page of pagination.getPageNumbers(); track $index) {
+                <button class="page-number" [class.active]="page === pagination.currentPage()" (click)="page !== -1 && pagination.goToPage(page)">
                   {{ page === -1 ? '...' : page }}
                 </button>
               }
             </div>
-            <button class="pagination-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Suivant</button>
+            <button class="pagination-btn" [disabled]="pagination.currentPage() === pagination.totalPages()" (click)="pagination.nextPage()">Suivant</button>
           </div>
         }
       } @else {
@@ -122,7 +124,8 @@
       }
     }
   </section>
-   <section class="suggestions-section">
+
+  <section class="suggestions-section">
     <div class="section-header">
       <h2>Clubs qui pourraient vous intéresser</h2>
       <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>

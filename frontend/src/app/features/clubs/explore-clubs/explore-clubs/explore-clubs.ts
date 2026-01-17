@@ -1,10 +1,4 @@
-import {
-  Component,
-  signal,
-  computed,
-  inject,
-  effect,
-} from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -14,6 +8,8 @@ import { ClubService } from '../../../../Core/services/club.service';
 import { AuthService } from '../../../../Core/services/auth.service';
 import { Club, ClubFilters, ClubsStats } from '../../../../Core/models/club.model';
 import { ClubComponent } from '../../club-component/club-component/club-component';
+import { createClubStatusManager } from '../../../../shared/utils/club-status.util';
+import { createFilterControlsClubs, createSortControlsClubs } from '../../../../shared/utils/filter-sort-clubs.util';
 
 @Component({
   selector: 'app-explore-clubs',
@@ -27,14 +23,26 @@ export class ExploreClubsComponent {
   private readonly authService = inject(AuthService);
   readonly router = inject(Router);
 
-  readonly selectedCategory = signal<number | 'all'>('all');
-  readonly searchQuery = signal('');
-  readonly sortBy = signal<'name' | 'members' | 'events' | 'createdAt'>('name');
-  readonly sortOrder = signal<'asc' | 'desc'>('asc');
+  private filterControls = createFilterControlsClubs({ hasCategory: true });
+  private sortControls = createSortControlsClubs<'name' | 'members' | 'events' | 'createdAt'>('name');
+
+  readonly selectedCategory = this.filterControls.categoryFilter!;
+  readonly searchQuery = this.filterControls.searchQuery;
+  readonly sortBy = this.sortControls.sortBy;
+  readonly sortOrder = this.sortControls.sortOrder;
   readonly currentPage = signal(1);
   readonly pageSize = signal(12);
-  readonly userClubStatuses = signal<Map<number, string>>(new Map());
-  readonly isLoadingStatuses = signal(false);
+
+  readonly currentUser = computed(() => this.authService.currentUser());
+  readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
+
+  private clubStatusManager = createClubStatusManager({
+    clubService: this.clubService,
+    userId: computed(() => this.currentUser()?.id)
+  });
+
+  readonly userClubStatuses = this.clubStatusManager.userClubStatuses;
+  readonly isLoadingStatuses = this.clubStatusManager.isLoadingStatuses;
 
   readonly filters = computed<ClubFilters>(() => ({
     status: 'active',
@@ -75,112 +83,50 @@ export class ExploreClubsComponent {
   } as ClubsStats);
 
   readonly categories = computed(() => this.categoriesResource.value() || []);
-  readonly currentUser = computed(() => this.authService.currentUser());
-  readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
 
   constructor() {
     effect(() => {
       const user = this.currentUser();
       const clubsList = this.clubs();
-      
+
       if (user && clubsList.length > 0) {
-        this.loadAllUserStatuses();
+        const clubIds = clubsList.map(club => Number(club.id));
+        this.clubStatusManager.loadAllStatuses(clubIds);
       } else if (!user) {
-        this.userClubStatuses.set(new Map());
+        this.clubStatusManager.reset();
       }
-    });
-  }
-
-  private loadAllUserStatuses(): void {
-    const userId = this.currentUser()?.id;
-    if (!userId) return;
-
-    this.isLoadingStatuses.set(true);
-    const currentMap = new Map<number, string>();
-
-    const statusPromises = this.clubs().map(club => 
-      new Promise<void>((resolve) => {
-        this.clubService.getUserClubStatus(Number(club.id), Number(userId)).subscribe({
-          next: (response) => {
-            currentMap.set(Number(club.id), response);
-            resolve();
-          },
-          error: () => {
-            currentMap.set(Number(club.id), 'Non membre');
-            resolve();
-          }
-        });
-      })
-    );
-
-    Promise.all(statusPromises).then(() => {
-      this.userClubStatuses.set(new Map(currentMap));
-      this.isLoadingStatuses.set(false);
     });
   }
 
   getUserClubStatus(clubId: number): string {
-    return this.userClubStatuses().get(clubId) || 'Non membre';
+    return this.clubStatusManager.getStatus(clubId);
   }
 
   getButtonText(clubId: number): string {
-    const status = this.getUserClubStatus(clubId);
-    
-    if (status.toLowerCase().startsWith('membre')) {
-      if (status.toLowerCase() === 'membre member') {
-        return 'Membre';
-      }
-      return status;
-    }
-    
-    if (status.toLowerCase().includes('candidature')) {
-      return status;
-    }
-    
-    if (status === 'Ancien membre') {
-      return 'Renouveler adhésion';
-    }
-    
-    return 'Rejoindre';
+    return this.clubStatusManager.getButtonText(clubId);
   }
 
   getButtonVariant(clubId: number): 'primary' | 'secondary' | 'danger' | 'ghost' {
-    const status = this.getUserClubStatus(clubId).toLowerCase();
-    
-    if (status.startsWith('membre')) {
-      return 'primary';
-    }
-    
-    if (status.includes('candidature')) {
-      return 'ghost';
-    }
-    
-    if (status === 'ancien membre') {
-      return 'secondary';
-    }
-    
-    return 'primary';
+    return this.clubStatusManager.getButtonVariant(clubId);
   }
 
   isButtonDisabled(clubId: number): boolean {
-    const status = this.getUserClubStatus(clubId).toLowerCase();
-    return status.startsWith('membre') || status.includes('candidature en attente');
+    return this.clubStatusManager.isButtonDisabled(clubId);
   }
 
   handleClubAction(club: Club): void {
-    const userId = this.currentUser()?.id;
-    if (!userId) {
+    if (!this.currentUser()?.id) {
       this.router.navigate(['/login']);
       return;
     }
 
-    const status = this.getUserClubStatus(club.id).toLowerCase();
-    
-    if (status === 'non membre') {
+    const statusLower = this.getUserClubStatus(club.id).toLowerCase();
+
+    if (statusLower === 'non membre') {
       this.joinClub(club);
-    } else if (status === 'ancien membre') {
+    } else if (statusLower === 'ancien membre') {
       this.renewMembership(club);
-    } else if (status.includes('candidature rejetée') || status.includes('candidature confirmée')) {
+    } else if (statusLower.includes('candidature rejetée') || statusLower.includes('candidature confirmée')) {
       this.joinClub(club);
     } else {
       this.viewClubDetails(club);
@@ -212,7 +158,7 @@ export class ExploreClubsComponent {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
-  
+
   viewClubDetails(club: Club): void {
     this.router.navigate(['/clubs', club.id]);
   }
@@ -220,9 +166,10 @@ export class ExploreClubsComponent {
   refreshData(): void {
     this.clubsResource.reload();
     this.publicStatsResource.reload();
-    
+
     if (this.isAuthenticated()) {
-      this.loadAllUserStatuses();
+      const clubIds = this.clubs().map(club => Number(club.id));
+      this.clubStatusManager.loadAllStatuses(clubIds);
     }
   }
 
@@ -232,6 +179,14 @@ export class ExploreClubsComponent {
 
   renewMembership(club: Club): void {
     this.router.navigate(['/clubs', club.id, 'renew']);
+  }
+
+  resetFilters(): void {
+    this.changeCategory('all');
+    this.onSearch('');
+    this.sortBy.set('name');
+    this.sortOrder.set('asc');
+    this.currentPage.set(1);
   }
 
   formatNumber(num: number): string {
