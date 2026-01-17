@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Admin } from '../users/entities/admin.entity';
 import { MailService } from '../mail/mail.service';
@@ -34,6 +35,7 @@ export class AuthService {
     @InjectRepository(Admin) private adminRepo: Repository<Admin>,
     private jwt: JwtService,
     private mail: MailService,
+    private configService: ConfigService,
   ) {
     setInterval(() => this.cleanExpiredOtps(), 60000);
     setInterval(() => this.cleanExpiredRegistrations(), 60000);
@@ -155,7 +157,7 @@ export class AuthService {
       }
 
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log('OTP:',otp);
+      console.log('OTP:', otp);
       this.otpStore.set(email, {
         code: otp,
         email: email,
@@ -238,60 +240,80 @@ export class AuthService {
     };
   }
 
-  generateTokens(id: number, type: 'User' | 'Admin') {
+  generateTokens(id: number, userType: 'User' | 'Admin') {
     const payload = { 
-      sub: id, 
-      type,
-      userId: id
+      sub: id,
+      userId: id,
+      role: userType,     
+      type: 'access',     
     };
     
+    // Utiliser ConfigService pour garantir la cohérence avec JwtStrategy
+    const accessSecret = this.configService.get<string>('JWT_SECRET');
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const accessExpiresIn = parseInt(this.configService.get<string>('JWT_EXPIRES_IN') || '3600');
+    const refreshExpiresIn = parseInt(this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '604800');
+    
+    console.log('🔑 Signing access token with secret:', accessSecret?.substring(0, 10) + '...');
+    
     const accessToken = this.jwt.sign(payload, { 
-      secret: process.env.JWT_SECRET,
-      expiresIn: '15m' 
+      secret: accessSecret,
+      expiresIn: accessExpiresIn
     });
     
-    const refreshToken = this.jwt.sign(payload, { 
-      secret: process.env.JWT_REFRESH_SECRET, 
-      expiresIn: '7d' 
-    });
+    const refreshToken = this.jwt.sign(
+      { ...payload, type: 'refresh' }, 
+      { 
+        secret: refreshSecret, 
+        expiresIn: refreshExpiresIn
+      }
+    );
+    
+    console.log('✅ Tokens generated successfully');
     
     return { accessToken, refreshToken };
   }
 
   async logout(id: number) {
-  if (!id) {
-    throw new BadRequestException('ID utilisateur requis');
-  }
-  
-  try {
-    const user = await this.userRepo.findOne({ where: { id } });
-    
-    if (user) {
-      await this.userRepo.update(id, { refreshToken: null });
-      
-      return { 
-        message: 'Utilisateur déconnecté avec succès',
-        userId: id
-      };
+    // Sécurité de base : l'ID doit être présent
+    if (!id) {
+      throw new BadRequestException('ID utilisateur requis');
     }
     
-    const admin = await this.adminRepo.findOne({ where: { id } });
-    
-    if (admin) {
-      await this.adminRepo.update(id, { refreshToken: null });
+    try {
+      const [user, admin] = await Promise.all([
+        this.userRepo.findOne({ where: { id } }),
+        this.adminRepo.findOne({ where: { id } })
+      ]);
+      
+      if (user) {
+        await this.userRepo.update(id, { refreshToken: null });
+        return { 
+          success: true,
+          message: 'Utilisateur déconnecté avec succès',
+          userId: id
+        };
+      }
+      
+      if (admin) {
+        await this.adminRepo.update(id, { refreshToken: null });
+        return { 
+          success: true,
+          message: 'Admin déconnecté avec succès',
+          adminId: id  
+        };
+      }
       
       return { 
-        message: 'Admin déconnecté avec succès',
-        adminId: id  
+        success: true, 
+        message: 'Session déjà fermée ou utilisateur non trouvé' 
       };
+      
+    } catch (error) {
+      console.error(`[Logout Error] ID: ${id}`, error);
+      throw error;
     }
-    
-    throw new NotFoundException(`Utilisateur avec ID ${id} non trouvé`);
-    
-  } catch (error) {
-    throw error;
   }
-}
 
   async refresh(id: number, refreshToken: string) {
     const user: User | null = await this.userRepo.findOneBy({ id });
@@ -344,10 +366,10 @@ export class AuthService {
     
     throw new UnauthorizedException('Refresh token invalide');
   }
-  async checkEmailExists(email: string): Promise<{ exists: boolean }> {
-  const user = await this.userRepo.findOneBy({ email });
-  const admin = await this.adminRepo.findOneBy({ email });
-  return { exists: !!(user || admin) };
-}
 
+  async checkEmailExists(email: string): Promise<{ exists: boolean }> {
+    const user = await this.userRepo.findOneBy({ email });
+    const admin = await this.adminRepo.findOneBy({ email });
+    return { exists: !!(user || admin) };
+  }
 }

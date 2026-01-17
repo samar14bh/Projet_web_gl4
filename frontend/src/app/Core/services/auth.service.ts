@@ -127,10 +127,9 @@ export class AuthService {
   const token = this.accessToken();
   
   if (!token) {
-    console.warn('[AUTH] Tentative de logout sans token');
     this.clearAuth();
     this.router.navigate(['/login']);
-    return of(void 0); 
+    return of(void 0);
   }
   
   return this.http.post<void>(`${this.API_URL}/logout`, {}).pipe(

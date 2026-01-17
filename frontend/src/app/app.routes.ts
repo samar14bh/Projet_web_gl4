@@ -7,6 +7,7 @@ import { roleGuard } from './Core/guards/role.guard';
 /**
  * Configuration des routes de l'application
  */
+
 export const routes: Routes = [
   {
     path: '',
@@ -19,7 +20,7 @@ export const routes: Routes = [
       },
     {
         path: 'dashboard',
-        loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
+        loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
       },
       {
         path: 'events',
@@ -76,11 +77,18 @@ export const routes: Routes = [
         title: 'Inscription réussie'
       },
        {
+      path: 'notifications',
+      loadComponent: () => import('./Pages/notifications/notifications')
+        .then(m => m.NotificationComponent),
+      title: 'Notifications'
+    },
+       {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
       },
+   
     ],
   },
   {

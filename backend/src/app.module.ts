@@ -9,6 +9,8 @@ import { SeedModule } from './database/seeds/seed.module';
 import { DashboardModule } from './member-dasboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { SseModule } from './sse/sse.module';
 
 // ... tes autres imports
 
@@ -35,7 +37,9 @@ import { MailModule } from './mail/mail.module';
     SeedModule,
     DashboardModule,
     AuthModule,
-    MailModule
+    MailModule,
+    NotificationsModule,
+    SseModule
   ],
   controllers: [],
   providers: [],
