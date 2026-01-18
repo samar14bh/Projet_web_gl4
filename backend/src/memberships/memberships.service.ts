@@ -63,7 +63,7 @@ export class MembershipsService {
 
     async updateStatus(id: number, status: Status): Promise<Membership> {
         const membership = await this.findOne(id);
-        membership.status = status;
+        //membership.status = status;
         return await this.membershipRepository.save(membership);
     }
 

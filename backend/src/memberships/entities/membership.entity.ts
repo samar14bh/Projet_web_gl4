@@ -33,12 +33,7 @@ export class Membership {
   })
   role: MemberRole;
 
-  @Column({
-    type: 'enum',
-    enum: Status,
-    default: Status.PENDING,
-  })
-  status: Status;
+
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

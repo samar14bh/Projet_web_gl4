@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
+import {roleGuard} from './Core/guards/role.guard';
 
 
 /**
@@ -122,14 +123,14 @@ export const routes: Routes = [
           .then(m => m.RegisterSuccessComponent),
         title: 'Inscription réussie'
       },
-      
+
        {
       path: 'notifications',
       loadComponent: () => import('./Pages/notifications/notifications')
         .then(m => m.NotificationComponent),
       title: 'Notifications',
          canActivate: [roleGuard],
-        data: { role: 'USER' } 
+        data: { role: 'USER' }
     },
        {
         path: 'verify-success',
@@ -139,6 +140,8 @@ export const routes: Routes = [
       },
       {
         path: 'payment',  // ← PAGE 11: Payment Page
+        loadComponent: () => import('./features/member/payment-page/payment-page').then(m => m.PaymentPageComponent),
+
         title: 'Paiement'
       },
       {
@@ -166,13 +169,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
       }
-   
+
 
 ,
     {path: '**',
-    redirectTo: 'club-manager/dashboard'
-    
-  }
+      component: PageNotFound,
+        title: 'Page non trouvée'
+    }
 
     ]
   }

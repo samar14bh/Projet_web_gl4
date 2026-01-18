@@ -88,13 +88,8 @@ async getRecommendations(
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
-  /**
-   * GET /api/clubs/stats
-   * Récupérer les statistiques globales des clubs
-   */
-   * GET /api/clubs/managed/:userId
-   * Récupérer les clubs gérés par un utilisateur
-   */
+
+
   @Get('managed/:userId')
   async findManagedClubs(@Param('userId', ParseIntPipe) userId: number) {
     return this.clubsService.findManagedClubs(userId);
@@ -123,17 +118,6 @@ async getRecommendations(
     return this.clubsService.findTopClubsByMembers(limit);
   }
 
-  /**
-   * GET /api/clubs/status/:clubId/:userId
-   * Récupérer le statut d'un utilisateur dans un club
-   */
-  @Get('status/:clubId/:userId')
-  async getUserClubStatus(
-    @Param('clubId', ParseIntPipe) clubId: number,
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<string> {
-    return this.clubsService.getUserClubStatus(clubId, userId);
-  }
 
   /**
    * GET /api/clubs/:id/membership/:userId
@@ -219,7 +203,13 @@ async getRecommendations(
   remove(@Param('id') id: string) {
     return this.clubsService.remove(+id);
   }
-
+  @Get('status/:clubId/:userId')
+  async getUserClubStatus2(
+      @Param('clubId', ParseIntPipe) clubId: number,
+      @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubStatus(clubId, userId);
+  }
 
 
 }
