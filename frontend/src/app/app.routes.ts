@@ -7,6 +7,7 @@ import { roleGuard } from './Core/guards/role.guard';
 /**
  * Configuration des routes de l'application
  */
+
 export const routes: Routes = [
   {
     path: '',
@@ -19,7 +20,7 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
+        loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
       },
       {
         path: 'events',
@@ -75,7 +76,16 @@ export const routes: Routes = [
           .then(m => m.RegisterSuccessComponent),
         title: 'Inscription réussie'
       },
-      {
+      
+       {
+      path: 'notifications',
+      loadComponent: () => import('./Pages/notifications/notifications')
+        .then(m => m.NotificationComponent),
+      title: 'Notifications',
+         canActivate: [roleGuard],
+        data: { role: 'USER' } 
+    },
+       {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
@@ -83,7 +93,6 @@ export const routes: Routes = [
       },
       {
         path: 'payment',  // ← PAGE 11: Payment Page
-        loadComponent: () => import('./features/member/payment-page/payment-page').then(m => m.PaymentPageComponent),
         title: 'Paiement'
       },
       {
@@ -111,10 +120,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
       }
-    ],
-  },
-  {
-    path: '**',
+   
+
+,
+    {path: '**',
     redirectTo: 'club-manager/dashboard'
+    
+  }
+
+    ]
   }
 ];
+

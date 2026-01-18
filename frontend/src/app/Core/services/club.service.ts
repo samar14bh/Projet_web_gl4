@@ -116,4 +116,5 @@ getUserClubStatus(clubId: number, userId: number): Observable<string> {
     responseType: 'text' as 'json'
   });
 }
+
 }

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ButtonComponent } from '../button/button';
@@ -9,7 +9,6 @@ import { ButtonComponent } from '../button/button';
   imports: [CommonModule, RouterLink, RouterLinkActive,ButtonComponent],
   templateUrl: './header.html',
   styleUrls: ['./header.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
   constructor(private router: Router) {}

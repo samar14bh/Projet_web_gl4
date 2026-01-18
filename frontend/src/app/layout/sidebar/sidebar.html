@@ -124,8 +124,14 @@
           <span class="nav-label">Profil</span>
         </a>
       </li>
-      
-      <!-- Bouton de déconnexion conditionnel -->
+      @if (isLoggedIn()) {
+      <li class="nav-item">
+        <a routerLink="/notifications" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-bell"></i>
+          <span class="nav-label">Notifications</span>
+        </a>
+      </li>
+    }
       @if (isLoggedIn()) {
         <li class="nav-item">
           <a (click)="onLogout()" class="nav-link logout-link" style="cursor: pointer;">

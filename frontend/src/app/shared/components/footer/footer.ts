@@ -10,7 +10,6 @@ import { LazyLoading } from '../../directives/lazy-loading';
   imports: [CommonModule, LazyLoading],
   templateUrl: './footer.html',
   styleUrls: ['./footer.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FooterComponent {
   private router = inject(Router);

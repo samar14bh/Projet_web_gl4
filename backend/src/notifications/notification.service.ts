@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, MoreThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { SseService } from '../sse/sse.service';
 
@@ -12,203 +12,154 @@ export class NotificationService {
     private sseService: SseService,
   ) {}
 
-  async createNotification(data: {
-    userId: number;
-    type: string;
-    description: string;
-    shortDescription?: string;
-    actionUrl?: string;
-    actionLabel?: string;
-    iconName?: string;
-    priority?: 'low' | 'medium' | 'high';
-    relatedEntityType?: string;
-    relatedEntityId?: number;
-    metadata?: Record<string, any>;
-    expiresAt?: Date;
-  }): Promise<Notification> {
+  async createNotification(data: any): Promise<Notification> {
+    if (!data.userId) {
+      throw new Error("Impossible de créer une notification sans userId");
+    }
+
+    console.log('[NotificationService] Création notification pour userId:', data.userId);
+
     const notification = this.notificationRepository.create({
-      user: { id: data.userId },
+      userId: data.userId,
       type: data.type,
       description: data.description,
       shortDescription: data.shortDescription || data.description.substring(0, 150),
-      isRead: false,
+      iconName: data.iconName || 'bell',
+      priority: data.priority || 'medium',
       actionUrl: data.actionUrl,
       actionLabel: data.actionLabel,
-      iconName: data.iconName || this.getIconForType(data.type),
-      priority: data.priority || 'medium',
       relatedEntityType: data.relatedEntityType,
       relatedEntityId: data.relatedEntityId,
       metadata: data.metadata,
       expiresAt: data.expiresAt,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      isRead: false,
     });
 
     const savedNotification = await this.notificationRepository.save(notification);
 
-    const sseNotification = {
-      id: savedNotification.id,
-      type: savedNotification.type,
-      description: savedNotification.description,
-      shortDescription: savedNotification.shortDescription,
-      isRead: savedNotification.isRead,
-      actionUrl: savedNotification.actionUrl,
-      actionLabel: savedNotification.actionLabel,
-      iconName: savedNotification.iconName,
-      priority: savedNotification.priority,
-      createdAt: savedNotification.createdAt,
-      relatedEntityType: savedNotification.relatedEntityType,
-      relatedEntityId: savedNotification.relatedEntityId,
-      actionLink: savedNotification.getActionLink(),
-    };
+    console.log(`[NotificationService] Notification créée avec succès, ID: ${savedNotification.id}`);
 
-    this.sseService.sendFormattedNotification(data.userId, {
+    // Envoi via SSE
+    const sent = this.sseService.sendFormattedNotification(data.userId, {
       type: 'NEW_NOTIFICATION',
-      notification: sseNotification,
+      notification: {
+        id: savedNotification.id,
+        userId: savedNotification.userId,
+        type: savedNotification.type,
+        description: savedNotification.description,
+        shortDescription: savedNotification.shortDescription,
+        iconName: savedNotification.iconName,
+        priority: savedNotification.priority,
+        isRead: savedNotification.isRead,
+        createdAt: savedNotification.createdAt,
+        updatedAt: savedNotification.updatedAt,
+        actionUrl: savedNotification.actionUrl,
+        actionLabel: savedNotification.actionLabel,
+        actionLink: savedNotification.getActionLink(),
+      },
     });
+
+    console.log(`[NotificationService] SSE envoyé: ${sent ? 'OUI' : 'NON (client non connecté)'}`);
 
     return savedNotification;
   }
 
-  async getUserNotifications(userId: number): Promise<Notification[]> {
+  async sendClubNotification(userId: number, clubName: string, action: string) {
+    console.log(`[NotificationService] sendClubNotification - userId: ${userId}, club: ${clubName}`);
+    
+    return this.createNotification({
+      userId,
+      type: 'CLUB_ACTION',
+      description: `Votre demande pour le club ${clubName} a été ${action}`,
+      iconName: 'users',
+      priority: 'medium',
+    });
+  }
+
+  async sendPaymentNotification(userId: number, data: any) {
+    console.log(`[NotificationService] sendPaymentNotification - userId: ${userId}`);
+    
+    return this.createNotification({
+      userId,
+      type: 'PAYMENT_SUCCESS',
+      description: `Paiement de ${data.amount}€ réussi pour : ${data.item}`,
+      iconName: 'credit-card',
+      priority: 'high',
+    });
+  }
+
+  async sendEventNotification(userId: number, eventName: string) {
+    console.log(`[NotificationService] sendEventNotification - userId: ${userId}`);
+    
+    return this.createNotification({
+      userId,
+      type: 'EVENT_REMINDER',
+      description: `Rappel : l'événement "${eventName}" commence bientôt.`,
+      iconName: 'calendar',
+      priority: 'medium',
+    });
+  }
+
+  async markAsUnread(notificationId: number, userId: number): Promise<Notification> {
+    const notification = await this.notificationRepository.findOne({
+      where: { id: notificationId, userId },
+    });
+
+    if (!notification) throw new NotFoundException('Notification non trouvée');
+
+    notification.isRead = false;
+    const updated = await this.notificationRepository.save(notification);
+
+    console.log(`[NotificationService] Notification ${notificationId} marquée comme non lue`);
+
+    this.sseService.sendFormattedNotification(userId, {
+      type: 'NOTIFICATION_UNREAD',
+      notificationId: updated.id,
+    });
+
+    return updated;
+  }
+
+  async getUserNotifications(userId: number) {
     return this.notificationRepository.find({
-      where: { 
-        user: { id: userId },
-        expiresAt: IsNull(),
-      },
-      order: { 
-        priority: 'DESC',
-        createdAt: 'DESC' 
-      },
+      where: { userId },
+      order: { createdAt: 'DESC' },
       take: 50,
     });
   }
 
-  async getUnreadCount(userId: number): Promise<number> {
-    return this.notificationRepository.count({
-      where: { 
-        user: { id: userId },
-        isRead: false,
-        // Modification ici aussi
-        expiresAt: IsNull(),
-      },
-    });
+  async getUnreadCount(userId: number) {
+    return this.notificationRepository.count({ where: { userId, isRead: false } });
   }
 
-  async markAsRead(notificationId: number, userId: number): Promise<Notification> {
+  async markAsRead(id: number, userId: number) {
     const notification = await this.notificationRepository.findOne({
-      where: { 
-        id: notificationId,
-        user: { id: userId }
-      },
+      where: { id, userId },
     });
 
-    if (!notification) {
-      throw new NotFoundException('Notification non trouvée');
-    }
+    if (!notification) throw new NotFoundException('Notification non trouvée');
 
     notification.isRead = true;
-    notification.updatedAt = new Date();
-    
-    const updatedNotification = await this.notificationRepository.save(notification);
+    await this.notificationRepository.save(notification);
+
+    console.log(`[NotificationService] Notification ${id} marquée comme lue`);
+
     this.sseService.sendFormattedNotification(userId, {
       type: 'NOTIFICATION_READ',
-      notificationId: notificationId,
-      notification: updatedNotification,
+      notificationId: id,
     });
-
-    return updatedNotification;
   }
 
   async markAllAsRead(userId: number): Promise<void> {
     await this.notificationRepository.update(
-      { user: { id: userId }, isRead: false },
-      { isRead: true, updatedAt: new Date() }
+      { userId, isRead: false },
+      { isRead: true }
     );
-    
-    // Notifier le client
+
+    console.log(`[NotificationService] Toutes les notifications marquées comme lues pour userId ${userId}`);
+
     this.sseService.sendFormattedNotification(userId, {
       type: 'ALL_NOTIFICATIONS_READ',
     });
-  }
-
-  async getActiveUserNotifications(userId: number): Promise<Notification[]> {
-    return this.notificationRepository.find({
-      where: [
-        { 
-          user: { id: userId },
-          expiresAt: IsNull() 
-        },
-        { 
-          user: { id: userId },
-          expiresAt: MoreThan(new Date()) 
-        }
-      ],
-      order: { 
-        priority: 'DESC',
-        createdAt: 'DESC' 
-      },
-      take: 50,
-    });
-  }
-
-  async cleanupExpiredNotifications(): Promise<void> {
-    await this.notificationRepository.delete({
-      expiresAt: IsNull() ? undefined : MoreThan(new Date())
-    });
-  }
-
-  async sendPaymentNotification(userId: number, paymentDetails: any): Promise<void> {
-    await this.createNotification({
-      userId,
-      type: 'PAYMENT_SUCCESS',
-      description: `Paiement réussi de ${paymentDetails.amount}€ pour ${paymentDetails.item}`,
-      shortDescription: `Paiement réussi: ${paymentDetails.amount}€`,
-      actionUrl: '/my-payments',
-      actionLabel: 'Voir mes paiements',
-      iconName: 'check-circle',
-      priority: 'high',
-      relatedEntityType: 'payment',
-      relatedEntityId: paymentDetails.id,
-      metadata: paymentDetails,
-    });
-  }
-
-  async sendClubNotification(userId: number, clubName: string, action: string): Promise<void> {
-    await this.createNotification({
-      userId,
-      type: 'CLUB_ACTION',
-      description: `Votre demande d'adhésion au club ${clubName} a été ${action}`,
-      shortDescription: `Club ${clubName}: ${action}`,
-      actionUrl: '/my-clubs',
-      actionLabel: 'Voir mes clubs',
-      iconName: 'users',
-      relatedEntityType: 'club',
-    });
-  }
-
-  async sendEventNotification(userId: number, eventName: string): Promise<void> {
-    await this.createNotification({
-      userId,
-      type: 'EVENT_REMINDER',
-      description: `Rappel : L'événement "${eventName}" commence demain`,
-      shortDescription: `Rappel: ${eventName}`,
-      actionUrl: '/my-events',
-      actionLabel: 'Voir l\'événement',
-      iconName: 'calendar',
-      relatedEntityType: 'event',
-    });
-  }
-
-  private getIconForType(type: string): string {
-    const iconMap: Record<string, string> = {
-      'PAYMENT_SUCCESS': 'credit-card',
-      'CLUB_ACTION': 'users',
-      'EVENT_REMINDER': 'calendar',
-      'NEW_MESSAGE': 'message-circle',
-      'SYSTEM_ALERT': 'alert-circle',
-      'ACHIEVEMENT': 'award',
-    };
-    return iconMap[type] || 'bell';
   }
 }
