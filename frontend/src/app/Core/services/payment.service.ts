@@ -37,6 +37,7 @@ export class PaymentService {
         membershipId: number;
         clubId: number;
         userId: number;
+        method?: 'CARD' | 'CASH';
     }): Observable<Payment> {
         this.loading.set(true);
         this.error.set(null);
@@ -60,6 +61,7 @@ export class PaymentService {
     processEventPayment(data: {
         eventId: number;
         userId: number;
+        method?: 'CARD' | 'CASH';
     }): Observable<{ payment: Payment; registration: any }> {
         this.loading.set(true);
         this.error.set(null);
@@ -136,6 +138,15 @@ export class PaymentService {
                 },
             })
         );
+    }
+
+    /**
+     * Download payment receipt as PDF
+     */
+    downloadReceipt(paymentId: number): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/${paymentId}/receipt`, {
+            responseType: 'blob'
+        });
     }
 
     /**

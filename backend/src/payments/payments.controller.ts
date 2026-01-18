@@ -7,7 +7,10 @@ import {
     Param,
     ParseIntPipe,
     UseGuards,
+    Res,
+    StreamableFile,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { PaymentsService } from './payments.service';
 import {
     CreateMembershipPaymentDto,
@@ -59,5 +62,33 @@ export class PaymentsController {
     @Get('stats/:userId')
     async getUserPaymentStats(@Param('userId', ParseIntPipe) userId: number) {
         return this.paymentsService.getUserPaymentStats(userId);
+    }
+
+    /**
+     * Download payment receipt as PDF
+     * GET /payments/:id/receipt
+     */
+    @Get(':id/receipt')
+    async downloadReceipt(
+        @Param('id', ParseIntPipe) id: number,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<StreamableFile> {
+        const pdfBuffer = await this.paymentsService.generateReceipt(id);
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="recu-${id}.pdf"`,
+        });
+
+        return new StreamableFile(pdfBuffer);
+    }
+
+    /**
+     * Send payment receipt by email
+     * POST /payments/:id/receipt/send
+     */
+    @Post(':id/receipt/send')
+    async sendReceipt(@Param('id', ParseIntPipe) id: number) {
+        return this.paymentsService.sendReceiptByEmail(id);
     }
 }

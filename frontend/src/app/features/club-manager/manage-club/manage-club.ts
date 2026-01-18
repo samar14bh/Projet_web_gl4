@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, effect, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -8,6 +8,8 @@ import { TabItem } from '../../../shared/interfaces/components.interface';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
 import { EventService } from '../../../Core/services/event.service';
 import { EventStatus } from '../../../Core/models/event.model';
+import { ClubContextService } from '../../../Core/services/club-context.service';
+import { ClubSelectorComponent } from '../components/club-selector/club-selector';
 
 /**
  * PAGE 13: Manage Club (Enhanced)
@@ -16,18 +18,20 @@ import { EventStatus } from '../../../Core/models/event.model';
 @Component({
     selector: 'app-manage-club',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, StatCardComponent],
+    imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, StatCardComponent, ClubSelectorComponent],
     templateUrl: './manage-club.html',
     styleUrl: './manage-club.css',
 })
-export class ManageClubComponent implements OnInit {
+export class ManageClubComponent {
+    private clubContext = inject(ClubContextService);
+
     // Signals
     activeTab = signal<string>('info');
-    currentClubId = signal(1); // TODO: Get from auth/context
+    currentClubId = computed(() => this.clubContext.currentClubId());
+
     saving = signal(false);
     editMode = signal(false);
 
-    // Club data signals
     // Club data signals
     clubName = signal('');
     clubDescription = signal('');
@@ -38,9 +42,7 @@ export class ManageClubComponent implements OnInit {
     approvalRequired = signal(true);
 
     // Preview data
-    // Preview data
     recentMembers = signal<any[]>([]);
-
     upcomingEvents = signal<any[]>([]);
 
     // Tab configuration
@@ -54,14 +56,19 @@ export class ManageClubComponent implements OnInit {
     constructor(
         private clubManagerService: ClubManagerService,
         private eventService: EventService
-    ) { }
-
-    ngOnInit() {
-        this.loadClubData();
+    ) {
+        effect(() => {
+            if (this.currentClubId()) {
+                this.loadClubData();
+            }
+        });
     }
+
+    // ngOnInit() removed as effect handles initial load
 
     loadClubData() {
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         // Load Club Details
         this.clubManagerService.getClubDetails(clubId).subscribe({
@@ -112,6 +119,7 @@ export class ManageClubComponent implements OnInit {
     saveClubInfo() {
         this.saving.set(true);
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         this.clubManagerService.updateClub(clubId, {
             name: this.clubName(),
@@ -133,6 +141,7 @@ export class ManageClubComponent implements OnInit {
     savePricing() {
         this.saving.set(true);
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         this.clubManagerService.updateClub(clubId, {
             isPublic: this.isPublic(),
@@ -152,6 +161,7 @@ export class ManageClubComponent implements OnInit {
     saveSettings() {
         this.saving.set(true);
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         this.clubManagerService.updateClub(clubId, {
             approvalRequired: this.approvalRequired(),

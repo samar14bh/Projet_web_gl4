@@ -10,6 +10,7 @@ import { Club } from '../clubs/entities/club.entity';
 
 import { RegistrationStatus } from '../common/enums/registration-status.enum';
 import { Status } from '../common/enums/status.enum';
+import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { DashboardResponseDto } from './dashboard-response.dto';
 import { DashboardStatsDto } from './dashboard-stats.dto';
 import { UpcomingEventDto } from './upcoming-event.dto';
@@ -31,7 +32,7 @@ export class DashboardService {
 
     @InjectRepository(Club)
     private readonly clubRepository: Repository<Club>,
-  ) {}
+  ) { }
 
   async getMemberDashboard(userId: number): Promise<DashboardResponseDto> {
     const stats = await this.getMemberStats(userId);
@@ -94,7 +95,7 @@ export class DashboardService {
       .createQueryBuilder('payment')
       .select('SUM(payment.amount)', 'total')
       .where('payment.user_id = :userId', { userId })
-      .andWhere('payment.status = :status', { status: Status.APPROVED })
+      .andWhere('payment.status = :status', { status: PaymentStatus.CONFIRMED })
       .andWhere('payment.date BETWEEN :start AND :end', {
         start: startOfMonth,
         end: endOfMonth,
@@ -146,7 +147,7 @@ export class DashboardService {
         paymentStatus = 'Gratuit';
       } else if (event.payments?.length) {
         paymentStatus = event.payments.some(
-          p => p.status === Status.APPROVED || p.status === Status.CONFIRMED,
+          p => p.status === PaymentStatus.CONFIRMED,
         )
           ? 'Payé'
           : 'En attente';

@@ -1,9 +1,11 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
 import { Member } from '../../../Core/interfaces/club-manager.interface';
 import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
 import { TabItem } from '../../../shared/interfaces/components.interface';
+import { ClubContextService } from '../../../Core/services/club-context.service';
+import { ClubSelectorComponent } from '../components/club-selector/club-selector';
 
 /**
  * PAGE 14: Manage Members
@@ -12,14 +14,16 @@ import { TabItem } from '../../../shared/interfaces/components.interface';
 @Component({
     selector: 'app-manage-members',
     standalone: true,
-    imports: [CommonModule, TabNavigationComponent],
+    imports: [CommonModule, TabNavigationComponent, ClubSelectorComponent],
     templateUrl: './manage-members.html',
     styleUrl: './manage-members.css',
 })
-export class ManageMembersComponent implements OnInit {
+export class ManageMembersComponent {
+    private clubContext = inject(ClubContextService);
+
     // Signals
     activeTab = signal<string>('active');
-    currentClubId = signal(1); // TODO: Get from auth/context
+    currentClubId = computed(() => this.clubContext.currentClubId());
     members = signal<Member[]>([]);
 
     // Tab configuration
@@ -34,14 +38,19 @@ export class ManageMembersComponent implements OnInit {
     pendingMembers = computed(() => this.clubManagerService.pendingMembers());
     loading = computed(() => this.clubManagerService.loading());
 
-    constructor(public clubManagerService: ClubManagerService) { }
-
-    ngOnInit() {
-        this.loadMembers();
+    constructor(public clubManagerService: ClubManagerService) {
+        effect(() => {
+            if (this.currentClubId()) {
+                this.loadMembers();
+            }
+        });
     }
+
+    // ngOnInit removed
 
     loadMembers() {
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         // Load pending requests
         this.clubManagerService.getMembers(clubId, 'PENDING').subscribe({
@@ -63,6 +72,8 @@ export class ManageMembersComponent implements OnInit {
 
     approveMember(membershipId: number) {
         const clubId = this.currentClubId();
+        if (!clubId) return;
+
         this.clubManagerService.updateMemberStatus(membershipId, 'APPROVED').subscribe({
             next: () => {
                 this.loadMembers();
@@ -72,6 +83,8 @@ export class ManageMembersComponent implements OnInit {
 
     rejectMember(membershipId: number) {
         const clubId = this.currentClubId();
+        if (!clubId) return;
+
         this.clubManagerService.updateMemberStatus(membershipId, 'REJECTED').subscribe({
             next: () => {
                 this.loadMembers();

@@ -21,53 +21,14 @@ export class MemberService {
     constructor(private http: HttpClient) { }
 
     /**
-     * Get payment history for a user
+     * Check if user is a member of a club
      */
-    getPaymentHistory(userId: number, filters?: { status?: string; page?: number; limit?: number }): Observable<any> {
-        this.loading.set(true);
+    checkMembership(userId: number, clubId: number): Observable<{ exists: boolean; membership?: any }> {
+        let params = new HttpParams()
+            .set('userId', userId.toString())
+            .set('clubId', clubId.toString());
 
-        let params = new HttpParams();
-        if (filters?.status) {
-            params = params.set('status', filters.status);
-        }
-        if (filters?.page) {
-            params = params.set('page', filters.page.toString());
-        }
-        if (filters?.limit) {
-            params = params.set('limit', filters.limit.toString());
-        }
-
-        return this.http.get<any>(`${this.apiUrl}/payments/history/${userId}`, { params }).pipe(
-            tap({
-                next: (response) => {
-                    this.payments.set(response.data || []);
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    this.error.set(err.message || 'Failed to load payment history');
-                    this.loading.set(false);
-                }
-            })
-        );
-    }
-
-    /**
-     * Get payment statistics for a user
-     */
-    getPaymentStats(userId: number): Observable<any> {
-        this.loading.set(true);
-        return this.http.get<any>(`${this.apiUrl}/payments/stats/${userId}`).pipe(
-            tap({
-                next: (stats) => {
-                    this.paymentStats.set(stats);
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    this.error.set(err.message || 'Failed to load payment stats');
-                    this.loading.set(false);
-                }
-            })
-        );
+        return this.http.get<{ exists: boolean; membership?: any }>(`${environment.apiUrl}/memberships/check/status`, { params });
     }
 
     clearError() {

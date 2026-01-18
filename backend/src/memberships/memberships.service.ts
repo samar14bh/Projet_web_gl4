@@ -66,4 +66,14 @@ export class MembershipsService {
         membership.status = status;
         return await this.membershipRepository.save(membership);
     }
+
+    async findByUserAndClub(userId: number, clubId: number): Promise<Membership | null> {
+        return await this.membershipRepository.findOne({
+            where: {
+                user: { id: userId },
+                club: { id: clubId },
+            },
+            relations: ['club'],
+        });
+    }
 }

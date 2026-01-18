@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
+import { ReceiptService } from './receipt.service';
 import { Payment } from './entities/payment.entity';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Club } from '../clubs/entities/club.entity';
@@ -19,7 +20,7 @@ import { Registration } from '../events/entities/registration.entity';
         ]),
     ],
     controllers: [PaymentsController],
-    providers: [PaymentsService],
-    exports: [PaymentsService],
+    providers: [PaymentsService, ReceiptService],
+    exports: [PaymentsService, ReceiptService],
 })
 export class PaymentsModule { }

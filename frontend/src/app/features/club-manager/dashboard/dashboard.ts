@@ -1,7 +1,9 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
+import { ClubSelectorComponent } from '../components/club-selector/club-selector';
+import { ClubContextService } from '../../../Core/services/club-context.service';
 
 /**
  * PAGE 12: Club Manager Dashboard
@@ -10,13 +12,16 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
 @Component({
     selector: 'app-club-manager-dashboard',
     standalone: true,
-    imports: [CommonModule, StatCardComponent],
+    imports: [CommonModule, StatCardComponent, ClubSelectorComponent],
     templateUrl: './dashboard.html',
     styleUrl: './dashboard.css',
 })
-export class ClubManagerDashboardComponent implements OnInit {
+export class ClubManagerDashboardComponent {
+    private clubContext = inject(ClubContextService);
+    public clubManagerService = inject(ClubManagerService);
+
     // Signals
-    currentClubId = signal(1); // TODO: Get from auth/context service
+    currentClubId = computed(() => this.clubContext.currentClubId());
 
     // Computed values
     stats = computed(() => this.clubManagerService.clubStats());
@@ -24,14 +29,18 @@ export class ClubManagerDashboardComponent implements OnInit {
     displayedPendingMembers = computed(() => this.pendingMembers().slice(0, 3));
     loading = computed(() => this.clubManagerService.loading());
 
-    constructor(public clubManagerService: ClubManagerService) { }
-
-    ngOnInit() {
-        this.loadDashboardData();
+    constructor() {
+        // Automatically load data when club changes
+        effect(() => {
+            if (this.currentClubId()) {
+                this.loadDashboardData();
+            }
+        });
     }
 
     loadDashboardData() {
         const clubId = this.currentClubId();
+        if (!clubId) return;
 
         // Load club detailed statistics
         this.clubManagerService.getClubDetailedStats(clubId).subscribe();
@@ -42,6 +51,8 @@ export class ClubManagerDashboardComponent implements OnInit {
 
     approveMember(membershipId: number) {
         const clubId = this.currentClubId();
+        if (!clubId) return;
+
         this.clubManagerService.updateMemberStatus(membershipId, 'APPROVED').subscribe({
             next: () => {
                 // Reload pending requests
@@ -52,6 +63,8 @@ export class ClubManagerDashboardComponent implements OnInit {
 
     rejectMember(membershipId: number) {
         const clubId = this.currentClubId();
+        if (!clubId) return;
+
         this.clubManagerService.updateMemberStatus(membershipId, 'REJECTED').subscribe({
             next: () => {
                 // Reload pending requests

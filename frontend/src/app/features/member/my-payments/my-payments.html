@@ -88,7 +88,8 @@
                                 </td>
                                 <td>
                                     <div class="payment-actions">
-                                        <button class="btn-icon" title="Voir le reçu">
+                                        <button class="btn-icon" title="Télécharger le reçu"
+                                            (click)="downloadReceipt(payment.id)">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                         </button>
                                     </div>

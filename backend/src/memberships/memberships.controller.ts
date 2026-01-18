@@ -31,4 +31,16 @@ export class MembershipsController {
     updateStatus(@Param('id') id: string, @Body('status') status: string) {
         return this.membershipsService.updateStatus(+id, Status[status]);
     }
+
+    @Get('check/status')
+    async checkMembership(
+        @Query('userId') userId: number,
+        @Query('clubId') clubId: number,
+    ) {
+        const membership = await this.membershipsService.findByUserAndClub(userId, clubId);
+        if (!membership) {
+            return { exists: false };
+        }
+        return { exists: true, membership };
+    }
 }

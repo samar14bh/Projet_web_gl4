@@ -43,26 +43,35 @@ export class ClubsController {
   }
 
   /**
+   * GET /api/clubs/managed/:userId
+   * Récupérer les clubs gérés par un utilisateur
+   */
+  @Get('managed/:userId')
+  async findManagedClubs(@Param('userId', ParseIntPipe) userId: number) {
+    return this.clubsService.findManagedClubs(userId);
+  }
+
+  /**
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
   @Get(':clubId/user/:userId/status')
-async getUserClubStatus(
-  @Param('clubId', ParseIntPipe) clubId: number,
-  @Param('userId', ParseIntPipe) userId: number,
-): Promise<string> {
-  return this.clubsService.getUserClubStatus(clubId, userId);
-}
+  async getUserClubStatus(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubStatus(clubId, userId);
+  }
   @Get('stats')
   getStats() {
     return this.clubsService.getStats();
   }
- @Get('top')
-async findTopClubs(
-  @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
-): Promise<Club[]> {
-  return this.clubsService.findTopClubsByMembers(limit);
-}
+  @Get('top')
+  async findTopClubs(
+    @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+  ): Promise<Club[]> {
+    return this.clubsService.findTopClubsByMembers(limit);
+  }
 
   /**
    * GET /api/clubs/:id

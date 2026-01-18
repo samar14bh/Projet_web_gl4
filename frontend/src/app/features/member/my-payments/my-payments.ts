@@ -1,6 +1,7 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MemberService } from '../../../Core/services/member.service';
+import { PaymentService } from '../../../Core/services/payment.service';
+import { AuthService } from '../../../Core/services/auth.service';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
 import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
 import { TabItem } from '../../../shared/interfaces/components.interface';
@@ -17,9 +18,13 @@ import { TabItem } from '../../../shared/interfaces/components.interface';
     styleUrl: './my-payments.css',
 })
 export class MyPaymentsComponent implements OnInit {
+    // Services
+    private paymentService = inject(PaymentService);
+    private authService = inject(AuthService);
+
     // Signals
     activeTab = signal<string>('history');
-    currentUserId = signal(1); // TODO: Get from auth service
+    currentUserId = computed(() => Number(this.authService.currentUser()?.id) || 0);
 
     // Tab configuration
     tabs = signal<TabItem[]>([
@@ -28,30 +33,33 @@ export class MyPaymentsComponent implements OnInit {
     ]);
 
     // Computed values
-    payments = computed(() => this.memberService.payments());
-    paymentStats = computed(() => this.memberService.paymentStats());
+    payments = computed(() => this.paymentService.payments());
+    paymentStats = computed(() => this.paymentService.stats());
 
     // Computed aliases for template compatibility
     stats = computed(() => this.paymentStats());
     totalSpentThisMonth = computed(() => this.paymentStats()?.totalSpentThisMonth || 0);
     totalSpentThisYear = computed(() => this.paymentStats()?.totalSpentThisYear || 0);
 
-    loading = computed(() => this.memberService.loading());
+    loading = computed(() => this.paymentService.loading());
 
-    constructor(public memberService: MemberService) { }
+    constructor() { }
 
     ngOnInit() {
-        this.loadData();
+        if (this.authService.isAuthenticated()) {
+            this.loadData();
+        }
     }
 
     loadData() {
         const userId = this.currentUserId();
+        if (!userId) return;
 
         // Load payment statistics
-        this.memberService.getPaymentStats(userId).subscribe();
+        this.paymentService.getPaymentStats(userId).subscribe();
 
         // Load payment history
-        this.memberService.getPaymentHistory(userId, {
+        this.paymentService.getPaymentHistory(userId, {
             page: 1,
             limit: 20,
         }).subscribe();
@@ -95,9 +103,28 @@ export class MyPaymentsComponent implements OnInit {
     }
 
     formatCurrency(amount: number): string {
-        return new Intl.NumberFormat('fr-FR', {
+        return new Intl.NumberFormat('fr-TN', {
             style: 'currency',
-            currency: 'EUR',
+            currency: 'TND',
+            minimumFractionDigits: 2
         }).format(amount);
+    }
+
+    downloadReceipt(paymentId: number) {
+        this.paymentService.downloadReceipt(paymentId).subscribe({
+            next: (blob: Blob) => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `recu-${paymentId}.pdf`;
+                link.click();
+                window.URL.revokeObjectURL(url);
+            },
+            error: (err: any) => {
+                console.error('Error downloading receipt:', err);
+                alert('Erreur lors du téléchargement du reçu');
+            }
+        });
     }
 }

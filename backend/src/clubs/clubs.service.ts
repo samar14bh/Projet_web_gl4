@@ -32,10 +32,10 @@ export class ClubsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-  @InjectRepository(Application) 
-  private readonly applicationRepository: Repository<Application>,
-    
-  ) {}
+    @InjectRepository(Application)
+    private readonly applicationRepository: Repository<Application>,
+
+  ) { }
 
   /**
    * Créer un nouveau club
@@ -415,6 +415,25 @@ export class ClubsService {
   }
 
   /**
+   * Récupérer les clubs gérés par un utilisateur
+   */
+  async findManagedClubs(userId: number) {
+    const managedMemberships = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.club', 'club')
+      .where('membership.user_id = :userId', { userId })
+      .andWhere('membership.role IN (:...roles)', {
+        roles: ['PRESIDENT', 'TREASURER', 'SECRETARY', 'RH']
+      })
+      .andWhere('(membership.dateFin IS NULL OR membership.dateFin >= :now)', {
+        now: new Date()
+      })
+      .getMany();
+
+    return managedMemberships.map(m => m.club);
+  }
+
+  /**
    * Générer un slug à partir d'un nom
    */
   private generateSlug(name: string): string {
@@ -426,84 +445,84 @@ export class ClubsService {
       .replace(/^-+|-+$/g, ''); // Supprimer les tirets en début et fin
   }
 
-   async findTopClubsByMembers(limit = 5): Promise<any[]> {
-  const qb = this.clubRepository
-    .createQueryBuilder('club')
-    .leftJoin('club.category', 'category') 
-    .leftJoin('club.memberships', 'membership')
-    .leftJoin('club.events', 'event')
-    .addSelect('category.name', 'categoryName')
-    .addSelect('COUNT(DISTINCT membership.id)', 'members')
-    .addSelect('COUNT(DISTINCT event.id)', 'events')
-    .where('club.isActive = :isActive', { isActive: true })
-    .groupBy('club.id')
-    .addGroupBy('category.name')
-    .orderBy('members', 'DESC')
-    .limit(limit);
+  async findTopClubsByMembers(limit = 5): Promise<any[]> {
+    const qb = this.clubRepository
+      .createQueryBuilder('club')
+      .leftJoin('club.category', 'category')
+      .leftJoin('club.memberships', 'membership')
+      .leftJoin('club.events', 'event')
+      .addSelect('category.name', 'categoryName')
+      .addSelect('COUNT(DISTINCT membership.id)', 'members')
+      .addSelect('COUNT(DISTINCT event.id)', 'events')
+      .where('club.isActive = :isActive', { isActive: true })
+      .groupBy('club.id')
+      .addGroupBy('category.name')
+      .orderBy('members', 'DESC')
+      .limit(limit);
 
-  const { entities, raw } = await qb.getRawAndEntities();
+    const { entities, raw } = await qb.getRawAndEntities();
 
-  return entities.map((club, index) => ({
-    ...club,
-    categoryName: raw[index].categoryName ?? null,
-    members: Number(raw[index].members) || 0,
-    events: Number(raw[index].events) || 0,
-  }));
-}
- 
-async getUserClubStatus(clubId: number, userId: number): Promise<string> {
-  const club = await this.clubRepository.findOne({ where: { id: clubId } });
-  if (!club) {
-    throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+    return entities.map((club, index) => ({
+      ...club,
+      categoryName: raw[index].categoryName ?? null,
+      members: Number(raw[index].members) || 0,
+      events: Number(raw[index].events) || 0,
+    }));
   }
 
-  const membership = await this.membershipRepository
-    .createQueryBuilder('membership')
-    .where('membership.club_id = :clubId', { clubId })
-    .andWhere('membership.user_id = :userId', { userId })
-    .andWhere('(membership.date_fin IS NULL OR membership.date_fin >= :now)', { 
-      now: new Date() 
-    })
-    .getOne();
-
-  if (membership) {
-    return `Membre ${membership.role.toLowerCase()}`;
-  }
-
-  const expiredMembership = await this.membershipRepository
-    .createQueryBuilder('membership')
-    .where('membership.club_id = :clubId', { clubId })
-    .andWhere('membership.user_id = :userId', { userId })
-    .andWhere('membership.date_fin < :now', { now: new Date() })
-    .getOne();
-
-  if (expiredMembership) {
-    return "Ancien membre";
-  }
-
-  const application = await this.applicationRepository
-    .createQueryBuilder('application')
-    .innerJoin('application.membership', 'membership')
-    .where('membership.club_id = :clubId', { clubId })
-    .andWhere('membership.user_id = :userId', { userId })
-    .orderBy('application.created_at', 'DESC')
-    .getOne();
-
-  if (application) {
-    switch (application.status) {
-      case Status.PENDING:
-        return "Candidature en attente";
-      case Status.APPROVED:
-        return "Candidature approuvée";
-      case Status.REJECTED:
-        return "Candidature rejetée";
-      case Status.CONFIRMED:
-        return "Candidature confirmée";
-      default:
-        return "Candidature en cours";
+  async getUserClubStatus(clubId: number, userId: number): Promise<string> {
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
     }
-  }
 
-  return "Non membre";
-}
+    const membership = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere('membership.user_id = :userId', { userId })
+      .andWhere('(membership.date_fin IS NULL OR membership.date_fin >= :now)', {
+        now: new Date()
+      })
+      .getOne();
+
+    if (membership) {
+      return `Membre ${membership.role.toLowerCase()}`;
+    }
+
+    const expiredMembership = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere('membership.user_id = :userId', { userId })
+      .andWhere('membership.date_fin < :now', { now: new Date() })
+      .getOne();
+
+    if (expiredMembership) {
+      return "Ancien membre";
+    }
+
+    const application = await this.applicationRepository
+      .createQueryBuilder('application')
+      .innerJoin('application.membership', 'membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere('membership.user_id = :userId', { userId })
+      .orderBy('application.created_at', 'DESC')
+      .getOne();
+
+    if (application) {
+      switch (application.status) {
+        case Status.PENDING:
+          return "Candidature en attente";
+        case Status.APPROVED:
+          return "Candidature approuvée";
+        case Status.REJECTED:
+          return "Candidature rejetée";
+        case Status.CONFIRMED:
+          return "Candidature confirmée";
+        default:
+          return "Candidature en cours";
+      }
+    }
+
+    return "Non membre";
+  }
 }

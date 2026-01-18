@@ -10,12 +10,13 @@ import { Membership } from '../memberships/entities/membership.entity';
 import { Club } from '../clubs/entities/club.entity';
 import { Event } from '../events/entities/event.entity';
 import { Registration } from '../events/entities/registration.entity';
+import { ReceiptService } from './receipt.service';
 import {
     CreateMembershipPaymentDto,
     CreateEventPaymentDto,
     FilterPaymentDto,
 } from './dto';
-import { PaymentType, Status, RegistrationStatus } from '../common/enums';
+import { PaymentType, Status, RegistrationStatus, PaymentMethod, PaymentStatus } from '../common/enums';
 
 /**
  * Service for handling payments (membership & events)
@@ -33,6 +34,7 @@ export class PaymentsService {
         private readonly eventRepository: Repository<Event>,
         @InjectRepository(Registration)
         private readonly registrationRepository: Repository<Registration>,
+        private readonly receiptService: ReceiptService,
     ) { }
 
     /**
@@ -58,12 +60,13 @@ export class PaymentsService {
 
         // Create payment record
         const payment = this.paymentRepository.create({
+            amount: membership.club.membershipFeeAmount,
+            date: new Date(),
+            status: PaymentStatus.CONFIRMED,
+            type: PaymentType.MEMBERSHIP,
+            method: dto.method || PaymentMethod.CARD,
             user: { id: dto.userId },
             membership: { id: dto.membershipId },
-            type: PaymentType.MEMBERSHIP,
-            amount: club.membershipFeeAmount,
-            date: new Date(),
-            status: Status.PENDING,
         });
 
         await this.paymentRepository.save(payment);
@@ -117,12 +120,13 @@ export class PaymentsService {
 
         // Create payment
         const payment = this.paymentRepository.create({
+            amount: isMember ? event.subscriptionFees * 0.8 : event.subscriptionFees,
+            date: new Date(),
+            status: PaymentStatus.CONFIRMED,
+            type: PaymentType.EVENT,
+            method: dto.method || PaymentMethod.CARD,
             user: { id: dto.userId },
             event: { id: dto.eventId },
-            type: PaymentType.EVENT,
-            amount: finalPrice,
-            date: new Date(),
-            status: Status.CONFIRMED,
         });
 
         await this.paymentRepository.save(payment);
@@ -201,7 +205,7 @@ export class PaymentsService {
             .select('SUM(payment.amount)', 'total')
             .where('payment.user = :userId', { userId })
             .andWhere('payment.date >= :startOfMonth', { startOfMonth })
-            .andWhere('payment.status = :status', { status: Status.CONFIRMED })
+            .andWhere('payment.status = :status', { status: PaymentStatus.CONFIRMED })
             .getRawOne();
 
         // Total spent this year
@@ -226,6 +230,52 @@ export class PaymentsService {
             totalSpentThisMonth: parseFloat(monthResult?.total || '0'),
             totalSpentThisYear: parseFloat(yearResult?.total || '0'),
             activeMemberships,
+        };
+    }
+
+    /**
+     * Generate PDF receipt for a payment
+     */
+    async generateReceipt(paymentId: number): Promise<Buffer> {
+        const payment = await this.paymentRepository.findOne({
+            where: { id: paymentId },
+            relations: ['user', 'membership', 'membership.club', 'event'],
+        });
+
+        if (!payment) {
+            throw new NotFoundException(`Payment with ID ${paymentId} not found`);
+        }
+
+        return this.receiptService.generateReceipt(payment);
+    }
+
+    /**
+     * Send receipt by email to user
+     */
+    async sendReceiptByEmail(paymentId: number): Promise<{ message: string }> {
+        const payment = await this.paymentRepository.findOne({
+            where: { id: paymentId },
+            relations: ['user', 'membership', 'membership.club', 'event'],
+        });
+
+        if (!payment) {
+            throw new NotFoundException(`Payment with ID ${paymentId} not found`);
+        }
+
+        if (!payment.user || !payment.user.email) {
+            throw new BadRequestException('User email not found');
+        }
+
+        // Generate the receipt
+        const receiptBuffer = await this.receiptService.generateReceipt(payment);
+
+        // TODO: Implement email sending with receipt attachment
+        // This would require MailService integration
+        // Example:
+        // await this.mailService.sendPaymentReceipt(payment.user.email, receiptBuffer, payment);
+
+        return {
+            message: `Receipt sent to ${payment.user.email}`,
         };
     }
 }

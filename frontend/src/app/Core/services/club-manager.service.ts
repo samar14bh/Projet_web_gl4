@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ClubStats, Member } from '../interfaces/club-manager.interface';
+import { Club } from '../models/club.model';
 
 /**
  * Service for club manager operations
@@ -22,6 +23,13 @@ export class ClubManagerService {
     error = signal<string | null>(null);
 
     constructor(private http: HttpClient) { }
+
+    /**
+     * Get clubs managed by a user
+     */
+    getManagedClubs(userId: number): Observable<Club[]> {
+        return this.http.get<Club[]>(`${this.apiUrl}/clubs/managed/${userId}`);
+    }
 
     /**
      * Get club detailed statistics for dashboard

@@ -17,7 +17,7 @@ export const routes: Routes = [
         redirectTo: 'home',
         pathMatch: 'full'
       },
-    {
+      {
         path: 'dashboard',
         loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
       },
@@ -42,45 +42,56 @@ export const routes: Routes = [
         title: 'Gestion des clubs'
       },
       {
-        path: 'clubs',  
+        path: 'clubs',
         loadComponent: () => import('./features/clubs/explore-clubs/explore-clubs/explore-clubs').then(m => m.ExploreClubsComponent),
         title: 'Explorer les clubs',
         canActivate: [roleGuard],
-        data: { role: 'USER' }  
+        data: { role: 'USER' }
       },
       {
         path: 'home',
         loadComponent: () => import('./Pages/landing-page/landing-page').then(m => m.LandingPageComponent),
         title: 'ClubHub - Découvrez et rejoignez des clubs'
-     },
-     
+      },
+
       {
-    path: 'login',
-    loadComponent: () => import('./features/auth/login/login')
-      .then(m => m.LoginComponent)
-  },
-  {
-    path: 'register',
-    loadComponent: () => import('./features/auth/register/register')
-      .then(m => m.RegisterComponent)
-  },
-  {
-    path: 'verify-email',
-    loadComponent: () => import('./features/auth/verify-email/verify-email')
-      .then(m => m.VerifyEmailComponent)
-  },
-   {
-        path: 'register-success',  
+        path: 'login',
+        loadComponent: () => import('./features/auth/login/login')
+          .then(m => m.LoginComponent)
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./features/auth/register/register')
+          .then(m => m.RegisterComponent)
+      },
+      {
+        path: 'verify-email',
+        loadComponent: () => import('./features/auth/verify-email/verify-email')
+          .then(m => m.VerifyEmailComponent)
+      },
+      {
+        path: 'register-success',
         loadComponent: () => import('./features/auth/register/register-success')
           .then(m => m.RegisterSuccessComponent),
         title: 'Inscription réussie'
       },
-       {
+      {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
-      },{
+      },
+      {
+        path: 'payment',  // ← PAGE 11: Payment Page
+        loadComponent: () => import('./features/member/payment-page/payment-page').then(m => m.PaymentPageComponent),
+        title: 'Paiement'
+      },
+      {
+        path: 'payment/success',  // Payment Success Page
+        loadComponent: () => import('./features/member/payment-success/payment-success').then(m => m.PaymentSuccessComponent),
+        title: 'Paiement confirmé'
+      },
+      {
         path: 'my-payments',  // ← PAGE 10
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'
@@ -101,7 +112,7 @@ export const routes: Routes = [
         title: 'Gérer les membres'
       }
     ],
-  },  
+  },
   {
     path: '**',
     redirectTo: 'club-manager/dashboard'
