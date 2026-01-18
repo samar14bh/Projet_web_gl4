@@ -1,0 +1,116 @@
+<div class="my-payments-page">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Mes paiements</h1>
+        <p>Gérez vos paiements et consultez votre historique</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <app-stat-card title="Dépenses ce mois" [value]="formatCurrency(totalSpentThisMonth())" icon="calendar-month"
+            variant="primary" [trend]="totalSpentThisMonth() > 0 ? 'up' : 'neutral'" />
+
+        <app-stat-card title="Dépenses cette année" [value]="formatCurrency(totalSpentThisYear())" icon="calendar-year"
+            variant="secondary" />
+
+        <app-stat-card title="Clubs actifs" [value]="stats()?.activeMemberships || 0" icon="people-fill"
+            variant="success" />
+
+        <app-stat-card title="Total paiements" [value]="payments().length" icon="receipt" variant="accent" />
+    </div>
+
+    <!-- Tabs -->
+    <div class="content-card">
+        <app-tab-navigation [tabs]="tabs()" [activeTab]="activeTab()" (tabChange)="onTabChange($event)" />
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            @if (activeTab() === 'history') {
+            <!-- Payment History -->
+            <div class="payment-history">
+                @if (loading()) {
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Chargement...</p>
+                </div>
+                } @else if (payments().length === 0) {
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <h3>Aucun paiement</h3>
+                    <p>Vous n'avez effectué aucun paiement pour le moment</p>
+                </div>
+                } @else {
+                <div class="payments-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (payment of payments(); track payment.id) {
+                            <tr>
+                                <td>
+                                    <span class="payment-date">{{ formatDate(payment.date) }}</span>
+                                </td>
+                                <td>
+                                    <div class="payment-description">
+                                        @if (payment.membership) {
+                                        <div class="payment-info">
+                                            <span class="payment-title">{{ payment.membership.club.name }}</span>
+                                            <span class="payment-subtitle">Cotisation annuelle</span>
+                                        </div>
+                                        } @else if (payment.event) {
+                                        <div class="payment-info">
+                                            <span class="payment-title">{{ payment.event.title }}</span>
+                                            <span class="payment-subtitle">Inscription événement</span>
+                                        </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="payment-type-badge">
+                                        {{ getPaymentTypeLabel(payment.type) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="payment-amount">{{ formatCurrency(payment.amount) }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge" [class]="getStatusBadgeClass(payment.status)">
+                                        {{ getStatusLabel(payment.status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="payment-actions">
+                                        <button class="btn-icon" title="Télécharger le reçu"
+                                            (click)="downloadReceipt(payment.id)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+            } @else if (activeTab() === 'methods') {
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <div class="empty-state">
+                    <i class="bi bi-credit-card"></i>
+                    <h3>Aucun moyen de paiement enregistré</h3>
+                    <p>Vous pourrez enregistrer vos cartes lors de vos prochains paiements</p>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>

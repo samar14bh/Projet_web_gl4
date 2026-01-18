@@ -1,0 +1,127 @@
+<app-club-selector></app-club-selector>
+<div class="manage-members-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Gérer les membres</h1>
+            <p>Gérez les membres et les demandes d'adhésion</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-secondary">
+                <i class="bi bi-download"></i>
+                Exporter CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="content-card">
+        <app-tab-navigation [tabs]="tabs()" [activeTab]="activeTab()" (tabChange)="onTabChange($event)" />
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            @if (activeTab() === 'active') {
+            <!-- Active Members -->
+            <div class="members-section">
+                <div class="section-header">
+                    <h3>Membres actifs</h3>
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Rechercher un membre..." />
+                    </div>
+                </div>
+
+                <div class="members-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Membre</th>
+                                <th>Email</th>
+                                <th>Rôle</th>
+                                <th>Date d'adhésion</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="empty-cell">
+                                    <div class="empty-state-small">
+                                        <i class="bi bi-people"></i>
+                                        <p>Aucun membre actif pour le moment</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            } @else if (activeTab() === 'pending') {
+            <!-- Pending Requests -->
+            <div class="members-section">
+                <div class="section-header">
+                    <h3>Demandes en attente</h3>
+                </div>
+
+                @if (loading()) {
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Chargement...</p>
+                </div>
+                } @else if (pendingMembers().length === 0) {
+                <div class="empty-state">
+                    <i class="bi bi-check-circle"></i>
+                    <h4>Aucune demande en attente</h4>
+                    <p>Toutes les demandes ont été traitées</p>
+                </div>
+                } @else {
+                <div class="pending-grid">
+                    @for (member of pendingMembers(); track member.id) {
+                    <div class="pending-card">
+                        <div class="card-header">
+                            <div class="member-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="member-info">
+                                <h4>{{ member.name }} {{ member.lastName }}</h4>
+                                <p>{{ member.email }}</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="label">Date de demande:</span>
+                                <span class="value">{{ formatDate(member.dateDebut) }}</span>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-approve" (click)="approveMember(member.id)">
+                                <i class="bi bi-check-lg"></i>
+                                Approuver
+                            </button>
+                            <button class="btn-reject" (click)="rejectMember(member.id)">
+                                <i class="bi bi-x-lg"></i>
+                                Rejeter
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+            } @else if (activeTab() === 'history') {
+            <!-- History -->
+            <div class="members-section">
+                <div class="section-header">
+                    <h3>Historique</h3>
+                </div>
+
+                <div class="empty-state">
+                    <i class="bi bi-archive"></i>
+                    <h4>Aucun historique</h4>
+                    <p>L'historique des membres apparaîtra ici</p>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>

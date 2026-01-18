@@ -1,0 +1,189 @@
+<div class="checkout-container">
+  <!-- Header -->
+  <div class="checkout-header">
+    <h1>Paiement</h1>
+    <p class="muted">Finalisez votre commande en toute sécurité</p>
+  </div>
+
+  <!-- Debug Info -->
+  <div class="debug-info" style="background: #f0f9ff; padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 2px solid #3b82f6;">
+    <h3 style="margin: 0 0 12px 0; color: #1e40af;">Debug Info:</h3>
+    <p><strong>Type:</strong> {{ type() }}</p>
+    <p><strong>ID:</strong> {{ id() }}</p>
+    <p><strong>Order Summary:</strong> {{ orderSummary() | json }}</p>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ error() }}</span>
+      <button class="btn-close" (click)="error.set(null)">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+  }
+
+  <div class="checkout-grid">
+    <!-- Left Column: Billing Form -->
+    <div class="checkout-form">
+      <form [formGroup]="billingForm" (ngSubmit)="pay()">
+        <h2>Informations de facturation</h2>
+
+        <div class="form-row">
+          <label for="fullName">Nom complet *</label>
+          <input
+            type="text"
+            id="fullName"
+            formControlName="fullName"
+            placeholder="Jean Dupont"
+            required
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="jean.dupont@example.com"
+            required
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="address">Adresse</label>
+          <input
+            type="text"
+            id="address"
+            formControlName="address"
+            placeholder="123 Rue de la Paix"
+          />
+        </div>
+
+        <div class="two-cols">
+          <div class="form-row">
+            <label for="postalCode">Code postal</label>
+            <input
+              type="text"
+              id="postalCode"
+              formControlName="postalCode"
+              placeholder="75001"
+            />
+          </div>
+
+          <div class="form-row">
+            <label for="city">Ville</label>
+            <input
+              type="text"
+              id="city"
+              formControlName="city"
+              placeholder="Paris"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="country">Pays</label>
+          <select id="country" formControlName="country">
+            <option value="FR">France</option>
+            <option value="BE">Belgique</option>
+            <option value="CH">Suisse</option>
+          </select>
+        </div>
+
+        <h2 style="margin-top: 32px;">Méthode de paiement</h2>
+
+        <div class="payment-methods">
+          <label>
+            <input type="radio" name="paymentMethod" value="card" checked />
+            <i class="bi bi-credit-card"></i>
+            Carte bancaire
+          </label>
+        </div>
+
+        <div class="form-row" style="margin-top: 24px;">
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" formControlName="acceptTOS" />
+              <span>J'accepte les <a href="#" class="link">conditions générales</a> et la <a href="#" class="link">politique de remboursement</a></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            [disabled]="processing() || !billingForm.value.acceptTOS"
+            class="btn-pay"
+          >
+            @if (processing()) {
+              <span class="spinner-sm"></span>
+              <span>Traitement...</span>
+            } @else {
+              <i class="bi bi-lock-fill"></i>
+              <span>Payer {{ orderSummary()?.total || 0 }}€</span>
+            }
+          </button>
+        </div>
+
+        <div class="security-notes">
+          <small>
+            <i class="bi bi-shield-check"></i>
+            Paiement 100% sécurisé - Vos données sont cryptées
+          </small>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right Column: Order Summary -->
+    <div class="checkout-summary">
+      @if (orderSummary()) {
+        <div class="summary-card">
+          <h3>Récapitulatif de commande</h3>
+
+          <div class="summary-item">
+            <div class="summary-icon">
+              @if (type() === 'membership') {
+                <i class="bi bi-star-fill"></i>
+              } @else {
+                <i class="bi bi-calendar-event"></i>
+              }
+            </div>
+            <div class="summary-details">
+              <div class="summary-title">{{ orderSummary().title }}</div>
+              <div class="summary-meta">{{ orderSummary().itemName }}</div>
+            </div>
+          </div>
+
+          <div class="summary-lines">
+            <div class="line">
+              <span>Sous-total</span>
+              <span>{{ orderSummary().price }}€</span>
+            </div>
+
+            @if (orderSummary().tax > 0) {
+              <div class="line">
+                <span>Taxes</span>
+                <span>{{ orderSummary().tax }}€</span>
+              </div>
+            }
+
+            <hr />
+
+            <div class="line total">
+              <span>Total</span>
+              <span>{{ orderSummary().total }}€</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-secondary" routerLink="/">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

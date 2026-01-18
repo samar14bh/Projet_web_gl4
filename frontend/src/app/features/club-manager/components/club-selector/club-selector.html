@@ -1,0 +1,82 @@
+<div class="club-selector-wrapper">
+
+    <!-- Context Bar (Always Visible if Club Selected) -->
+    @if (currentClub()) {
+    <div class="club-context-bar">
+        <div class="context-info">
+            <div class="club-logo-small">
+                <i class="bi bi-buildings-fill"></i>
+            </div>
+            <div class="info-text">
+                <span class="label">Club Géré</span>
+                <span class="club-name">{{ currentClub()?.name }}</span>
+            </div>
+        </div>
+
+        <div class="selector-container">
+            <button class="btn-switch" (click)="toggleDropdown()">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Changer</span>
+            </button>
+
+            @if (isOpen()) {
+            <div class="dropdown-menu">
+                <div class="dropdown-header">Vos clubs gérés</div>
+                <div class="club-list">
+                    @for (club of managedClubs(); track club.id) {
+                    <div class="club-item" [class.active]="club.id === currentClub()?.id" (click)="selectClub(club)">
+                        <div class="club-item-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <span class="club-item-name">{{ club.name }}</span>
+                        @if (club.id === currentClub()?.id) {
+                        <i class="bi bi-check-lg check-icon"></i>
+                        }
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Modal (Visible if NO Club Selected) -->
+    @if (!currentClub() && !loading()) {
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <i class="bi bi-house-gear-fill modal-icon"></i>
+            <h3>Sélectionnez un club</h3>
+            <p>Veuillez choisir le club que vous souhaitez gérer maintenant.</p>
+
+            <div class="modal-club-list">
+                @for (club of managedClubs(); track club.id) {
+                <div class="modal-club-item" (click)="selectClub(club)">
+                    <div class="modal-club-icon">
+                        <i class="bi bi-buildings"></i>
+                    </div>
+                    <div class="modal-club-info">
+                        <h4>{{ club.name }}</h4>
+                        <span>Gérer ce club</span>
+                    </div>
+                    <i class="bi bi-chevron-right ms-auto"></i>
+                </div>
+                }
+
+                @if (managedClubs().length === 0) {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Vous n'avez aucun club à gérer pour le moment.
+                </div>
+                <a routerLink="/home" class="btn btn-secondary mt-3">Retour à l'accueil</a>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Transparent Overlay to close dropdown -->
+    @if (isOpen()) {
+    <div class="fixed inset-0 z-40" (click)="toggleDropdown()"></div>
+    }
+</div>
