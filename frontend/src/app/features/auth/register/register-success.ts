@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../shared/components/button/button';
 @Component({
   selector: 'app-register-success',
   standalone: true,
-  imports: [CommonModule, RouterLink,ButtonComponent],
+  imports: [CommonModule],
   templateUrl: './register-success.html',
   styleUrls: ['./register-success.css']
 })
@@ -58,7 +58,7 @@ export class RegisterSuccessComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.message.set('');
-    
+
     setTimeout(() => {
       this.isLoading.set(false);
       this.message.set('Email de vérification renvoyé !');
