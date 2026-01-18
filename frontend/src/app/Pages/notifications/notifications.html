@@ -1,6 +1,4 @@
-<!-- notifications.html - VERSION AVEC FILTRES AMÉLIORÉS -->
 <div class="notifications-container">
-  <!-- Header avec titre et indicateurs -->
   <div class="header-section">
     <div class="header-content">
       <div class="title-section">
@@ -22,7 +20,6 @@
         </div>
       </div>
       
-      <!-- Filtre amélioré pour basculer entre tous/non lus/lus -->
       <div class="filter-section">
         <div class="filter-buttons">
           <button (click)="setFilter('unread')" 
@@ -59,77 +56,6 @@
     </div>
   </div>
 
-  <!-- Console de test -->
-  <div class="test-console">
-    <div class="console-header">
-      <h3 class="console-title">
-        <i class="bi bi-terminal"></i>
-        Console de Test
-      </h3>
-      <p class="console-subtitle">Envoyez des notifications de test pour vérifier le système SSE</p>
-    </div>
-    
-    <div class="test-buttons-grid">
-      <button (click)="sendPaymentNotification()" 
-              [disabled]="loading" 
-              class="test-btn payment-btn">
-        <div class="btn-icon">
-          <i class="bi bi-credit-card"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Paiement</span>
-          <span class="btn-subtitle">Simuler un paiement</span>
-        </div>
-      </button>
-      
-      <button (click)="sendClubNotification()" 
-              [disabled]="loading" 
-              class="test-btn club-btn">
-        <div class="btn-icon">
-          <i class="bi bi-person-circle"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Club</span>
-          <span class="btn-subtitle">Activité de club</span>
-        </div>
-      </button>
-      
-      <button (click)="sendEventNotification()" 
-              [disabled]="loading" 
-              class="test-btn event-btn">
-        <div class="btn-icon">
-          <i class="bi bi-calendar-event"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Événement</span>
-          <span class="btn-subtitle">Nouvel événement</span>
-        </div>
-      </button>
-      
-      <!-- Bouton pour créer une notification personnalisée -->
-      <button (click)="openCustomNotificationModal()" 
-              class="test-btn custom-btn">
-        <div class="btn-icon">
-          <i class="bi bi-plus-circle"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Personnalisée</span>
-          <span class="btn-subtitle">Créer une notification</span>
-        </div>
-      </button>
-    </div>
-    
-    <!-- Feedback message -->
-    @if (response || error) {
-      <div class="feedback-message"
-           [ngClass]="{'success': response, 'error': error}">
-        <i [class]="response ? 'bi bi-check-circle' : 'bi bi-exclamation-circle'"></i>
-        <span>{{ error ? 'Erreur: ' + error : 'Notification envoyée avec succès !' }}</span>
-      </div>
-    }
-  </div>
-
-  <!-- Liste des notifications -->
   <div class="notifications-list-container">
     <div class="list-header">
       <h2 class="list-title">
@@ -166,7 +92,6 @@
       </div>
     </div>
     
-    <!-- Loading state -->
     @if (isLoading()) {
       <div class="loading-state">
         <div class="loading-spinner">
@@ -176,7 +101,6 @@
       </div>
     }
     
-    <!-- Empty states -->
     @if (!isLoading()) {
       @if (currentFilter() === 'unread' && filteredNotifications().length === 0) {
         <div class="empty-state">
@@ -230,7 +154,6 @@
       }
     }
     
-    <!-- Notifications list -->
     @if (!isLoading() && filteredNotifications().length > 0) {
       <div class="notifications-list">
         @for (notif of filteredNotifications(); track notif.id) {
@@ -294,11 +217,6 @@
                 }
               </div>
             </div>
-          </div>
-        } @empty {
-          <div class="empty-list">
-            <i class="bi bi-inbox"></i>
-            <p>Aucune notification à afficher</p>
           </div>
         }
       </div>
