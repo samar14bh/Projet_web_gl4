@@ -19,7 +19,7 @@
         (clicked)="exportData('excel')"
       />
       <app-button
-        label="+ Ajouter une dépense"
+        label="+ Ajouter une transaction"
         variant="primary"
         icon="plus-lg"
         (clicked)="openExpenseModal()"
@@ -337,31 +337,18 @@
     </div>
   }
 </div>
-
-<!-- Modal d'ajout de dépense -->
+<!-- Modal d'ajout de transaction -->
 <app-modal
   [isOpen]="isExpenseModalOpen()"
-  title="Ajouter une dépense"
+  title="Ajouter une transaction"
+  (closed)="closeExpenseModal()"
   (closed)="closeExpenseModal()"
 >
-  <div class="modal-content">
-    <p>Formulaire d'ajout de dépense (à implémenter)</p>
-  </div>
-
-  <div modal-footer>
-    <app-button
-      label="Annuler"
-      variant="ghost"
-      (clicked)="closeExpenseModal()"
-    />
-    <app-button
-      label="Enregistrer"
-      variant="primary"
-      icon="check-lg"
-    />
-  </div>
+  <app-transaction-form
+    (onSuccess)="onTransactionSuccess()"
+    (onCancel)="closeExpenseModal()"
+  />
 </app-modal>
-
 <!-- Modal de détails de transaction -->
 <app-modal
   [isOpen]="isDetailsModalOpen()"

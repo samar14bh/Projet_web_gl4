@@ -1,0 +1,121 @@
+<div class="transaction-form-container">
+  <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()">
+
+    <!-- Type de transaction -->
+    <div class="form-group">
+      <label for="type" class="form-label">
+        Type de transaction <span class="required">*</span>
+      </label>
+      <select
+        id="type"
+        formControlName="type"
+        class="form-select"
+        [class.error]="hasError('type')"
+      >
+        @for (type of transactionTypes; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description" class="form-label">
+        Description <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="description"
+        formControlName="description"
+        class="form-input"
+        [class.error]="hasError('description')"
+        placeholder="Ex: Cotisation annuelle / Achat de matériel"
+      />
+      @if (hasError('description')) {
+        <span class="error-message">{{ getErrorMessage('description') }}</span>
+      }
+    </div>
+
+    <!-- Montant et Catégorie -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="amount" class="form-label">
+          Montant (TND) <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          id="amount"
+          formControlName="amount"
+          class="form-input"
+          [class.error]="hasError('amount')"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+        />
+        @if (hasError('amount')) {
+          <span class="error-message">{{ getErrorMessage('amount') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="category" class="form-label">
+          Catégorie <span class="required">*</span>
+        </label>
+        <select
+          id="category"
+          formControlName="category"
+          class="form-select"
+          [class.error]="hasError('category')"
+        >
+          @for (cat of transactionCategories; track cat.value) {
+            <option [value]="cat.value">{{ cat.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Date -->
+    <div class="form-group">
+      <label for="date" class="form-label">
+        Date <span class="required">*</span>
+      </label>
+      <input
+        type="date"
+        id="date"
+        formControlName="date"
+        class="form-input"
+        [class.error]="hasError('date')"
+      />
+      @if (hasError('date')) {
+        <span class="error-message">{{ getErrorMessage('date') }}</span>
+      }
+    </div>
+
+    <!-- Erreur de soumission -->
+    @if (submitError()) {
+      <div class="submit-error">
+        <i class="bi bi-exclamation-triangle"></i>
+        {{ submitError() }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <app-button
+        label="Annuler"
+        variant="ghost"
+        type="button"
+        (clicked)="cancel()"
+        [disabled]="isSubmitting()"
+      />
+      <app-button
+        label="Enregistrer la transaction"
+        variant="primary"
+        type="submit"
+        icon="check-lg"
+        [loading]="isSubmitting()"
+        [disabled]="transactionForm.invalid"
+      />
+    </div>
+  </form>
+</div>

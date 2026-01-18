@@ -84,4 +84,5 @@ export class TransactionsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.transactionsService.remove(id);
   }
+
 }

@@ -16,6 +16,8 @@ import {
 } from '../../../Core/models/finance.model';
 import { ButtonComponent } from '../../../shared/components/button/button';
 import { ModalComponent } from '../../../shared/components/modal/modal';
+import { TransactionForm } from './transaction-form/transaction-form';
+import { ExportService } from '../../../Core/services/export.service';
 
 /**
  * PAGE 16 : Finances du club
@@ -24,12 +26,13 @@ import { ModalComponent } from '../../../shared/components/modal/modal';
 @Component({
   selector: 'app-finances',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent,TransactionForm],
   templateUrl: './finances.html',
   styleUrl: './finances.css',
 })
 export class FinancesComponent {
   private readonly financeService = inject(FinanceService);
+  private readonly exportService = inject(ExportService);
 
   // ========== SIGNALS D'ÉTAT ==========
 
@@ -200,6 +203,14 @@ export class FinancesComponent {
   closeExpenseModal() {
     this.isExpenseModalOpen.set(false);
   }
+  /**
+   * Succès de l'ajout de transaction
+   */
+  onTransactionSuccess() {
+    this.closeExpenseModal();
+    this.reloadData();
+    alert('Transaction ajoutée avec succès !');
+  }
 
   /**
    * Ouvrir le modal de détails
@@ -216,14 +227,45 @@ export class FinancesComponent {
     this.selectedTransaction.set(null);
     this.isDetailsModalOpen.set(false);
   }
-
   /**
-   * Exporter les données
+   * Exporter les données en PDF ou Excel
    */
   exportData(format: 'pdf' | 'excel') {
-    // TODO: Implémenter l'export
-    console.log('Export en', format);
-    alert(`Export en ${format.toUpperCase()} - À implémenter`);
+    const period = this.selectedPeriod();
+    const stats = this.financialStats();
+    const transactions = this.transactions();
+
+    if (transactions.length === 0) {
+      alert('Aucune transaction à exporter');
+      return;
+    }
+
+    if (format === 'pdf') {
+      // Export PDF avec rapport complet
+      this.exportService.exportFinancialReportPDF(
+        stats,
+        transactions,
+        period,
+        `rapport-financier-${period}-${Date.now()}.pdf`,
+      );
+    } else {
+      // Export Excel
+      const excelData = transactions.map((t) => ({
+        Date: new Date(t.date).toLocaleDateString('fr-FR'),
+        Référence: t.reference,
+        Description: t.description,
+        Catégorie: this.getCategoryLabel(t.category),
+        Type: t.type === 'REVENUE' ? 'Revenu' : 'Dépense',
+        Montant: t.amount,
+        Statut: 'Complété',
+      }));
+
+      this.exportService.exportToExcel(
+        excelData,
+        `transactions-${period}-${Date.now()}.xlsx`,
+        'Transactions',
+      );
+    }
   }
 
   /**
