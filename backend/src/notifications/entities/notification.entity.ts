@@ -115,8 +115,6 @@ export class Notification {
     onUpdate: 'CURRENT_TIMESTAMP'
   })
   updatedAt: Date;
-
-  // ✅ CORRECTION: Relation ManyToOne avec User
   @ManyToOne(() => User, (user) => user.notifications, { 
     onDelete: 'CASCADE',
     createForeignKeyConstraints: false
@@ -124,7 +122,6 @@ export class Notification {
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
-  // ✅ Méthode helper pour générer le lien d'action
   getActionLink(): string | null {
     if (!this.actionUrl) return null;
     

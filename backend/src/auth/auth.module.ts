@@ -56,6 +56,6 @@ import { MailModule } from '../mail/mail.module';
 })
 export class AuthModule {
   constructor() {
-    console.log('[AUTH MODULE] ✅ Module initialisé');
+    console.log('[AUTH MODULE] Module initialisé');
   }
 }

@@ -8,9 +8,7 @@ export class SseService {
   addClient(userId: number): Observable<any> {
     const subject = new Subject<any>();
     this.clients.set(userId, subject);
-    console.log(`[SSE Backend] ✅ Client ajouté pour userId ${userId}, total clients: ${this.clients.size}`);
-    
-    // Envoyer un message de connexion réussie
+    console.log(`[SSE Backend]  Client ajouté pour userId ${userId}, total clients: ${this.clients.size}`);
     setTimeout(() => {
       subject.next({
         type: 'connection',
@@ -38,25 +36,23 @@ export class SseService {
       subject.complete();
     }
     this.clients.delete(userId);
-    console.log(`[SSE Backend] ❌ Client retiré pour userId ${userId}, total clients: ${this.clients.size}`);
+    console.log(`[SSE Backend] Client retiré pour userId ${userId}, total clients: ${this.clients.size}`);
   }
 
   sendNotification(userId: number, data: any): boolean {
     const client = this.clients.get(userId);
     if (client) {
-      console.log(`[SSE Backend] 📤 Envoi notification à userId ${userId}:`, data);
+      console.log(`[SSE Backend] Envoi notification à userId ${userId}:`, data);
       client.next(data);
       return true;
     }
-    console.warn(`[SSE Backend] ⚠️ Client non connecté pour userId ${userId}`);
+    console.warn(`[SSE Backend] Client non connecté pour userId ${userId}`);
     return false;
   }
 
   broadcastToUsers(userIds: number[], data: any): void {
     userIds.forEach(userId => this.sendNotification(userId, data));
   }
-
-  // Méthode pour envoyer des notifications avec format standardisé
   sendFormattedNotification(userId: number, notification: any): boolean {
     const formattedData = {
       type: 'notification',
@@ -65,15 +61,11 @@ export class SseService {
     console.log(`[SSE Backend] Envoi notification formatée à userId ${userId}:`, formattedData);
     return this.sendNotification(userId, formattedData);
   }
-
-  // Vérifier si un utilisateur est connecté en SSE
   isUserConnected(userId: number): boolean {
     const connected = this.clients.has(userId);
     console.log(`[SSE Backend] Vérification connexion userId ${userId}: ${connected ? 'OUI' : 'NON'}`);
     return connected;
   }
-
-  // Debug: Lister tous les clients connectés
   getConnectedUsers(): number[] {
     return Array.from(this.clients.keys());
   }

@@ -248,13 +248,12 @@ export class AuthService {
       type: 'access',     
     };
     
-    // Utiliser ConfigService pour garantir la cohérence avec JwtStrategy
     const accessSecret = this.configService.get<string>('JWT_SECRET');
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
     const accessExpiresIn = parseInt(this.configService.get<string>('JWT_EXPIRES_IN') || '3600');
     const refreshExpiresIn = parseInt(this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '604800');
     
-    console.log('🔑 Signing access token with secret:', accessSecret?.substring(0, 10) + '...');
+    console.log('Signing access token with secret:', accessSecret?.substring(0, 10) + '...');
     
     const accessToken = this.jwt.sign(payload, { 
       secret: accessSecret,
@@ -269,13 +268,12 @@ export class AuthService {
       }
     );
     
-    console.log('✅ Tokens generated successfully');
+    console.log('Tokens generated successfully');
     
     return { accessToken, refreshToken };
   }
 
   async logout(id: number) {
-    // Sécurité de base : l'ID doit être présent
     if (!id) {
       throw new BadRequestException('ID utilisateur requis');
     }

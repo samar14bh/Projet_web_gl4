@@ -35,7 +35,6 @@ export class NotificationService {
       isRead: false,
     });
 
-    // ✅ CORRECTION: save() retourne l'objet directement, pas un tableau
     const savedNotification = await this.notificationRepository.save(notification);
 
     console.log(`[NotificationService] Notification créée avec succès, ID: ${savedNotification.id}`);
