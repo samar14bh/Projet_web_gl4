@@ -1,0 +1,181 @@
+<div class="payment-glass-page">
+
+    <!-- Background Elements -->
+    <div class="glass-background"></div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Finaliser l'inscription</h1>
+        <p>Sécurisez votre place maintenant</p>
+    </div>
+
+    <!-- Error State -->
+    @if (error() && !clubDetails() && !eventDetails()) {
+    <div class="error-glass">
+        <i class="bi bi-exclamation-circle error-icon"></i>
+        <h2>Oups ! Une erreur est survenue</h2>
+        <p>{{ error() }}</p>
+        <button class="btn-glass-secondary" (click)="cancel()">
+            <i class="bi bi-arrow-left"></i> Retour
+        </button>
+    </div>
+    } @else {
+
+    @if (loading()) {
+    <div class="loading-glass">
+        <div class="spinner-shimmer"></div>
+        <p>Préparation de votre paiement...</p>
+    </div>
+    } @else {
+    <div class="payment-glass-grid">
+
+        <!-- Summary Card (Left/Top) -->
+        <div class="content-card summary-card">
+            <div class="card-glass-header">
+                <h3><i class="bi bi-receipt"></i> Récapitulatif</h3>
+            </div>
+
+            @if (paymentType() === 'membership' && clubDetails()) {
+            <div class="summary-visual">
+                <div class="club-icon-placeholder">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h2>{{ clubDetails().name }}</h2>
+                <span class="badge-glass">Cotisation Annuelle</span>
+                <p class="description-text">{{ clubDetails().description }}</p>
+            </div>
+            }
+
+            @if (paymentType() === 'event' && eventDetails()) {
+            <div class="summary-visual">
+                <div class="event-icon-placeholder">
+                    <i class="bi bi-calendar-event-fill"></i>
+                </div>
+                <h2>{{ eventDetails().title }}</h2>
+                <div class="event-meta-glass">
+                    <span><i class="bi bi-geo-alt"></i> {{ eventDetails().location }}</span>
+                    <span><i class="bi bi-calendar"></i> {{ eventDetails().startDate | date:'dd MMM yyyy' }}</span>
+                </div>
+            </div>
+            }
+
+            <!-- Price Block -->
+            <div class="glass-price-breakdown">
+                <div class="price-display">
+                    <span class="amount">{{ formatCurrency(amount()) }}</span>
+                    <span class="period">/ an</span>
+                </div>
+                @if (hasDiscount()) {
+                <div class="discount-pill">
+                    <i class="bi bi-check-circle-fill"></i> Tarif membre appliqué
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Payment Form Card (Right/Bottom) -->
+        <div class="content-card form-card">
+            <div class="card-glass-header">
+                <h3><i class="bi bi-credit-card"></i> Mode de règlement</h3>
+            </div>
+
+            <!-- Method Selector -->
+            <div class="glass-method-selector">
+                <button class="method-glass-btn" [class.active]="selectedMethod() === 'CARD'"
+                    (click)="selectedMethod.set('CARD')">
+                    <div class="icon-wrapper">
+                        <i class="bi bi-credit-card-2-front"></i>
+                    </div>
+                    <span>Carte Bancaire</span>
+                    <div class="active-indicator"></div>
+                </button>
+
+                <button class="method-glass-btn" [class.active]="selectedMethod() === 'CASH'"
+                    (click)="selectedMethod.set('CASH')">
+                    <div class="icon-wrapper">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <span>Sur Place</span>
+                    <div class="active-indicator"></div>
+                </button>
+            </div>
+
+            <!-- Dynamic Form Content -->
+            <div class="form-content-area">
+                @if (selectedMethod() === 'CASH') {
+                <div class="cash-glass-info">
+                    <i class="bi bi-stars"></i>
+                    <h4>Réservation simplifiée</h4>
+                    <p>Votre place sera réservée instantanément. Le paiement s'effectuera lors de votre arrivée au club.
+                    </p>
+                </div>
+                }
+
+                <form (ngSubmit)="processPayment()">
+                    @if (selectedMethod() === 'CARD') {
+                    <div class="glass-input-group">
+                        <label>Numéro de carte</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-credit-card input-icon"></i>
+                            <input type="text" [value]="cardNumber()" (input)="formatCardNumber($event)"
+                                placeholder="0000 0000 0000 0000" maxlength="19" required />
+                        </div>
+                    </div>
+
+                    <div class="glass-input-group">
+                        <label>Nom du titulaire</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" [ngModel]="cardName()" (ngModelChange)="cardName.set($event)"
+                                name="cardName" placeholder="NOM PRENOM" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="glass-input-group">
+                            <label>Expiration</label>
+                            <input type="text" [value]="cardExpiry()" (input)="formatExpiry($event)" placeholder="MM/YY"
+                                maxlength="5" required />
+                        </div>
+                        <div class="glass-input-group">
+                            <label>CVV</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-lock input-icon"></i>
+                                <input type="text" [value]="cardCVV()" (input)="formatCVV($event)" placeholder="123"
+                                    maxlength="3" required />
+                            </div>
+                        </div>
+                    </div>
+                    }
+
+                    <!-- Inline Form Error -->
+                    @if (formError()) {
+                    <div class="form-error-glass">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>{{ formError() }}</span>
+                    </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="glass-actions">
+                        <button type="button" class="btn-glass-secondary" (click)="cancel()" [disabled]="processing()">
+                            Annuler
+                        </button>
+                        <button type="submit" class="btn-glass-primary" [disabled]="processing()">
+                            @if (processing()) {
+                            <span class="spinner-dots"></span> Traitement
+                            } @else {
+                            {{ selectedMethod() === 'CARD' ? 'Payer ' + formatCurrency(amount()) : 'Confirmer la
+                            réservation' }}
+                            <i class="bi bi-arrow-right-short"></i>
+                            }
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+    }
+    }
+</div>

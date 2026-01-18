@@ -1,10 +1,7 @@
-// notification.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
   Index,
@@ -15,6 +12,10 @@ import { User } from '../../users/entities/user.entity';
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: number;
 
   @Column({
     type: 'varchar',
@@ -31,7 +32,7 @@ export class Notification {
     length: 255,
     nullable: true,
   })
-  shortDescription: string; 
+  shortDescription: string;
 
   @Column({ 
     default: false, 
@@ -45,7 +46,7 @@ export class Notification {
     length: 500,
     nullable: true,
   })
-  actionUrl: string; 
+  actionUrl: string;
 
   @Column({
     name: 'action_label',
@@ -53,15 +54,15 @@ export class Notification {
     length: 100,
     nullable: true,
   })
-  actionLabel: string; // Texte du bouton d'action
+  actionLabel: string;
 
   @Column({
     name: 'icon_name',
     type: 'varchar',
     length: 50,
-    nullable: true,
+    default: 'bell',
   })
-  iconName: string; 
+  iconName: string;
 
   @Column({
     name: 'priority',
@@ -77,49 +78,53 @@ export class Notification {
     length: 50,
     nullable: true,
   })
-  relatedEntityType: string; 
+  relatedEntityType: string;
 
   @Column({
     name: 'related_entity_id',
     type: 'int',
     nullable: true,
   })
-  relatedEntityId: number; 
+  relatedEntityId: number;
 
   @Column({
     name: 'metadata',
     type: 'json',
     nullable: true,
   })
-  metadata: Record<string, any>; 
+  metadata: Record<string, any>;
 
   @Column({
     name: 'expires_at',
     type: 'timestamp',
     nullable: true,
   })
-  expiresAt: Date; 
+  expiresAt: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ 
+    name: 'created_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP'
+  })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @Column({ 
+    name: 'updated_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP'
+  })
   updatedAt: Date;
-
-  // Relations
-  @ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.notifications, { 
+    onDelete: 'CASCADE',
+    createForeignKeyConstraints: false
+  })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user?: User;
 
-  @Column({ name: 'user_id' })
-  @Index()
-  userId: number; 
-
-  
   getActionLink(): string | null {
     if (!this.actionUrl) return null;
     
-   
     if (this.relatedEntityId && this.actionUrl.includes(':id')) {
       return this.actionUrl.replace(':id', this.relatedEntityId.toString());
     }

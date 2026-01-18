@@ -166,5 +166,12 @@ export class ClubService {
     });
   }
 
+  return this.http.get<Club[]>(`${this.apiUrl}/top`);
+}
+getUserClubStatus(clubId: number, userId: number): Observable<string> {
+  return this.http.get<string>(`${this.apiUrl}/${clubId}/user/${userId}/status`, {
+    responseType: 'text' as 'json'
+  });
+}
 
 }

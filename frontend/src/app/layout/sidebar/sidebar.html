@@ -62,6 +62,12 @@
         </a>
       </li>
       <li class="nav-item">
+        <a routerLink="/my-payments" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-credit-card"></i>
+          <span class="nav-label">Mes paiements</span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a routerLink="/members" routerLinkActive="active" class="nav-link">
           <i class="bi bi-people"></i>
           <span class="nav-label">Membres</span>
@@ -71,6 +77,31 @@
         <a routerLink="/documents" routerLinkActive="active" class="nav-link">
           <i class="bi bi-folder"></i>
           <span class="nav-label">Documents</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Section Responsable Club -->
+  <div class="nav-section">
+    <div class="nav-section-title">Responsable Club</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/club-manager/dashboard" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-speedometer"></i>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/club-manager/manage-club" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-building-gear"></i>
+          <span class="nav-label">Gérer mon club</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/club-manager/manage-members" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-person-check"></i>
+          <span class="nav-label">Gérer les membres</span>
         </a>
       </li>
     </ul>
@@ -117,8 +148,14 @@
           <span class="nav-label">Profil</span>
         </a>
       </li>
-      
-      <!-- Bouton de déconnexion conditionnel -->
+      @if (isLoggedIn()) {
+      <li class="nav-item">
+        <a routerLink="/notifications" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-bell"></i>
+          <span class="nav-label">Notifications</span>
+        </a>
+      </li>
+    }
       @if (isLoggedIn()) {
         <li class="nav-item">
           <a (click)="onLogout()" class="nav-link logout-link" style="cursor: pointer;">

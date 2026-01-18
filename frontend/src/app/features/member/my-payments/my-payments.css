@@ -1,0 +1,545 @@
+/* ========================================
+   GLASSMORPHIC MY PAYMENTS DESIGN
+   ======================================== */
+
+/* === Animated Background === */
+.my-payments-page {
+    position: relative;
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.my-payments-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
+    background-size: 400% 400%;
+    animation: gradientFlow 20s ease infinite;
+    z-index: -2;
+    opacity: 0.08;
+}
+
+@keyframes gradientFlow {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.my-payments-page::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* === Glass Header === */
+.page-header {
+    margin-bottom: 48px;
+    position: relative;
+    padding: 32px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(139, 92, 246, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+}
+
+.page-header h1 {
+    font-size: 48px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 12px 0;
+    letter-spacing: -2px;
+    line-height: 1;
+    animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% center;
+    }
+
+    50% {
+        background-position: 100% center;
+    }
+}
+
+.page-header p {
+    font-size: 18px;
+    color: rgba(75, 85, 99, 0.8);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* === Stats Grid === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+}
+
+/* === Glass Content Card === */
+.content-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.content-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+    background-size: 200% auto;
+    animation: gradientSlide 3s linear infinite;
+}
+
+@keyframes gradientSlide {
+    to {
+        background-position: 200% center;
+    }
+}
+
+/* === Tab Content === */
+.tab-content {
+    margin-top: 32px;
+    animation: fadeSlideIn 0.5s ease-out;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+/* === Payments Table === */
+.payments-table {
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.payments-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.payments-table thead {
+    background: rgba(16, 185, 129, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.payments-table th {
+    padding: 18px 24px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid rgba(16, 185, 129, 0.1);
+}
+
+.payments-table td {
+    padding: 24px;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.05);
+    vertical-align: middle;
+}
+
+.payments-table tbody tr {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.5s ease-out backwards;
+}
+
+.payments-table tbody tr:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.payments-table tbody tr:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.payments-table tbody tr:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.payments-table tbody tr:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.payments-table tbody tr:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+}
+
+.payments-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.02) translateX(4px);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.12);
+    z-index: 1;
+}
+
+/* === Payment Amount === */
+.payment-amount {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* === Payment Date === */
+.payment-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.payment-date i {
+    color: #8b5cf6;
+}
+
+/* === Status Badges === */
+.status-badge {
+    padding: 8px 18px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.status-badge::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.status-badge:hover::after {
+    transform: translateX(100%);
+}
+
+.status-badge.completed {
+    background: rgba(16, 185, 129, 0.25);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-badge.completed:hover {
+    background: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.pending {
+    background: rgba(245, 158, 11, 0.25);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+.status-badge.pending:hover {
+    background: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+@keyframes statusPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    }
+}
+
+.status-badge.failed {
+    background: rgba(239, 68, 68, 0.25);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.status-badge.failed:hover {
+    background: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.status-badge i {
+    font-size: 13px;
+}
+
+/* === Payment Cards === */
+.payment-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.payment-card {
+    padding: 28px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #10b981, #3b82f6);
+}
+
+.payment-card:hover {
+    transform: translateY(-12px) scale(1.03) rotateX(2deg);
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 24px 48px rgba(16, 185, 129, 0.15);
+}
+
+.payment-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.payment-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.payment-card-date {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.payment-card-amount {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 16px 0;
+}
+
+.payment-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+/* === Total Cards === */
+.total-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.total-card {
+    padding: 32px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.total-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.total-card:hover::before {
+    opacity: 1;
+}
+
+.total-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 24px 48px rgba(16, 185, 129, 0.18);
+}
+
+.total-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 12px 0;
+}
+
+.total-card-value {
+    font-size: 40px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #10b981, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+/* === Empty State === */
+.empty-state {
+    text-align: center;
+    padding: 80px 32px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #d1d5db;
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+/* === Filter Tabs === */
+.filter-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.filter-tab {
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-tab:hover {
+    background: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+}
+
+.filter-tab.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* === Receipt Button === */
+.btn-receipt {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-receipt:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-receipt i {
+    font-size: 16px;
+}

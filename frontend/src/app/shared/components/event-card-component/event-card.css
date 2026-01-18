@@ -1,0 +1,135 @@
+/* Conteneur principal de la carte */
+.event-card-grid {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%; /* Important pour que toutes les cartes aient la même hauteur */
+}
+
+.event-card-grid:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: #3b82f6;
+}
+
+/* Header : Badge de prix */
+.event-card-header {
+  padding: 1.5rem 1.5rem 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.event-price-badge {
+  background: #1e3a8a; /* Bleu foncé */
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.event-price-badge.free {
+  background: #10b981; /* Vert */
+}
+
+/* Titre et Club */
+.event-title {
+  padding: 0.5rem 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.event-club {
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.club-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.club-name {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Bloc d'informations bleuté */
+.event-info-grid {
+  margin: 0 1.5rem 1.5rem;
+  padding: 1rem;
+  background: #f0f9ff; /* Bleu ciel très clair */
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-item {
+  color: #0369a1; /* Bleu moyen */
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.info-item i {
+  width: 16px;
+  text-align: center;
+}
+
+/* Pied de carte : Statut et Bouton */
+.event-footer-grid {
+  margin-top: auto; /* Pousse le footer vers le bas */
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+}
+
+/* Styles des statuts (utilisés avec [class]) */
+.payment-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-paid { color: #10b981; }
+.status-free { color: #0ea5e9; }
+.status-pending { color: #f59e0b; }
+
+/* Bouton Détails */
+.btn-details {
+  background: #2563eb; /* Bleu cobalt */
+  color: white !important;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-details:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}

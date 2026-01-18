@@ -9,6 +9,7 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -16,13 +17,30 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+
   app.enableCors({
-    origin: 'http://localhost:4200', // URL de ton frontend Angular
+    origin: 'http://localhost:4200', 
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'Accept', 
+      'Cache-Control',
+      'Connection', 
+      'X-Requested-With',
+    ],
+    exposedHeaders: [
+      'Content-Type', 
+      'Cache-Control',
+    ],
   });
- app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   app.setGlobalPrefix('api');
+  
   const config = new DocumentBuilder()
     .setTitle('Club Management API')
     .setDescription(
@@ -47,8 +65,7 @@ async function bootstrap() {
 
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`API endpoints available at: http://localhost:${port}/api`);
-  console.log(
-    `Swagger documentation available at: http://localhost:${port}/api/docs`,
-  );
+  console.log(`Swagger documentation available at: http://localhost:${port}/api/docs`);
+  console.log(`✅ SSE endpoint: http://localhost:${port}/api/notifications/sse`);
 }
 bootstrap();

@@ -1,70 +1,79 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop'; 
 import { AuthService } from '../services/auth.service';
+import { catchError, switchMap, throwError, filter, take } from 'rxjs';
+
+const isRefreshing = signal<boolean>(false);
+const refreshTokenSignal = signal<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const router = inject(Router);
-
-  const publicUrls = [
-    '/register',
-    '/register-with-image',
-    '/login',
-    '/verify-email',
-    '/check-email',
-    '/refresh',
-    '/home'
-  ];
-
-
-  const isPublicUrl = publicUrls.some(url => req.url.includes(url));
-
-  if (isPublicUrl) {
+  if (req.url.includes('/auth/logout')) {
+    const token = authService.accessToken();
+    if (token) {
+      req = req.clone({
+        setHeaders: { Authorization: `Bearer ${token}` }
+      });
+    }
+    return next(req); 
+  }
+  if (req.url.includes('/auth/login') || 
+      req.url.includes('/auth/register') || 
+      req.url.includes('/auth/verify-email') ||
+      req.url.includes('/auth/refresh')) {
     return next(req);
   }
-
 
   const token = authService.accessToken();
-
-  if (!token) {
-    return next(req);
+  if (token) {
+    req = req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` }
+    });
   }
 
-  const authReq = req.clone({
-    setHeaders: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  return next(authReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-
-      if (error.status === 401 && !req.url.includes('/refresh')) {
-        const refreshToken = authService.refreshToken();
+  return next(req).pipe(
+    catchError(error => {
+      if (error.status === 401 && authService.refreshToken()) {
         
-        if (refreshToken) {
-          return authService.refresh({ refreshToken }).pipe(
-            switchMap(() => {
+        if (!isRefreshing()) {
+          isRefreshing.set(true);
+          refreshTokenSignal.set(null);
 
-              const newToken = authService.accessToken();
-              const retryReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${newToken}`
-                }
+          const refreshToken = authService.refreshToken();
+          if (!refreshToken) {
+            authService.logout();
+            return throwError(() => error);
+          }
+
+          return authService.refresh({ refreshToken }).pipe(
+            switchMap((response) => {
+              isRefreshing.set(false);
+              refreshTokenSignal.set(response.accessToken);
+              
+              const clonedReq = req.clone({
+                setHeaders: { Authorization: `Bearer ${response.accessToken}` }
               });
-              return next(retryReq);
+              return next(clonedReq);
             }),
-            catchError(refreshError => {
-              authService.logout().subscribe();
-              router.navigate(['/login']);
-              return throwError(() => refreshError);
+            catchError((err) => {
+              isRefreshing.set(false);
+              refreshTokenSignal.set(null);
+              authService.logout();
+              return throwError(() => err);
             })
           );
         } else {
-      
-          router.navigate(['/login']);
+          return toObservable(refreshTokenSignal).pipe(
+            filter(token => token !== null), 
+            take(1),                         
+            switchMap(newToken => {
+              const clonedReq = req.clone({
+                setHeaders: { Authorization: `Bearer ${newToken}` }
+              });
+              return next(clonedReq);
+            })
+          );
         }
       }
 

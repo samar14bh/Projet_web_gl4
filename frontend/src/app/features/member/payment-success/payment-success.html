@@ -1,0 +1,79 @@
+<div class="payment-success-page">
+    <div class="success-container">
+        <!-- Success Icon -->
+        <div class="success-icon">
+            <i [class]="message().icon"></i>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message">
+            <h1>{{ message().title }}</h1>
+            <p>{{ message().description }}</p>
+        </div>
+
+        @if (!loading() && paymentId()) {
+        <!-- Payment Details -->
+        <div class="payment-details-card">
+            <div class="detail-row">
+                <span class="detail-label">Numéro de paiement</span>
+                <span class="detail-value">#{{ paymentId() }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span class="detail-value">{{ currentDate | date:'d MMMM y à HH:mm':'':'fr' }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Type</span>
+                <span class="detail-value">
+                    {{ paymentType() === 'membership' ? 'Cotisation' : 'Événement' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="next-steps">
+            <h3>Prochaines étapes</h3>
+            <div class="steps-list">
+                <div class="step-item">
+                    <i class="bi bi-envelope-check"></i>
+                    <p>Un email de confirmation vous a été envoyé</p>
+                </div>
+                <div class="step-item">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <p>Votre reçu est disponible en téléchargement</p>
+                </div>
+                @if (paymentType() === 'membership') {
+                <div class="step-item">
+                    <i class="bi bi-person-check"></i>
+                    <p>Vous pouvez maintenant accéder à tous les avantages du club</p>
+                </div>
+                } @else {
+                <div class="step-item">
+                    <i class="bi bi-calendar-event"></i>
+                    <p>Retrouvez les détails de l'événement dans votre espace</p>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+            <button class="btn-secondary" (click)="downloadReceipt()">
+                <i class="bi bi-download"></i>
+                Télécharger le reçu
+            </button>
+            <button class="btn-primary" (click)="goToPayments()">
+                <i class="bi bi-receipt"></i>
+                Voir mes paiements
+            </button>
+        </div>
+
+        <div class="back-link">
+            <a (click)="goToHome()" class="link">
+                <i class="bi bi-arrow-left"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+        }
+    </div>
+</div>

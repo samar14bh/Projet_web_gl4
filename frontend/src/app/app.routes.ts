@@ -6,6 +6,7 @@ import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 /**
  * Configuration des routes de l'application
  */
+
 export const routes: Routes = [
   {
     path: '',
@@ -44,7 +45,7 @@ export const routes: Routes = [
 
       {
         path: 'dashboard',
-        loadComponent: () => import('./Pages/dashboard/dashboard').then(m => m.Dashboard)
+        loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
       },
       {
         path: 'events',
@@ -88,6 +89,19 @@ export const routes: Routes = [
             .then(m => m.ApplicationResponse),
         title: 'Application Details'
       }, {
+        path: 'clubs',
+        loadComponent: () => import('./features/clubs/explore-clubs/explore-clubs/explore-clubs').then(m => m.ExploreClubsComponent),
+        title: 'Explorer les clubs',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
+      },
+      {
+        path: 'home',
+        loadComponent: () => import('./Pages/landing-page/landing-page').then(m => m.LandingPageComponent),
+        title: 'ClubHub - Découvrez et rejoignez des clubs'
+      },
+
+      {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login')
           .then(m => m.LoginComponent)
@@ -108,19 +122,59 @@ export const routes: Routes = [
           .then(m => m.RegisterSuccessComponent),
         title: 'Inscription réussie'
       },
-      {
+      
+       {
+      path: 'notifications',
+      loadComponent: () => import('./Pages/notifications/notifications')
+        .then(m => m.NotificationComponent),
+      title: 'Notifications',
+         canActivate: [roleGuard],
+        data: { role: 'USER' } 
+    },
+       {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
       },
+      {
+        path: 'payment',  // ← PAGE 11: Payment Page
+        title: 'Paiement'
+      },
+      {
+        path: 'payment/success',  // Payment Success Page
+        loadComponent: () => import('./features/member/payment-success/payment-success').then(m => m.PaymentSuccessComponent),
+        title: 'Paiement confirmé'
+      },
+      {
+        path: 'my-payments',  // ← PAGE 10
+        loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
+        title: 'Mes paiements'
+      },
+      {
+        path: 'club-manager/dashboard',  // ← PAGE 12
+        loadComponent: () => import('./features/club-manager/dashboard/dashboard').then(m => m.ClubManagerDashboardComponent),
+        title: 'Dashboard Responsable'
+      },
+      {
+        path: 'club-manager/manage-club',  // ← PAGE 13
+        loadComponent: () => import('./features/club-manager/manage-club/manage-club').then(m => m.ManageClubComponent),
+        title: 'Gérer mon club'
+      },
+      {
+        path: 'club-manager/manage-members',  // ← PAGE 14
+        loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
+        title: 'Gérer les membres'
+      }
+   
 
+,
+    {path: '**',
+    redirectTo: 'club-manager/dashboard'
+    
+  }
 
-
-    ],
-  },
-  {
-    path: '**',
-    component: PageNotFound
+    ]
   }
 ];
+

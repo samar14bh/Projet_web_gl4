@@ -65,7 +65,7 @@ export class EventService {
   /**
    * Mettre à jour un événement
    */
-  updateEvent(id: number, dto: UpdateEventDto): Observable<Event> { // ← CHANGER ICI
+  updateEvent(id: number, dto: UpdateEventDto): Observable<Event> {
     return this.http.patch<Event>(`${this.apiUrl}/${id}`, dto);
   }
 

@@ -9,14 +9,19 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  ParseIntPipe, DefaultValuePipe,
-
+  ParseIntPipe,
+  DefaultValuePipe,
+  Req,
+  UseGuards,
+  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PaginatedResult } from '../common/pagination/pagination.dto';
 
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { Club } from './entities/club.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 /**
  * Controller pour la gestion des clubs
@@ -24,7 +29,30 @@ import { Club } from './entities/club.entity';
  */
 @Controller('clubs')
 export class ClubsController {
-  constructor(private readonly clubsService: ClubsService) { }
+  constructor(private readonly clubsService: ClubsService) {}
+  @Get('recommendations')
+@UseGuards(JwtAuthGuard)
+async getRecommendations(
+  @Req() req: any,
+  @Query('limit', new DefaultValuePipe(3), ParseIntPipe) limit: number,
+) {
+  // Ensure the userId exists in the request object
+  console.log('👤 User from request:', req.user);
+  const rawUserId = req.user?.userId;
+  
+  if (rawUserId === undefined || rawUserId === null) {
+    throw new UnauthorizedException('User ID not found in token');
+  }
+
+  const userId = Number(rawUserId);
+
+  if (isNaN(userId)) {
+    throw new BadRequestException('Invalid User ID format');
+  }
+  
+  return this.clubsService.getRecommendations(userId, limit);
+}
+
 
   /**
    * POST /api/clubs
@@ -64,6 +92,25 @@ export class ClubsController {
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
+   * GET /api/clubs/managed/:userId
+   * Récupérer les clubs gérés par un utilisateur
+   */
+  @Get('managed/:userId')
+  async findManagedClubs(@Param('userId', ParseIntPipe) userId: number) {
+    return this.clubsService.findManagedClubs(userId);
+  }
+
+  /**
+   * GET /api/clubs/stats
+   * Récupérer les statistiques globales des clubs
+   */
+  @Get(':clubId/user/:userId/status')
+  async getUserClubStatus(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubStatus(clubId, userId);
+  }
   @Get('stats')
   getStats() {
     return this.clubsService.getStats();
@@ -123,6 +170,29 @@ export class ClubsController {
   }
 
   /**
+   * GET /api/clubs/:id/stats
+   * Récupérer les statistiques détaillées d'un club (pour dashboard)
+   */
+  @Get(':id/stats')
+  getClubStats(@Param('id') id: string) {
+    return this.clubsService.getClubDetailedStats(+id);
+  }
+
+  /**
+   * GET /api/clubs/:id/members
+   * Récupérer les membres d'un club
+   */
+  @Get(':id/members')
+  getClubMembers(
+    @Param('id') id: string,
+    @Query('status') status?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.clubsService.getClubMembers(+id, { status, page, limit });
+  }
+
+  /**
    * PATCH /api/clubs/:id
    * Mettre à jour un club
    */
@@ -153,3 +223,4 @@ export class ClubsController {
 
 
 }
+

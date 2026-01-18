@@ -10,6 +10,8 @@ import {
 import { Club } from '../../clubs/entities/club.entity';
 import { User } from '../../users/entities/user.entity';
 import { Event } from '../../events/entities/event.entity';
+import { Membership } from '../../memberships/entities/membership.entity';
+import { PaymentMethod } from '../../common/enums';
 
 /**
  * Enum pour le type de transaction
@@ -109,4 +111,18 @@ export class Transaction {
 
   @Column({ name: 'event_id', nullable: true })
   eventId: number;
+
+  @ManyToOne(() => Membership, { nullable: true })
+  @JoinColumn({ name: 'membership_id' })
+  membership: Membership;
+
+  @Column({ name: 'membership_id', nullable: true })
+  membershipId: number;
+
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    default: PaymentMethod.CARD,
+  })
+  method: PaymentMethod;
 }
