@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, httpResource } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Event,
@@ -8,8 +8,11 @@ import {
   PaginatedResponse,
   EventStats,
   EventStatus, UpdateEventDto,
+  EventType, RegistrationStatus, EventWithUserRegistration
 } from '../models/event.model';
 import { environment } from '../../../environments/environment';
+import { PaginatedResult } from '../models/paginated-result.model';
+import { UserEventDto } from '../dtos/user-event.dto';
 
 /**
  * Service de gestion des événements
@@ -85,10 +88,83 @@ export class EventService {
   duplicateEvent(id: number): Observable<Event> {
     return this.http.post<Event>(`${this.apiUrl}/${id}/duplicate`, {});
   }
+
+
   /**
    * Récupérer les inscriptions d'un événement
    */
   getEventRegistrations(eventId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${eventId}/registrations`);
   }
+
+  /**
+   * Récupérer les événements d'un utilisateur
+   */
+  getUserEvents(
+    userId: number,
+    page = 1,
+    limit = 10,
+    search?: string,
+    status?: EventStatus | '',
+    type?: EventType | '',
+    sortBy: 'date' | 'title' | 'registrations' = 'date',
+    order: 'asc' | 'desc' = 'asc',
+  ): Observable<PaginatedResult<UserEventDto>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString())
+      .set('sortBy', sortBy)
+      .set('order', order);
+
+    if (search) params = params.set('search', search);
+    if (status) params = params.set('status', status);
+    if (type) params = params.set('type', type);
+
+    return this.http.get<PaginatedResult<UserEventDto>>(
+      `${this.apiUrl}/user-events/${userId}`,
+      { params },
+    );
+  }
+
+
+
+
+
+  cancelRegistration(eventId: number) {
+    return this.http.post(`${this.apiUrl}/${eventId}/cancel`, {});
+  }
+
+  downloadReceipt(eventId: number) {
+    return this.http.get(`${this.apiUrl}/${eventId}/receipt`, { responseType: 'blob' });
+  }
+
+  getEventDetails(userId: () => number, eventId: () => number) {
+    return httpResource<UserEventDto>(() => {
+      const u = userId();
+      const e = eventId();
+      if (!u || !e) return undefined;
+      return `${this.apiUrl}/user-event-details/${u}?eventId=${e}`;
+    });
+  }
+
+  /**
+   * Discovery: Récupérer tous les événements avec le statut pour un utilisateur
+   */
+  getEventsDiscovery(
+    userId: number,
+    filters: EventFilters = {}
+  ): Observable<PaginatedResult<UserEventDto>> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.append(key, String(value));
+      }
+    });
+
+    return this.http.get<PaginatedResult<UserEventDto>>(
+      `${this.apiUrl}/discovery/${userId}`,
+      { params }
+    );
+  }
 }
+

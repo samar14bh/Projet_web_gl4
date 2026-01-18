@@ -19,6 +19,7 @@ export interface Club {
   members?: number;
   events?: number;
   revenue?: number;
+  isMember?: boolean;
 }
 
 /**

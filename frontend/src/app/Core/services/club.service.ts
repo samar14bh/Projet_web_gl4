@@ -60,6 +60,39 @@ export class ClubService {
   }
 
   /**
+   * Récupérer les clubs d'un utilisateur (ceux dont il est membre)
+   */
+  getUserClubs(userId: number, filters: ClubFilters = {}): Observable<PaginatedClubs> {
+    let params = new HttpParams();
+
+    if (filters.categoryId && filters.categoryId !== 'all') {
+      params = params.set('categoryId', filters.categoryId.toString());
+    }
+
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
+
+    if (filters.sortBy) {
+      params = params.set('sortBy', filters.sortBy);
+    }
+
+    if (filters.sortOrder) {
+      params = params.set('sortOrder', filters.sortOrder);
+    }
+
+    if (filters.page) {
+      params = params.set('page', filters.page.toString());
+    }
+
+    if (filters.limit) {
+      params = params.set('limit', filters.limit.toString());
+    }
+
+    return this.http.get<PaginatedClubs>(`${this.apiUrl}/user-clubs/${userId}`, { params });
+  }
+
+  /**
    * Récupérer un club par son ID
    */
   getClubById(id: number): Observable<Club> {
@@ -107,8 +140,32 @@ export class ClubService {
   deleteClub(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
-  
+
+
+  /**
+   * Récupérer les détails d'adhésion d'un utilisateur à un club
+   */
+  getClubMembershipDetails(clubId: number, userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${clubId}/membership/${userId}`);
+  }
+
+  /**
+   * Quitter un club
+   */
+  leaveClub(clubId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/leave/${userId}`);
+  }
+
+
   getTopClubs(): Observable<Club[]> {
+    return this.http.get<Club[]>(`${this.apiUrl}/top`);
+  }
+  getUserClubStatus(clubId: number, userId: number): Observable<string> {
+    return this.http.get<string>(`${this.apiUrl}/status/${clubId}/${userId}`, {
+      responseType: 'text' as 'json'
+    });
+  }
+
   return this.http.get<Club[]>(`${this.apiUrl}/top`);
 }
 getUserClubStatus(clubId: number, userId: number): Observable<string> {

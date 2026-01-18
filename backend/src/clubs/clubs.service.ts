@@ -15,6 +15,8 @@ import {
   Transaction,
   TransactionType,
 } from '../transactions/entities/transaction.entity';
+import { PaginatedResult } from '../common/pagination/pagination.dto';
+
 import { Application } from 'src/memberships/entities/application.entity';
 import { Status } from 'src/common/enums';
 
@@ -257,6 +259,60 @@ export class ClubsService {
   }
 
   /**
+   * Récupérer les clubs pour les utilisateurs (paginés et filtrés)
+   */
+  async getUserClubs(userId: number, filters: FilterClubDto): Promise<PaginatedResult<any>> {
+    const { status, categoryId, search, sortBy, sortOrder, page = 1, limit = 10 } = filters;
+
+    const queryBuilder = this.clubRepository
+      .createQueryBuilder('club')
+      .innerJoin('club.memberships', 'membership')
+      .andWhere('membership.user_id = :userId', { userId })
+      .leftJoinAndSelect('club.category', 'category');
+
+    if (status && status !== ClubStatus.ALL) {
+      queryBuilder.andWhere('club.isActive = :isActive', { isActive: status === ClubStatus.ACTIVE });
+    } else {
+      queryBuilder.andWhere('club.isActive = :isActive', { isActive: true });
+    }
+
+    if (categoryId) {
+      queryBuilder.andWhere('club.category_id = :categoryId', { categoryId });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(club.name LIKE :search OR club.description LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    queryBuilder.orderBy('club.name', sortOrder?.toUpperCase() as any || 'ASC');
+
+    const skip = (Math.max(1, page) - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const [clubs, total] = await queryBuilder.getManyAndCount();
+
+    const enrichedData = await Promise.all(
+      clubs.map(async (club) => {
+        const stats = await this.getClubStats(club.id);
+        return {
+          ...club,
+          categoryName: club.category?.name,
+          members: stats.members,
+          events: stats.events,
+          revenue: stats.revenue,
+          isMember: true,
+        };
+      }),
+    );
+
+    return {
+      data: enrichedData,
+      total,
+      page: Number(page),
+      limit: Number(limit),
    * Récupérer les statistiques détaillées d'un club pour le dashboard
    */
   async getClubDetailedStats(clubId: number) {
@@ -445,6 +501,105 @@ export class ClubsService {
       .replace(/^-+|-+$/g, ''); // Supprimer les tirets en début et fin
   }
 
+
+  async getClubMembershipDetails(userId: number, clubId: number) {
+    const club = await this.findOne(clubId);
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+    }
+
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+      },
+    });
+
+    return {
+      club,
+      membership,
+    };
+  }
+
+  async leaveClub(userId: number, clubId: number): Promise<void> {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException(`Vous n'êtes pas membre de ce club`);
+    }
+
+    await this.membershipRepository.remove(membership);
+  }
+  async findTopClubsByMembers(limit = 5): Promise<any[]> {
+    const qb = this.clubRepository
+      .createQueryBuilder('club')
+      .leftJoin('club.category', 'category')
+      .leftJoin('club.memberships', 'membership')
+      .leftJoin('club.events', 'event')
+      .addSelect('category.name', 'categoryName')
+      .addSelect('COUNT(DISTINCT membership.id)', 'members')
+      .addSelect('COUNT(DISTINCT event.id)', 'events')
+      .where('club.isActive = :isActive', { isActive: true })
+      .groupBy('club.id')
+      .addGroupBy('category.name')
+      .orderBy('members', 'DESC')
+      .limit(limit);
+
+    const { entities, raw } = await qb.getRawAndEntities();
+
+    return entities.map((club, index) => ({
+      ...club,
+      categoryName: raw[index].categoryName ?? null,
+      members: Number(raw[index].members) || 0,
+      events: Number(raw[index].events) || 0,
+    }));
+  }
+
+  async getUserClubStatus(clubId: number, userId: number): Promise<string> {
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+    if (!club) {
+      throw new NotFoundException(`Club with id  ${clubId} not found `);
+    }
+
+    const membership = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere('membership.user_id = :userId', { userId })
+      .andWhere('(membership.date_fin IS NULL OR membership.date_fin >= :now)', {
+        now: new Date()
+      })
+      .getOne();
+
+    if (membership) {
+      return 'MEMBER';
+    }
+
+
+    const application = await this.applicationRepository
+      .createQueryBuilder('application')
+      .innerJoin('application.club', 'club')
+      .innerJoin('application.user', 'user')
+      .where('club.id = :clubId', { clubId })
+      .andWhere('user.id = :userId', { userId })
+      .orderBy('application.created_at', 'DESC')
+      .getOne();
+
+    if (application) {
+      if (Status.PENDING) { return "PENDING"; }
+      else if (Status.REJECTED) { return "REJECTED"; }
+
+    }
+
+
+    return "NOT_MEMBER";
+
+
+  }
   async findTopClubsByMembers(limit = 5): Promise<any[]> {
     const qb = this.clubRepository
       .createQueryBuilder('club')

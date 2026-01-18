@@ -16,6 +16,8 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { PaginatedResult } from '../common/pagination/pagination.dto';
+
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { Club } from './entities/club.entity';
@@ -71,6 +73,25 @@ async getRecommendations(
   }
 
   /**
+   * GET /api/clubs/user-clubs
+   * Récupérer les clubs pour les utilisateurs (paginés et filtrés)
+   */
+  @Get('user-clubs/:userId')
+  getUserClubs(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query() filters: FilterClubDto
+  ): Promise<PaginatedResult<any>> {
+    return this.clubsService.getUserClubs(userId, filters);
+  }
+
+  /**
+   * GET /api/clubs/stats
+   * Récupérer les statistiques globales des clubs
+   */
+  /**
+   * GET /api/clubs/stats
+   * Récupérer les statistiques globales des clubs
+   */
    * GET /api/clubs/managed/:userId
    * Récupérer les clubs gérés par un utilisateur
    */
@@ -94,11 +115,49 @@ async getRecommendations(
   getStats() {
     return this.clubsService.getStats();
   }
+
   @Get('top')
   async findTopClubs(
     @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
   ): Promise<Club[]> {
     return this.clubsService.findTopClubsByMembers(limit);
+  }
+
+  /**
+   * GET /api/clubs/status/:clubId/:userId
+   * Récupérer le statut d'un utilisateur dans un club
+   */
+  @Get('status/:clubId/:userId')
+  async getUserClubStatus(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubStatus(clubId, userId);
+  }
+
+  /**
+   * GET /api/clubs/:id/membership/:userId
+   * Récupérer les détails d'adhésion d'un utilisateur à un club
+   */
+  @Get(':id/membership/:userId')
+  getClubMembershipDetails(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.getClubMembershipDetails(userId, id);
+  }
+
+  /**
+   * DELETE /api/clubs/:id/leave/:userId
+   * Quitter un club
+   */
+  @Delete(':id/leave/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leaveClub(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.leaveClub(userId, id);
   }
 
   /**

@@ -1,0 +1,150 @@
+<div class="header">
+  <div class="header-content">
+    <div class="header-title">
+      <span class="sparkle-icon">{{ clubId() ? '🔍' : '🎫' }}</span>
+      <h1>{{ clubId() ? 'Découvrir les Événements' : 'Mes Événements' }}</h1>
+    </div>
+    <p class="header-subtitle">
+      {{ clubId() ? 'Explorez les activités proposées par ce club' : 'Gérez vos inscriptions et découvrez vos événements' }}
+    </p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="quick-filters">
+    <button *ngFor="let filter of filters" class="filter-tab" [class.active]="activeFilter() === filter.id"
+      (click)="activeFilter.set(filter.id)">
+      {{ filter.label }}
+
+      <span class="filter-count" *ngIf="filter.id === 'all'">
+        {{ eventsResource.value()?.data?.length ?? 0 }}
+      </span>
+    </button>
+  </div>
+
+  <div class="search-filter-card">
+    <div class="search-row">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+
+        <input type="text" class="search-input"
+          [placeholder]="clubId() ? 'Rechercher un événement...' : 'Rechercher dans mes événements...'"
+          [value]="filterState().search" (input)="updateFilters({ search: $any($event.target).value })" />
+
+        <button *ngIf="filterState().search" class="clear-search-btn" (click)="updateFilters({ search: '' })">
+          ✕
+        </button>
+      </div>
+
+      <button class="filter-toggle-btn" (click)="toggleFilters()">
+        <span class="filter-icon">⚙️</span>
+        Filtres avancés
+        <span *ngIf="hasActiveFilters()" class="filter-badge"></span>
+      </button>
+    </div>
+
+    <div *ngIf="showFilters()" class="filters-panel">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label class="filter-label">Statut</label>
+          <select class="filter-select" [value]="filterState().status"
+            (change)="updateFilters({ status: $any($event.target).value })">
+            <option value="">Tous les statuts</option>
+            <option [value]="EventStatus.UPCOMING">À venir</option>
+            <option [value]="EventStatus.ONGOING">En cours</option>
+            <option [value]="EventStatus.COMPLETED">Terminé</option>
+            <option [value]="EventStatus.CANCELLED">Annulé</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Type d'événement</label>
+          <select class="filter-select" [value]="filterState().type"
+            (change)="updateFilters({ type: $any($event.target).value })">
+            <option value="">Tous les types</option>
+            <option [value]="EventType.HACKATHON">💻 Hackathon</option>
+            <option [value]="EventType.MEET">🤝 Rencontre</option>
+            <option [value]="EventType.TEAM_BUILDING">🎯 Team Building</option>
+            <option [value]="EventType.AG">📋 AG</option>
+            <option [value]="EventType.OTHER">✨ Autre</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Trier par</label>
+          <select class="filter-select" [value]="filterState().sortBy"
+            (change)="updateFilters({ sortBy: $any($event.target).value })">
+            <option value="date">Date</option>
+            <option value="title">Titre</option>
+            <option value="registrations">Popularité</option>
+          </select>
+        </div>
+      </div>
+
+      <button *ngIf="hasActiveFilters()" class="clear-filters-btn" (click)="clearAllFilters()">
+        ✕ Réinitialiser tous les filtres
+      </button>
+    </div>
+  </div>
+
+  <div class="results-count">
+    <span class="count-number">{{ visibleEvents().length }}</span>
+    événement{{ visibleEvents().length !== 1 ? 's' : '' }}
+    <span class="count-suffix">
+      {{
+      activeFilter() === 'upcoming'
+      ? 'à venir'
+      : activeFilter() === 'past'
+      ? 'passés'
+      : ''
+      }}
+    </span>
+  </div>
+
+  <div *ngIf="eventsResource.isLoading()" class="loading-state">
+    <app-loader [message]="clubId() ? 'Chargement des événements...' : 'Chargement de vos événements...'"></app-loader>
+  </div>
+
+  <div *ngIf="eventsResource.error()" class="error-state">
+    <app-error [errorMessage]="'Erreur de chargement des événements'" returnLink="/dashboard"></app-error>
+    <button class="retry-btn mt-3" (click)="eventsResource.reload()">
+      Réessayer
+    </button>
+  </div>
+
+  <div *ngIf="
+      !eventsResource.isLoading() &&
+      !eventsResource.error() &&
+      visibleEvents().length === 0
+    " class="empty-state">
+    <span class="empty-icon">📅</span>
+    <h3>Aucun événement trouvé</h3>
+
+    <p *ngIf="hasActiveFilters()">
+      Essayez de modifier vos critères de recherche
+    </p>
+
+    <p *ngIf="!hasActiveFilters()">
+      {{ clubId() ? 'Aucun événement n\'est actuellement disponible pour ce club' : 'Vous n\'êtes inscrit à aucun événement pour le moment' }}
+    </p>
+
+    <button *ngIf="hasActiveFilters()" class="clear-btn" (click)="clearAllFilters()">
+      Effacer les filtres
+    </button>
+  </div>
+
+  <div class="events-grid" *ngIf="
+      !eventsResource.isLoading() &&
+      !eventsResource.error() &&
+      visibleEvents().length > 0
+    ">
+    <app-user-events-card *ngFor="let event of visibleEvents(); trackBy: trackByEventId"
+      [event]="event"></app-user-events-card>
+  </div>
+
+  <app-pagination *ngIf="
+      !eventsResource.isLoading() &&
+      !eventsResource.error() &&
+      totalPages() > 1
+    " [currentPage]="currentPage()" [totalPages]="totalPages()" (pageChange)="goToPage($event)"></app-pagination>
+</div>

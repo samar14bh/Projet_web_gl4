@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
-import { Dashboard } from "./Pages/dashboard/dashboard";
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
-import { roleGuard } from './Core/guards/role.guard';
+
 
 /**
  * Configuration des routes de l'application
@@ -15,9 +14,35 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'home',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
       },
+      {
+        path: 'my-events',
+        loadComponent: () =>
+          import('./Pages/user-events/user-events').then(m => m.UserEvents)
+      },
+      {
+        path: 'discover-events/:clubId',
+        loadComponent: () =>
+          import('./Pages/user-events/user-events').then(m => m.UserEvents)
+      },
+      {
+        path: 'my-clubs',
+        loadComponent: () =>
+          import('./Pages/user-clubs/user-clubs').then(m => m.UserClubs)
+      },
+      {
+        path: 'my-clubs/:clubId',
+        loadComponent: () =>
+          import('./Pages/club-details/club-details').then(m => m.ClubDetails)
+      },
+      {
+        path: 'user-event-details/:userId/:eventId',
+        loadComponent: () => import('./Pages/event-details/event-details').then(m => m.EventDetails)
+      },
+
+
       {
         path: 'dashboard',
         loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
@@ -43,6 +68,27 @@ export const routes: Routes = [
         title: 'Gestion des clubs'
       },
       {
+        path: 'join-club/:clubId',
+        loadComponent: () =>
+          import('./features/member/join-club-form/join-club-form')
+            .then(m => m.JoinClubForm),
+
+        title: 'Join Club'
+      },
+      {
+        path: 'my-applications',
+        loadComponent: () =>
+          import('./Pages/user-applications/user-applications')
+            .then(m => m.UserApplications),
+        title: 'My Applications'
+      },
+      {
+        path: 'applications/:applicationId',
+        loadComponent: () =>
+          import('./Pages/application-response/application-response')
+            .then(m => m.ApplicationResponse),
+        title: 'Application Details'
+      }, {
         path: 'clubs',
         loadComponent: () => import('./features/clubs/explore-clubs/explore-clubs/explore-clubs').then(m => m.ExploreClubsComponent),
         title: 'Explorer les clubs',

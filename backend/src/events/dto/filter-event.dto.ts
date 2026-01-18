@@ -9,9 +9,6 @@ import {
 import { Type } from 'class-transformer';
 import { EventStatus, EventType } from '../../common/enums';
 
-/**
- * DTO pour les filtres de recherche d'événements
- */
 export class FilterEventDto {
   @IsOptional()
   @IsEnum(EventStatus)

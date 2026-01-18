@@ -8,6 +8,9 @@ import { Category } from './entities/category.entity';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Event } from '../events/entities/event.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import {MembershipsController} from "./memberships.controller";
+import {MembershipsService} from "./memberships.service";
+import {User} from "../users/entities/user.entity";
 import { Application } from 'src/memberships/entities/application.entity';
 
 /**
@@ -21,11 +24,12 @@ import { Application } from 'src/memberships/entities/application.entity';
       Membership,
       Event,
       Transaction,
-      Application
+        Application,
+        User
     ]),
   ],
-  controllers: [ClubsController, CategoriesController],
-  providers: [ClubsService],
+  controllers: [ClubsController, CategoriesController,MembershipsController],
+  providers: [ClubsService,MembershipsService],
   exports: [ClubsService],
 })
 export class ClubsModule {}

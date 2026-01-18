@@ -779,4 +779,72 @@ Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.
       throw error;
     }
   }
+
+
+
+
+
+
+  /**
+   * Send a custom email to the club
+   * @param to Club email address
+   * @param from Sender name/email
+   * @param subject Email subject
+   * @param message Email message (HTML and plain text)
+   */
+  async sendClubMessage(
+      to: string,
+      from: string,
+      subject: string,
+      message: string
+  ) {
+    const textVersion = message.replace(/<\/?[^>]+(>|$)/g, ''); // Plain text fallback
+
+    const htmlTemplate = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e3a8a; background: #f8fafc; padding: 20px; }
+          .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+          h2 { color: #2563eb; margin-bottom: 20px; }
+          p { font-size: 15px; color: #1f2937; margin-bottom: 15px; }
+          .footer { margin-top: 30px; font-size: 13px; color: #6b7280; }
+          .from { font-size: 14px; font-style: italic; color: #4b5563; margin-bottom: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="from">De: ${from}</div>
+          <h2>${subject}</h2>
+          <p>${message}</p>
+          <div class="footer">
+            © ${new Date().getFullYear()} ClubHub
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      this.logger.log(`Envoi message au club: ${to} de ${from}`);
+
+      await this.mailerService.sendMail({
+        to,
+        from, 
+        subject,
+        html: htmlTemplate,
+        text: textVersion,
+      });
+
+      this.logger.log(`Message envoyé au club: ${to}`);
+      return { success: true };
+    } catch (error) {
+      this.logger.error(`Erreur envoi message au club: ${to}`, error.stack);
+      throw error;
+    }
+  }
 }

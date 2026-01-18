@@ -1,0 +1,207 @@
+<div class="form-container">
+  <div class="form-header">
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    </div>
+    <h1 class="form-title">Join Our Club</h1>
+    <p class="form-subtitle">Tell us about yourself and why you'd like to become a member</p>
+  </div>
+
+  @if (statusResource.isLoading()) {
+  <div class="loading-state">
+    <app-loader [message]="'Loading form details...'">
+
+    </app-loader>
+  </div>
+  }
+
+  @if (!statusResource.isLoading() && statusResource.error()) {
+  <app-error [errorMessage]="'User or club not found' " [buttonText]="'return to clubs'"
+    [returnLink]="'/clubs'">
+  </app-error>
+  }
+
+  @if(!statusResource.error() && !statusResource.isLoading() && statusResource.value()==="PENDING"){
+    <div class="info-message">
+      <div class="icon-circle pending">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <h3>Application Pending</h3>
+      <p>Your membership application is currently under review. We will notify you once a decision has been made.</p>
+    </div>
+  } @else if (statusResource.value()==="MEMBER"){
+    <div class="info-message">
+      <div class="icon-circle member">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <h3>Already a Member</h3>
+      <p>You are already a member of this club. No need to apply again!</p>
+    </div>
+  }
+  @else if (!statusResource.error() && !statusResource.isLoading()) {
+  <form [formGroup]="joinClubForm" (ngSubmit)="submitForm()" class="club-form">
+
+    @if (success()) {
+    <div class="success-message">
+      <div class="icon-circle">
+        <i class="bi bi-check-lg"></i>
+      </div>
+      <h3>Application Sent!</h3>
+      <p>Your request has been received. Redirecting...</p>
+    </div>
+    }
+
+    <div class="form-section">
+      <h2 class="section-title">About Your Interest</h2>
+
+      <div class="form-group">
+        <label for="whyJoin" class="form-label">
+          Why do you want to join? <span class="required">*</span>
+        </label>
+        <textarea id="whyJoin" formControlName="whyJoin" class="form-textarea"
+          placeholder="Share your motivation for joining our club (minimum 50 characters)..." rows="4"></textarea>
+        <div class="character-count">
+          {{ getLength('whyJoin') }} / 1000
+
+        </div>
+        @if (joinClubForm.get('whyJoin')?.invalid && joinClubForm.get('whyJoin')?.touched) {
+        <div class="error-message">
+          @if (joinClubForm.get('whyJoin')?.errors?.['required']) {
+          <span>Please tell us why you'd like to join</span>
+          }
+          @if (joinClubForm.get('whyJoin')?.errors?.['minlength']) {
+          <span>Please provide at least 50 characters</span>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="goalsInClub" class="form-label">
+          What are your goals? <span class="required">*</span>
+        </label>
+        <textarea id="goalsInClub" formControlName="goalsInClub" class="form-textarea"
+          placeholder="Describe what you hope to achieve as a member (minimum 30 characters)..." rows="4"></textarea>
+        <div class="character-count">
+          {{ getLength('goalsInClub')}} / 1000
+        </div>
+        @if (joinClubForm.get('goalsInClub')?.invalid && joinClubForm.get('goalsInClub')?.touched) {
+        <div class="error-message">
+          @if (joinClubForm.get('goalsInClub')?.errors?.['required']) {
+          <span>Please share your goals with us</span>
+          }
+          @if (joinClubForm.get('goalsInClub')?.errors?.['minlength']) {
+          <span>Please provide at least 30 characters</span>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Contact Information</h2>
+
+      <div class="form-group">
+        <label for="phoneNumber" class="form-label">
+          Phone Number <span class="required">*</span>
+        </label>
+        <input type="tel" id="phoneNumber" formControlName="phoneNumber" class="form-input"
+          placeholder="Enter your phone number" />
+        @if (joinClubForm.get('phoneNumber')?.invalid && joinClubForm.get('phoneNumber')?.touched) {
+        <div class="error-message">
+          @if (joinClubForm.get('phoneNumber')?.errors?.['required']) {
+          <span>Phone number is required</span>
+          }
+          @if (joinClubForm.get('phoneNumber')?.errors?.['pattern']) {
+          <span>Please enter a valid phone number (8-20 digits)</span>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Experience & Background</h2>
+
+      <div class="form-group">
+        <label for="previousClub" class="form-label">
+          Previous Club Experience
+        </label>
+        <input type="text" id="previousClub" formControlName="previousClub" class="form-input"
+          placeholder="Have you been part of similar clubs before?" />
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="isMemberOfOtherClub" class="checkbox-input" />
+          <span class="checkbox-custom"></span>
+          <span class="checkbox-text">I'm currently a member of another club</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="skills" class="form-label">
+          Skills & Expertise
+        </label>
+        <textarea id="skills" formControlName="skills" class="form-textarea"
+          placeholder="What skills or expertise can you bring to the club?" rows="3"></textarea>
+        <div class="character-count">
+          {{getLength('skills') }} / 500
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="section-title">Additional Details</h2>
+
+      <div class="form-group">
+        <label for="expectations" class="form-label">
+          Your Expectations
+        </label>
+        <textarea id="expectations" formControlName="expectations" class="form-textarea"
+          placeholder="What do you expect from being a club member?" rows="3"></textarea>
+        <div class="character-count">
+          {{ getLength('expectations') }} / 500
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="availability" class="form-label">
+          Availability
+        </label>
+        <input type="text" id="availability" formControlName="availability" class="form-input"
+          placeholder="When are you typically available? (e.g., weekends, evenings)" />
+      </div>
+
+      <div class="form-group">
+        <label for="additionalComments" class="form-label">
+          Additional Comments
+        </label>
+        <textarea id="additionalComments" formControlName="additionalComments" class="form-textarea"
+          placeholder="Anything else you'd like us to know?" rows="3"></textarea>
+        <div class="character-count">
+          {{ getLength('additionalComments') }} / 500
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="submit-button" [disabled]="joinClubForm.invalid">
+        <span class="button-text">Submit Application</span>
+        <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+    </div>
+
+  </form>
+  }
+</div>

@@ -1,0 +1,9 @@
+<div
+  class="loader-container"
+  role="status"
+  aria-live="polite"
+  [attr.aria-label]="message"
+>
+  <div class="loader" [style.width.px]="size" [style.height.px]="size"></div>
+  <span class="loader-text">{{ message }}</span>
+</div>

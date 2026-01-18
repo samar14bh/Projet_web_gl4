@@ -1,0 +1,139 @@
+<div class="event-details-page">
+    <div *ngIf="isLoading()" class="d-flex justify-content-center align-items-center loading-container">
+        <app-loader message="loading event information"></app-loader>
+    </div>
+
+    <div *ngIf="error()" class="container pt-5">
+        <app-error [errorMessage]="'error loading event details please try again later!'"></app-error>
+    </div>
+
+    <ng-container *ngIf="event() as e">
+        <div class="hero-section">
+            <div class="hero-bg" [style.backgroundImage]="'url(' + (e.coverImage | defaultImage:'event') + ')'"></div>
+            <div class="container hero-content">
+                <div class="row">
+                    <div class="col-lg-10 mx-auto fade-in">
+                        <!-- Badges -->
+                        <div class="hero-badges mb-3 d-flex gap-2">
+                            <span class="badge" [ngClass]="{
+                                'bg-success': e.status === 'UPCOMING',
+                                'bg-secondary': e.status === 'COMPLETED',
+                                'bg-danger': e.status === 'CANCELLED'
+                            }">{{ e.status }}</span>
+                            <span class="badge">{{ e.type }}</span>
+                        </div>
+
+                        <h1 class="display-3 hero-title mb-4">{{ e.title }}</h1>
+
+                        <div class="hero-meta d-flex flex-wrap gap-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar2-event-fill me-2 fs-5"></i>
+                                <span>{{ e.startDate | date:'fullDate' }}</span>
+                            </div>
+                            <div class="d-flex align-items-center" *ngIf="e.address">
+                                <i class="bi bi-geo-alt-fill me-2 fs-5"></i>
+                                <span>{{ e.address }}</span>
+                            </div>
+                            <div class="d-flex align-items-center" *ngIf="e.club">
+                                <i class="bi bi-shield-fill-check me-2 fs-5"></i>
+                                <span>Organisé par {{ e.club.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container content-overlap pb-5">
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="glass-card h-100 p-5 fade-in" style="animation-delay: 0.1s;">
+                        <h3 class="section-title">À propos de l'événement</h3>
+                        <div class="text-muted text-justify lead mb-5" style="white-space: pre-line;">
+                            {{ e.description }}
+                        </div>
+
+                        <h3 class="section-title">Informations Pratiques</h3>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-light p-3 rounded-circle me-3 text-primary">
+                                        <i class="bi bi-clock-history fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Horaires</h6>
+                                        <p class="text-muted small mb-0">
+                                            Début: {{ e.startDate | date:'shortTime' }}<br>
+                                            Fin: {{ e.endDate | date:'shortTime' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="glass-card registration-card p-4 sticky-top fade-in"
+                        style="top: 100px; z-index: 20; animation-delay: 0.2s;">
+
+                        <div class="text-center mb-4 pt-2">
+                            <h4 class="fw-bold mb-1">Inscription</h4>
+                            <p class="text-muted small">Rejoignez-nous pour cet événement</p>
+                        </div>
+
+                        <div class="bg-light rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center">
+                            <span class="text-muted fw-medium">Tarif</span>
+                            <span class="fs-2 fw-bold text-primary price-tag">
+                                {{ e.subscriptionFees > 0 ? (e.subscriptionFees | currency:'TND') : 'Gratuit' }}
+                            </span>
+                        </div>
+
+                        <div class="mb-4" *ngIf="e.userRegistration">
+                            <div
+                                class="alert alert-success border-0 bg-success-subtle text-success d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Inscrit</h6>
+                                    <small>Le {{ e.userRegistration.registeredAt | date:'mediumDate' }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button
+                                *ngIf="e.subscriptionFees > 0 && e.paymentStatus !== 'paid' && e.attendanceStatus!='absent'"
+                                (click)="openPaymentModal()"
+                                class="btn btn-primary action-btn text-uppercase shadow-lg">
+                                <i class="bi bi-credit-card-2-front-fill me-2"></i> Payer l'inscription
+                            </button>
+
+                            <button *ngIf="e.paymentStatus === 'paid'" (click)="downloadReceipt()"
+                                class="btn btn-outline-primary action-btn">
+                                <i class="bi bi-file-earmark-arrow-down-fill me-2"></i> Télécharger le reçu
+                            </button>
+
+                            <button *ngIf="e.canCancel" (click)="cancel()"
+                                class="btn btn-link text-danger text-decoration-none small mt-2">
+                                Annuler mon inscription
+                            </button>
+                        </div>
+
+                        <div *ngIf="e.attendanceStatus" class="mt-4 text-center border-top pt-3">
+                            <span class="attendance-badge badge rounded-pill" [ngClass]="{
+                                'bg-success': e.attendanceStatus === 'present',
+                                'bg-danger': e.attendanceStatus === 'absent'
+                            }">
+                                {{ e.attendanceStatus === 'present' ? 'Présent' : 'Absent' }}
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+    <app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()">
+    </app-payment-modal>
+</div>

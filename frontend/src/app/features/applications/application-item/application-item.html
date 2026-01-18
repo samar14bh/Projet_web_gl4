@@ -1,0 +1,32 @@
+<div class="application-row">
+  <!-- Club name -->
+  <div class="club-name">
+    <div class="club-name-text">{{ application().clubName }}</div>
+    <div class="club-category">Membership Application</div>
+  </div>
+
+  <!-- Application date -->
+  <div class="date">
+    <span class="date-label">Submitted</span>
+    <span class="date-value">{{ application().createdAt | date: 'mediumDate' }}</span>
+  </div>
+
+  <!-- Status -->
+  <div
+    class="status"
+    [class.pending]="application().status === 'PENDING'"
+    [class.approved]="application().status === 'APPROVED'"
+    [class.rejected]="application().status === 'REJECTED'"
+  >
+    {{ application().status }}
+  </div>
+
+  <!-- Action -->
+  <button
+    type="button"
+    class="btn btn-outline-primary"
+    (click)="onViewDetails()"
+  >
+    <span>View details</span>
+  </button>
+</div>
