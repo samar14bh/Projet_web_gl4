@@ -1,14 +1,20 @@
 <section class="application-page">
 
-  <!-- HERO -->
   <header class="hero">
+    <div class="hero-background">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
+    </div>
     <div class="hero-content">
+      <div class="hero-icon">
+        <i class="bi bi-file-earmark-text"></i>
+      </div>
       <h1>Application Review</h1>
-      <p>Detailed overview of the request</p>
+      <p>Detailed overview of your membership request</p>
     </div>
   </header>
 
-  <!-- STATES -->
   <div *ngIf="application.isLoading()" class="state">
     <app-loader message="Loading application details..."></app-loader>
   </div>
@@ -17,98 +23,191 @@
     <app-error message="Failed to load application details. Please try again."></app-error>
   </div>
 
-  <!-- CARD -->
+  <!-- REDESIGNED CARD -->
   <article *ngIf="application.value() as app" class="stack-card">
 
-    <!-- HEADER -->
+    <!-- ENHANCED HEADER -->
     <div class="card-head">
-      <div>
-        <h2>{{ app.clubName }}</h2>
-        <span class="status-pill" [ngClass]="app.status.toLowerCase()">
-          {{ app.status }}
-        </span>
+      <div class="header-left">
+        <div class="club-avatar">
+          <i class="bi bi-building"></i>
+        </div>
+        <div>
+          <h2>{{ app.clubName }}</h2>
+          <span class="meta-info">
+            <i class="bi bi-calendar-event"></i>
+            Applied {{ app.createdAt | date:'MMM d, yyyy' }}
+          </span>
+        </div>
       </div>
+      <span class="status-badge" [ngClass]="app.status.toLowerCase()">
+        <span class="status-dot"></span>
+        {{ app.status }}
+      </span>
     </div>
 
-    <!-- BODY -->
+    <!-- REDESIGNED BODY -->
     <div class="card-body">
 
-      <!-- APPLICATION -->
-      <section class="block accent">
-        <h3>Application Details</h3>
+      <!-- APPLICATION DETAILS WITH CARDS -->
+      <section class="details-section">
+        <div class="section-header">
+          <i class="bi bi-person-badge"></i>
+          <h3>Application Details</h3>
+        </div>
 
-        <div class="content-grid">
-          <div>
-            <small>Why Join</small>
-            <p>{{ app.whyJoin }}</p>
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="bi bi-heart"></i>
+            </div>
+            <div class="info-content">
+              <small>Why Join</small>
+              <p>{{ app.whyJoin }}</p>
+            </div>
           </div>
 
-          <div>
-            <small>Goals</small>
-            <p>{{ app.goalsInClub }}</p>
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="bi bi-trophy"></i>
+            </div>
+            <div class="info-content">
+              <small>Goals</small>
+              <p>{{ app.goalsInClub }}</p>
+            </div>
           </div>
 
-          <div *ngIf="app.previousClub">
-            <small>Previous Club</small>
-            <p>{{ app.previousClub }}</p>
+          <div class="info-card" *ngIf="app.previousClub">
+            <div class="info-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="info-content">
+              <small>Previous Club</small>
+              <p>{{ app.previousClub }}</p>
+            </div>
           </div>
 
-          <div>
-            <small>Member Elsewhere</small>
-            <p>{{ app.isMemberOfOtherClub ? 'Yes' : 'No' }}</p>
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="info-content">
+              <small>Member Elsewhere</small>
+              <p class="badge-text">{{ app.isMemberOfOtherClub ? 'Yes' : 'No' }}</p>
+            </div>
           </div>
 
-          <div *ngIf="app.skills">
-            <small>Skills</small>
-            <p>{{ app.skills }}</p>
+          <div class="info-card" *ngIf="app.skills">
+            <div class="info-icon">
+              <i class="bi bi-stars"></i>
+            </div>
+            <div class="info-content">
+              <small>Skills</small>
+              <p>{{ app.skills }}</p>
+            </div>
           </div>
 
-          <div *ngIf="app.expectations">
-            <small>Expectations</small>
-            <p>{{ app.expectations }}</p>
+          <div class="info-card" *ngIf="app.expectations">
+            <div class="info-icon">
+              <i class="bi bi-lightbulb"></i>
+            </div>
+            <div class="info-content">
+              <small>Expectations</small>
+              <p>{{ app.expectations }}</p>
+            </div>
           </div>
 
-          <div *ngIf="app.availability">
-            <small>Availability</small>
-            <p>{{ app.availability }}</p>
+          <div class="info-card" *ngIf="app.availability">
+            <div class="info-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="info-content">
+              <small>Availability</small>
+              <p>{{ app.availability }}</p>
+            </div>
           </div>
 
-          <div *ngIf="app.additionalComments" class="full">
-            <small>Additional Notes</small>
-            <p>{{ app.additionalComments }}</p>
+          <div class="info-card full-width" *ngIf="app.additionalComments">
+            <div class="info-icon">
+              <i class="bi bi-chat-left-text"></i>
+            </div>
+            <div class="info-content">
+              <small>Additional Notes</small>
+              <p>{{ app.additionalComments }}</p>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- VISIBLE ADMIN FEEDBACK SECTION -->
+      <section class="feedback-section">
+        <div class="section-header">
+          <i class="bi bi-shield-check"></i>
+          <h3>Admin Feedback</h3>
+        </div>
 
-      <section class="block highlight">
-        <h3>Admin Feedback</h3>
-
-        <p *ngIf="app.adminResponse; else noResponse">
-          {{ app.adminResponse }}
-        </p>
+        <div class="feedback-card" *ngIf="app.adminResponse; else noResponse">
+          <div class="feedback-header">
+            <div class="admin-avatar">
+              <i class="bi bi-person-check"></i>
+            </div>
+            <div>
+              <strong>Admin Response</strong>
+              <span class="feedback-time">{{ app.updatedAt | date:'MMM d, h:mm a' }}</span>
+            </div>
+          </div>
+          <div class="feedback-content">
+            <p>{{ app.adminResponse }}</p>
+          </div>
+        </div>
 
         <ng-template #noResponse>
-          <p class="placeholder">
-            No response has been added by the admin yet.
-          </p>
+          <div class="feedback-card empty-feedback">
+            <div class="empty-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <p class="empty-text">Awaiting admin review</p>
+            <small>You'll be notified once the admin provides feedback</small>
+          </div>
         </ng-template>
       </section>
 
-
-
+      <!-- ENHANCED ACTION BUTTONS -->
+      <div *ngIf="app.status==='PENDING'" class="actions">
+        <button class="btn btn-cancel" (click)="onDeleteApplication()">
+          <i class="bi bi-x-circle"></i>
+          <span>Cancel Application</span>
+        </button>
+      </div>
     </div>
 
-    <!-- FOOTER -->
+    <!-- ENHANCED FOOTER -->
     <footer class="card-footer">
-      <span>Created {{ app.createdAt | date:'medium' }}</span>
-      <span>Updated {{ app.updatedAt | date:'medium' }}</span>
+      <div class="footer-item">
+        <i class="bi bi-clock"></i>
+        <span>Created {{ app.createdAt | date:'medium' }}</span>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-item">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Updated {{ app.updatedAt | date:'medium' }}</span>
+      </div>
     </footer>
 
   </article>
 
-  <p *ngIf="application.value() === null && !application.isLoading()" class="empty">
-    Application not found
-  </p>
+  <div *ngIf="application.value() === null && !application.isLoading()" class="empty-state">
+    <div class="empty-icon">
+      <i class="bi bi-file-earmark-x"></i>
+    </div>
+    <h3>Application Not Found</h3>
+    <p>The application you're looking for doesn't exist or has been removed.</p>
+  </div>
+
+  <app-confirm-modal *ngIf="showDeleteModal()" title="Cancel Application?"
+                     message="Are you sure you want to cancel this application? This action cannot be undone."
+                     (confirm)="confirmDeleteApplication()" (cancel)="showDeleteModal.set(false)">
+  </app-confirm-modal>
 
 </section>
+

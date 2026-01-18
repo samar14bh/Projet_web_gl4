@@ -60,23 +60,33 @@ export class ClubsController {
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
    */
-  @Get(':clubId/user/:userId/status')
-async getUserClubStatus(
-  @Param('clubId', ParseIntPipe) clubId: number,
-  @Param('userId', ParseIntPipe) userId: number,
-): Promise<string> {
-  return this.clubsService.getUserClubStatus(clubId, userId);
-}
+  /**
+   * GET /api/clubs/stats
+   * Récupérer les statistiques globales des clubs
+   */
   @Get('stats')
   getStats() {
     return this.clubsService.getStats();
   }
- @Get('top')
-async findTopClubs(
-  @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
-): Promise<Club[]> {
-  return this.clubsService.findTopClubsByMembers(limit);
-}
+
+  @Get('top')
+  async findTopClubs(
+    @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+  ): Promise<Club[]> {
+    return this.clubsService.findTopClubsByMembers(limit);
+  }
+
+  /**
+   * GET /api/clubs/status/:clubId/:userId
+   * Récupérer le statut d'un utilisateur dans un club
+   */
+  @Get('status/:clubId/:userId')
+  async getUserClubStatus(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubStatus(clubId, userId);
+  }
 
   /**
    * GET /api/clubs/:id/membership/:userId

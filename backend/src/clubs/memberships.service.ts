@@ -309,6 +309,24 @@ export class MembershipsService {
         return this.toResponseDto(application);
     }
 
+    async deleteApplication(applicationId:number){
+        const application = await this.applicationRepository.findOne({
+            where: { id: applicationId },
+        });
+        if (!application) {
+            throw new NotFoundException(
+                `Candidature avec ID ${applicationId} introuvable`,
+            );
+        }
+        if (application.status !== Status.PENDING) {
+            throw new BadRequestException(
+                'Seules les candidatures en attente peuvent être annulées',
+            );
+        }
+        await this.applicationRepository.remove(application);
+
+
+    }
     toResponseDto(application: Application): ApplicationResponseDto {
         return {
             id: application.id,

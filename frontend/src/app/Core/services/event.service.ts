@@ -139,7 +139,12 @@ export class EventService {
   }
 
   getEventDetails(userId: () => number, eventId: () => number) {
-    return httpResource<UserEventDto>(() => `${this.apiUrl}/user-event-details/${userId()}?eventId=${eventId()}`);
+    return httpResource<UserEventDto>(() => {
+      const u = userId();
+      const e = eventId();
+      if (!u || !e) return undefined;
+      return `${this.apiUrl}/user-event-details/${u}?eventId=${e}`;
+    });
   }
 
   /**

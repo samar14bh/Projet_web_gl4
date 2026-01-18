@@ -22,8 +22,8 @@ export class EventDetails {
 
   private eventService = inject(EventService);
 
-  userId = input.required({ transform: numberAttribute });
-  eventId = input.required({ transform: numberAttribute });
+  userId = input(0, { transform: numberAttribute });
+  eventId = input(0, { transform: numberAttribute });
 
 
   eventResource = this.eventService.getEventDetails(this.userId, this.eventId);
@@ -35,6 +35,7 @@ export class EventDetails {
 
   constructor() {
     effect(() => {
+      console.log('the user id is ', this.userId, this.eventId);
       console.log('Event Resource Value:', this.eventResource.value());
     });
 

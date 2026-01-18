@@ -126,4 +126,12 @@ export class MembershipsController {
         return application;
     }
 
+    @Delete('applications/:applicationId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteApplication(
+        @Param('applicationId', ParseIntPipe) applicationId: number,
+    ): Promise<void> {
+        await this.membershipsService.deleteApplication(applicationId);
+    }
+
 }

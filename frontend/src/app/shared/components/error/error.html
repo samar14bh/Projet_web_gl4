@@ -9,12 +9,12 @@
   <div class="mt-3">
     <ng-container *ngIf="returnLink(); else historyBack">
       <a [routerLink]="returnLink()" class="btn btn-danger rounded-pill px-4">
-        <i class="bi bi-arrow-left me-2"></i> Retour
+        <i class="bi bi-arrow-left me-2"></i> {{ buttonText() }}
       </a>
     </ng-container>
     <ng-template #historyBack>
       <button (click)="goBack()" class="btn btn-danger rounded-pill px-4">
-        <i class="bi bi-arrow-left me-2"></i> Retour
+        <i class="bi bi-arrow-left me-2"></i> {{ buttonText() }}
       </button>
     </ng-template>
   </div>

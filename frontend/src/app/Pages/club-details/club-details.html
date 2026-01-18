@@ -7,7 +7,13 @@
     <div class="error-container">
         <app-error [errorMessage]="'Une erreur est survenue lors du chargement des détails du club.'"></app-error>
     </div>
-    } @else {
+    } @else if (errorMessage()){
+    <div class="error-container">
+        <app-error [errorMessage]="errorMessage()"></app-error>
+    </div>
+
+    }
+    @else {
     @if (membershipResource.value()?.club; as c) {
     <div class="hero-section">
         <div class="hero-background"
@@ -16,7 +22,7 @@
         <div class="container hero-content">
             <div class="back-link">
                 <a routerLink="/my-clubs" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Retour à mes clubs
+                    <i class="bi bi-arrow-left"></i> Retour à mes clubs
                 </a>
             </div>
             <div class="club-header">
@@ -27,8 +33,8 @@
                     <span class="category-badge">{{ c.categoryName || 'Général' }}</span>
                     <h1>{{ c.name }}</h1>
                     <div class="quick-stats">
-                        <span><i class="fas fa-users"></i> {{ c.members || 0 }} Membres</span>
-                        <span><i class="fas fa-calendar-alt"></i> {{ c.events || 0 }} Événements</span>
+                        <span><i class="bi bi-people"></i> {{ c.members || 0 }} Membres</span>
+                        <span><i class="bi bi-calendar-event"></i> {{ c.events || 0 }} Événements</span>
                     </div>
                 </div>
             </div>
@@ -47,14 +53,14 @@
                     <h2 class="section-title">Activités & Services</h2>
                     <div class="features-grid">
                         <div class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-star"></i></div>
+                            <div class="feature-icon"><i class="bi bi-star-fill"></i></div>
                             <div class="feature-text">
                                 <h3>Avantages Membres</h3>
                                 <p>Accès prioritaire aux événements et tarifs réduits.</p>
                             </div>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
+                            <div class="feature-icon"><i class="bi bi-envelope-open"></i></div>
                             <div class="feature-text">
                                 <h3>Newsletter</h3>
                                 <p>Restez informé des dernières nouvelles du club.</p>
@@ -67,7 +73,7 @@
                     <div class="section-header d-flex justify-content-between align-items-center mb-4">
                         <h2 class="section-title mb-0">Événements du club</h2>
                         <button class="btn btn-primary btn-sm rounded-pill px-3" (click)="onDiscoverEvents()">
-                            <i class="fas fa-plus me-1"></i> Découvrir plus
+                            <i class="bi bi-plus me-1"></i> Découvrir plus
                         </button>
                     </div>
 
@@ -83,7 +89,7 @@
                     </div>
                     } @else {
                     <div class="empty-events text-center py-5 glass-card">
-                        <i class="fas fa-calendar-times fs-1 mb-3 text-muted"></i>
+                        <i class="bi bi-calendar-x fs-1 mb-3 text-muted"></i>
                         <p class="mb-0 text-muted">Aucun événement à venir trouvé.</p>
                     </div>
                     }
@@ -97,7 +103,7 @@
                     @if (membershipResource.value()?.membership; as m) {
                     <div class="membership-info">
                         <div class="status-badge" [class.status-active]="true">
-                            <i class="fas fa-check-circle"></i> Membre Actif
+                            <i class="bi bi-check-circle-fill"></i> Membre Actif
                         </div>
                         <div class="info-row">
                             <span class="label">Rôle</span>
@@ -121,10 +127,10 @@
                     }
                     <div class="action-buttons">
                         <button class="btn btn-outline-primary w-100 mb-2" (click)="onContactMember()">
-                            <i class="fas fa-comments"></i> Contacter un membre
+                            <i class="bi bi-chat-dots"></i> Contacter un membre
                         </button>
                         <button class="btn btn-outline-danger w-100" (click)="onLeaveClub()">
-                            <i class="fas fa-door-open"></i> Quitter le club
+                            <i class="bi bi-door-open"></i> Quitter le club
                         </button>
                     </div>
                 </div>
@@ -132,7 +138,7 @@
                 <div class="glass-card help-card">
                     <h3>Besoin d'aide ?</h3>
                     <p>Si vous avez des questions sur votre adhésion, contactez le bureau du club.</p>
-                    <a href="mailto:support@clubconnect.com" class="support-link">support@clubconnect.com</a>
+                    <a href="mailto:support@clubconnect.com" class="support-link">support&#64;clubconnect.com</a>
                 </div>
             </aside>
         </div>
@@ -146,4 +152,10 @@
                 (close)="showContactModal.set(false)" (submitted)="onSendMessage($event)"></app-contact>
         </div>
     </div>
+
+    <app-confirm-modal *ngIf="showLeaveModal()" title="Quitter le club ?"
+        message="Êtes-vous sûr de vouloir quitter ce club ?"
+        disclaimer="Attention : Si vous quittez le club, il n'y a aucune garantie de pouvoir revenir, sauf si le recrutement ouvre à nouveau."
+        (confirm)="confirmLeaveClub()" (cancel)="showLeaveModal.set(false)">
+    </app-confirm-modal>
 </div>

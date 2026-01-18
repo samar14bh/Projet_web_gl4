@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
+import { Component, inject, input, resource, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClubService } from '../../Core/services/club.service';
 import { EventService } from '../../Core/services/event.service';
@@ -9,11 +9,13 @@ import { Router, RouterModule } from '@angular/router';
 import { UserEventsCard } from '../../features/events/user-events-card/user-events-card';
 import { FormsModule } from '@angular/forms';
 import { Contact } from '../../features/member/contact/contact';
+import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
+import { MailService } from '../../Core/services/mail.service';
 
 @Component({
   selector: 'app-club-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, Loader, AppError, DefaultImagePipe, UserEventsCard, FormsModule, Contact],
+  imports: [CommonModule, RouterModule, Loader, AppError, DefaultImagePipe, UserEventsCard, FormsModule, Contact, ConfirmModal],
   templateUrl: './club-details.html',
   styleUrl: './club-details.css',
 })
@@ -23,6 +25,11 @@ export class ClubDetails {
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
   private readonly USER_ID = 1;
+
+  errorMessage = signal<string>('');
+  private readonly mailService = inject(MailService);
+
+
 
   readonly showContactModal = signal(false);
   readonly clubId = input.required<number, string>({
@@ -56,29 +63,49 @@ export class ClubDetails {
     }
   });
 
+  readonly showLeaveModal = signal(false);
+
   onDiscoverEvents() {
     this.router.navigate(['/discover-events', this.clubId()]);
   }
 
   onLeaveClub() {
-    if (confirm('Êtes-vous sûr de vouloir quitter ce club ?')) {
-      this.clubService.leaveClub(this.clubId(), this.USER_ID).subscribe({
-        next: () => {
-          alert('Vous avez quitté le club avec succès.');
-          this.router.navigate(['/my-clubs']);
-        },
-        error: () => {
-          alert('Une erreur est survenue lors de votre désinscription.');
-        }
-      });
-    }
+    this.showLeaveModal.set(true);
+  }
+
+  confirmLeaveClub() {
+    this.showLeaveModal.set(false);
+    this.clubService.leaveClub(this.clubId(), this.USER_ID).subscribe({
+      next: () => {
+        this.router.navigate(['/my-clubs']);
+      },
+      error: () => {
+        this.errorMessage.set('Failed to leave the club. Please try again.');
+
+
+      }
+    });
   }
 
   onContactMember() {
     this.showContactModal.set(true);
   }
 
+
+
   onSendMessage(data: { subject: string; message: string }) {
-    console.log('Message sent successfully:', data);
+    const clubEmail = this.membershipResource.value()?.club?.email;
+
+
+    this.mailService.sendContactClubEmail(clubEmail, data.subject, data.message).subscribe({
+      next: () => {
+        console.log('Message sent successfully');
+
+      },
+      error: (err) => {
+        console.error('Error sending message', err);
+        this.errorMessage.set('Failed to send message.');
+      }
+    });
   }
 }

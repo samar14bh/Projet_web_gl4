@@ -71,6 +71,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/member/join-club-form/join-club-form')
             .then(m => m.JoinClubForm),
+
         title: 'Join Club'
       },
       {

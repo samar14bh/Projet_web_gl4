@@ -30,7 +30,6 @@ export class UserEventsCard {
     try {
       await this.eventService.cancelRegistration(this.event.id).toPromise();
       alert('Inscription annulée avec succès');
-      // Optionally emit an event to parent to reload the list
     } catch {
       alert('Erreur lors de l’annulation');
     }
