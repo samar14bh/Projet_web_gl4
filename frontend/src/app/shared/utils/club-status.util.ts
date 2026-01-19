@@ -21,7 +21,7 @@ export function createClubStatusManager(config: ClubStatusConfig) {
 
     const statusPromises = clubIds.map(clubId =>
       new Promise<void>((resolve) => {
-        config.clubService.getUserClubStatus(clubId, numericUserId).subscribe({
+        config.clubService.getUserClubMembershipStatus(clubId, numericUserId).subscribe({
           next: (response) => {
             currentMap.set(clubId, response);
             resolve();

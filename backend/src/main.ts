@@ -66,6 +66,6 @@ async function bootstrap() {
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`API endpoints available at: http://localhost:${port}/api`);
   console.log(`Swagger documentation available at: http://localhost:${port}/api/docs`);
-  console.log(`✅ SSE endpoint: http://localhost:${port}/api/notifications/sse`);
+  console.log(` SSE endpoint: http://localhost:${port}/api/notifications/sse`);
 }
 bootstrap();

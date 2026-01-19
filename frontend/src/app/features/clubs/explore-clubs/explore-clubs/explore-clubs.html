@@ -6,34 +6,26 @@
     </div>
   </div>
 
-  @if (publicStatsResource.isLoading()) {
-    <div class="stats-loading">
-      <div class="spinner"></div>
-    </div>
+  @if (statsRes.isLoading()) {
+    <div class="stats-loading"><div class="spinner"></div></div>
   } @else {
     <div class="quick-stats">
       <div class="quick-stat">
-        <div class="stat-icon primary">
-          <i class="bi bi-building"></i>
-        </div>
+        <div class="stat-icon primary"><i class="bi bi-building"></i></div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats().active) }}</span>
           <span class="stat-label">Clubs actifs</span>
         </div>
       </div>
       <div class="quick-stat">
-        <div class="stat-icon success">
-          <i class="bi bi-people"></i>
-        </div>
+        <div class="stat-icon success"><i class="bi bi-people"></i></div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats().totalMembers) }}</span>
           <span class="stat-label">Membres totaux</span>
         </div>
       </div>
       <div class="quick-stat">
-        <div class="stat-icon warning">
-          <i class="bi bi-calendar-event"></i>
-        </div>
+        <div class="stat-icon warning"><i class="bi bi-calendar-event"></i></div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats().totalEvents) }}</span>
           <span class="stat-label">Événements</span>
@@ -50,7 +42,7 @@
           type="text" 
           placeholder="Rechercher..." 
           [value]="searchQuery()" 
-          (input)="onSearch($any($event.target).value)" 
+          (input)="onSearch($event)" 
           class="search-input" 
         />
       </div>
@@ -60,7 +52,7 @@
         (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)"
       >
         <option value="all">Toutes les catégories</option>
-        @for (category of categories(); track category.id) {
+        @for (category of categoriesRes.data(); track category.id) {
           <option [value]="category.id">{{ category.name }}</option>
         }
       </select>
@@ -78,72 +70,78 @@
     <button class="reset-btn" (click)="resetFilters()">Réinitialiser les filtres</button>
   </div>
 
-  @if (isLoading()) {
+  @if (clubsRes.isLoading()) {
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Chargement des clubs...</p>
     </div>
-  } @else if (hasError()) {
+  } @else if (clubsRes.hasError()) {
     <div class="error-state">
       <i class="bi bi-exclamation-triangle"></i>
       <h3>Erreur de chargement</h3>
-      <p>Impossible de charger les clubs</p>
-      <app-button 
-        label="Réessayer" 
-        variant="secondary" 
-        (clicked)="refreshData()" 
-      />
+      <app-button label="Réessayer" variant="secondary" (clicked)="clubsRes.reload()" />
     </div>
   } @else if (clubs().length === 0) {
     <div class="empty-state">
       <i class="bi bi-inbox"></i>
       <h3>Aucun club trouvé</h3>
-      <p>Aucun club ne correspond à vos critères de recherche.</p>
-      <app-button 
-        label="Réinitialiser" 
-        variant="secondary" 
-        (clicked)="resetFilters()" 
-      />
+      <app-button label="Réinitialiser" variant="secondary" (clicked)="resetFilters()" />
     </div>
   } @else {
     <div class="clubs-grid">
       @for (club of clubs(); track club.id) {
+        @let meta = getClubMeta(club.id);
         <app-club-component
           [club]="club"
           [showJoinButton]="true"
-          [joinButtonLabel]="getButtonText(club.id)"
-          [joinButtonVariant]="getButtonVariant(club.id)"
-          [joinButtonDisabled]="isButtonDisabled(club.id)"
+          [joinButtonLabel]="meta.text"
+          [joinButtonVariant]="meta.variant"
+          [joinButtonDisabled]="meta.disabled"
           [isAuthenticated]="isAuthenticated()"
-          (viewDetails)="viewClubDetails($event)"
+          (viewDetails)="router.navigate(['/clubs', club.id])"
           (join)="handleClubAction($event)"
-          (loginRequired)="router.navigate(['/login'])"
         />
       }
     </div>
 
     @if (totalPages() > 1) {
-      <div class="pagination">
-        <button 
-          class="pagination-btn" 
-          [disabled]="currentPage() === 1" 
-          (click)="goToPage(currentPage() - 1)"
-        >
-          <i class="bi bi-chevron-left"></i> Précédent
-        </button>
-        
-        <div class="pagination-info">
-          Page {{ currentPage() }} sur {{ totalPages() }}
-          <span class="pagination-total">({{ totalClubs() }} clubs)</span>
+      <div class="pagination-container">
+        <div class="pagination-controls">
+          <button 
+            class="pagination-nav-btn" 
+            [disabled]="currentPage() === 1" 
+            (click)="goToPage(currentPage() - 1)"
+          >
+            <i class="bi bi-chevron-left"></i>
+          </button>
+
+          <div class="pagination-numbers">
+            @for (page of pageNumbers(); track $index) {
+              @if (page === -1) {
+                <span class="pagination-ellipsis">...</span>
+              } @else {
+                <button 
+                  class="pagination-number-btn" 
+                  [class.active]="page === currentPage()"
+                  (click)="goToPage(page)"
+                >
+                  {{ page }}
+                </button>
+              }
+            }
+          </div>
+
+          <button 
+            class="pagination-nav-btn" 
+            [disabled]="currentPage() === totalPages()" 
+            (click)="goToPage(currentPage() + 1)"
+          >
+            <i class="bi bi-chevron-right"></i>
+          </button>
         </div>
-        
-        <button 
-          class="pagination-btn" 
-          [disabled]="currentPage() === totalPages()" 
-          (click)="goToPage(currentPage() + 1)"
-        >
-          Suivant <i class="bi bi-chevron-right"></i>
-        </button>
+        <div class="pagination-summary">
+          Page {{ currentPage() }} sur {{ totalPages() }} ({{ totalClubs() }} clubs)
+        </div>
       </div>
     }
   }

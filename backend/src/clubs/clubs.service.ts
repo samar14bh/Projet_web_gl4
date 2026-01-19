@@ -602,8 +602,6 @@ export class ClubsService {
 
   }
 
-
-
  async getRecommendations(
   userId: number,
   limit: number = 3
@@ -690,5 +688,60 @@ export class ClubsService {
   return results;
 }
 
+async getUserClubMembershipStatus(clubId: number, userId: number): Promise<string> {
+  const club = await this.clubRepository.findOne({ where: { id: clubId } });
+  if (!club) {
+    throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+  }
+
+  const membership = await this.membershipRepository
+    .createQueryBuilder('membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .andWhere('(membership.date_fin IS NULL OR membership.date_fin >= :now)', { 
+      now: new Date() 
+    })
+    .getOne();
+
+  if (membership) {
+    return `Membre ${membership.role.toLowerCase()}`;
+  }
+
+  const expiredMembership = await this.membershipRepository
+    .createQueryBuilder('membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .andWhere('membership.date_fin < :now', { now: new Date() })
+    .getOne();
+
+  if (expiredMembership) {
+    return "Ancien membre";
+  }
+
+  const application = await this.applicationRepository
+    .createQueryBuilder('application')
+    .innerJoin('application.membership', 'membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .orderBy('application.created_at', 'DESC')
+    .getOne();
+
+  if (application) {
+    switch (application.status) {
+      case Status.PENDING:
+        return "Candidature en attente";
+      case Status.APPROVED:
+        return "Candidature approuvée";
+      case Status.REJECTED:
+        return "Candidature rejetée";
+      case Status.CONFIRMED:
+        return "Candidature confirmée";
+      default:
+        return "Candidature en cours";
+    }
+  }
+
+  return "Non membre";
+}
 
 }
