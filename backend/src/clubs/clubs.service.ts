@@ -2,6 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Club } from './entities/club.entity';
+import { unlink } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
 import {
   CreateClubDto,
   UpdateClubDto,
@@ -43,14 +47,14 @@ export class ClubsService {
    * Créer un nouveau club
    */
   async create(createClubDto: CreateClubDto): Promise<Club> {
-    // Générer le slug à partir du nom
-    const slug = this.generateSlug(createClubDto.name);
+
+    const { categoryId, ...clubData } = createClubDto;
 
     const club = this.clubRepository.create({
-      ...createClubDto,
-      slug,
+      ...clubData,
       creationDate: new Date(),
       isActive: true,
+      category: { id: categoryId },
     });
 
     return await this.clubRepository.save(club);
@@ -173,25 +177,52 @@ export class ClubsService {
   /**
    * Mettre à jour un club
    */
-  async update(id: number, updateClubDto: UpdateClubDto): Promise<any> {
-    // Vérifier existence
-    const exists = await this.clubRepository.findOne({ where: { id } });
+  async update(
+    id: number,
+    dto: UpdateClubDto,
+    logo?: string,
+    coverImage?: string,
+  ) {
+    const club = await this.clubRepository.findOne({
+      where: { id },
+      relations: ['category'],
+    });
 
-    if (!exists) {
-      throw new NotFoundException(`Club avec l'ID ${id} introuvable`);
+    if (!club) {
+      throw new NotFoundException('Club not found');
     }
 
-    // Si le nom change, régénérer le slug
-    if (updateClubDto.name && updateClubDto.name !== exists.name) {
-      updateClubDto['slug'] = this.generateSlug(updateClubDto.name);
+    const updateData: any = {
+      ...dto,
+    };
+
+    // 🔥 FIX DATE MYSQL
+    if (dto.creationDate) {
+      updateData.creationDate = dto.creationDate.split('T')[0]; // YYYY-MM-DD
     }
 
-    // UPDATE direct
-    await this.clubRepository.update(id, updateClubDto);
+    // Logo
+    if (logo) {
+      updateData.logo = logo;
+    }
 
-    // Retourner le club enrichi
+    // Cover
+    if (coverImage) {
+      updateData.coverImage = coverImage;
+    }
+
+    // ⚠️ Category relation (IMPORTANT)
+    if (dto.categoryId) {
+      updateData.category = { id: dto.categoryId };
+      delete updateData.categoryId;
+    }
+
+    await this.clubRepository.update(id, updateData);
+
     return this.findOne(id);
   }
+
+
 
   /**
    * Activer/Désactiver un club
@@ -218,9 +249,22 @@ export class ClubsService {
    * Supprimer un club
    */
   async remove(id: number): Promise<void> {
-    const club = await this.findOne(id);
+    const club = await this.clubRepository.findOne({
+      where: { id },
+    });
+
+    if (!club) {
+      throw new NotFoundException(`Club avec l'ID ${id} introuvable`);
+    }
+
+    // 🧹 Supprimer les fichiers
+    await this.deleteFile(club.logo);
+    await this.deleteFile(club.coverImage);
+
+    // 🗑️ Supprimer le club
     await this.clubRepository.remove(club);
   }
+
 
   /**
    * Récupérer les statistiques globales des clubs
@@ -689,6 +733,21 @@ export class ClubsService {
 
   return results;
 }
+  private async deleteFile(filePath?: string) {
+    if (!filePath) return;
+
+    const fullPath = join(process.cwd(), filePath);
+
+    if (existsSync(fullPath)) {
+      try {
+        await unlink(fullPath);
+      } catch (err) {
+        console.error('Erreur suppression fichier:', fullPath, err);
+      }
+    }
+  }
+
+
 
 
 }

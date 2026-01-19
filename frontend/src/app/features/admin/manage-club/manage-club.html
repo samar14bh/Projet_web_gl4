@@ -7,7 +7,7 @@
     </div>
     <div class="header-actions">
       <app-button
-        label="+ Créer un club"
+        label="Créer un club"
         variant="primary"
         icon="plus-lg"
         (clicked)="openCreateModal()"
@@ -165,7 +165,7 @@
         <div class="club-card">
           <!-- Image de couverture -->
           <div class="club-cover">
-            <img [src]="club.coverImage" [alt]="club.name" />
+            <img [src]="getImageUrl(club.coverImage)" [alt]="club.name" />
             <div class="club-status-badge" [class]="getStatusClass(club.isActive)">
               {{ getStatusLabel(club.isActive) }}
             </div>
@@ -175,7 +175,7 @@
           <div class="club-content">
             <!-- Logo et nom -->
             <div class="club-header">
-              <img [src]="club.logo" [alt]="club.name" class="club-logo" />
+              <img [src]="getImageUrl(club.logo)" [alt]="club.name" class="club-logo" />
               <div class="club-info">
                 <h3 class="club-name">{{ club.name }}</h3>
                 <span class="club-category">
@@ -301,12 +301,12 @@
     <div class="club-details">
       <!-- Image de couverture -->
       <div class="details-cover">
-        <img [src]="selectedClub()!.coverImage" [alt]="selectedClub()!.name" />
+        <img [src]="getImageUrl(selectedClub()!.coverImage)" [alt]="selectedClub()!.name" />
       </div>
 
       <!-- Informations principales -->
       <div class="details-header">
-        <img [src]="selectedClub()!.logo" [alt]="selectedClub()!.name" class="details-logo" />
+        <img [src]="getImageUrl(selectedClub()!.logo)" [alt]="selectedClub()!.name" class="details-logo" />
         <div class="details-info">
           <h2>{{ selectedClub()!.name }}</h2>
           <span class="details-category">
@@ -435,27 +435,16 @@
   </div>
 </app-modal>
 
-<!-- Modal de formulaire (à implémenter) -->
+<!-- Modal de création/édition de club -->
 <app-modal
   [isOpen]="isFormModalOpen()"
   [title]="selectedClub() ? 'Modifier le club' : 'Créer un club'"
   size="large"
   (closed)="isFormModalOpen.set(false)"
 >
-  <div class="form-placeholder">
-    <p>Formulaire de création/édition de club (à implémenter)</p>
-  </div>
-
-  <div modal-footer>
-    <app-button
-      label="Annuler"
-      variant="ghost"
-      (clicked)="isFormModalOpen.set(false)"
-    />
-    <app-button
-      label="Enregistrer"
-      variant="primary"
-      icon="check-lg"
-    />
-  </div>
+  <app-club-form
+    [club]="selectedClub()"
+    (onSuccess)="onClubCreated()"
+    (onCancel)="isFormModalOpen.set(false)"
+  />
 </app-modal>

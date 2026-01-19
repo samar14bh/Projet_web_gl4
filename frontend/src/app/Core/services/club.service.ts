@@ -119,6 +119,25 @@ export class ClubService {
   createClub(dto: CreateClubDto): Observable<Club> {
     return this.http.post<Club>(this.apiUrl, dto);
   }
+  /**
+   * Créer un club avec upload de logo (FormData)
+   */
+  createClubWithLogo(formData: FormData): Observable<Club> {
+    return this.http.post<Club>(this.apiUrl, formData);
+  }
+  /**
+   * Mettre à jour un club avec upload de fichiers
+   */
+  updateClubWithLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/update-with-files`, formData);
+  }
+
+  /**
+   * Upload du logo d'un club
+   */
+  uploadLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/logo`, formData);
+  }
 
   /**
    * Mettre à jour un club
