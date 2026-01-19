@@ -48,6 +48,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
+        title: 'Tableau de bord',
         canActivate: [roleGuard],
         data: { role: 'USER' }
       },
