@@ -688,7 +688,61 @@
   font-size: 12px;
   font-weight: 500;
 }
+/* --- Boutons de Filtre --- */
+.filter-btn {
+  border: none;
+  background: none;
+  padding: 0; /* On laisse le composant gérer le padding interne */
+}
 
+.filter-btn ::ng-deep button {
+  padding: 10px 20px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border: 1px solid transparent !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+  width: auto !important;
+}
+
+/* État actif des filtres */
+.filter-btn.active ::ng-deep button {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* --- Boutons de Test (Console) --- */
+.test-btn {
+  width: 100%;
+}
+
+.test-btn ::ng-deep button {
+  width: 100% !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  justify-content: center !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Couleurs spécifiques des boutons de test */
+.payment-btn ::ng-deep button { background: #ebf8ff !important; color: #3182ce !important; }
+.club-btn ::ng-deep button { background: #faf5ff !important; color: #805ad5 !important; }
+.event-btn ::ng-deep button { background: #fff5f5 !important; color: #e53e3e !important; }
+.custom-btn ::ng-deep button { background: #f0fff4 !important; color: #38a169 !important; }
+
+/* --- Boutons d'action (Marquer comme lu, etc.) --- */
+.action-btn ::ng-deep button {
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  border-radius: 8px !important;
+}
 /* Animations */
 @keyframes pulse {
   0%, 100% { opacity: 1; }

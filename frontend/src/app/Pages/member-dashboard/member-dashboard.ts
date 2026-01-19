@@ -10,11 +10,12 @@ import { EventCardComponent } from '../../shared/components/event-card-component
 import { ClubComponent } from '../../features/clubs/club-component/club-component/club-component';
 import { createPaginationClubs } from '../../shared/utils/pagination-clubs.util';
 import { createFilterControlsClubs, createSortControlsClubs, handleSortChangeClubs, handleSearchClubs, sortItemsClubs } from '../../shared/utils/filter-sort-clubs.util';
+import { ButtonComponent } from '../../shared/components/button/button';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent],
+  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent,ButtonComponent],
   templateUrl: './member-dashboard.html',
   styleUrls: ['./member-dashboard.css']
 })

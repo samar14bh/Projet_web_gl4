@@ -56,7 +56,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
-    // On sauvegarde systématiquement lors d'une navigation interne
     this.router.events.pipe(
       filter(event => event instanceof NavigationStart),
       takeUntilDestroyed(this.destroyRef)
@@ -67,7 +66,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any): void {
-    // Sauvegarde lors de la fermeture de l'onglet ou refresh
     this.saveFormData();
   }
 
@@ -77,8 +75,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }
 
     this.restoreFormData();
-  
-    // Sauvegarde automatique en temps réel
     this.registerForm.valueChanges
       .pipe(
         debounceTime(500),
@@ -90,7 +86,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // On persiste les données même si le composant est détruit après un succès
     this.saveFormData();
   }
 
@@ -198,8 +193,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
         this.successMessage.set('✓ Compte créé avec succès !');
         this.isLoading.set(false);
         
-        // MODIFICATION : On ne supprime plus clearFormData() ici pour permettre le retour arrière
-        
         if (response.user) {
           this.authService.currentUser.set(response.user);
         }
@@ -215,8 +208,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  // Méthode appelée par le nouveau bouton
   clearSavedData(): void {
     this.clearFormData();
     this.registerForm.reset();

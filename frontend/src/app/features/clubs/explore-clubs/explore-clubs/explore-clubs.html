@@ -67,7 +67,13 @@
         <option value="createdAt">Trier par date de création</option>
       </select>
     </div>
-    <button class="reset-btn" (click)="resetFilters()">Réinitialiser les filtres</button>
+    <app-button 
+  label="Réinitialiser les filtres" 
+  variant="ghost" 
+  icon="arrow-counterclockwise"
+  (clicked)="resetFilters()"
+  class="reset-btn"
+/>
   </div>
 
   @if (clubsRes.isLoading()) {
@@ -107,37 +113,39 @@
     @if (totalPages() > 1) {
       <div class="pagination-container">
         <div class="pagination-controls">
-          <button 
-            class="pagination-nav-btn" 
-            [disabled]="currentPage() === 1" 
-            (click)="goToPage(currentPage() - 1)"
-          >
-            <i class="bi bi-chevron-left"></i>
-          </button>
+          <app-button 
+    variant="ghost"
+    icon="chevron-left"
+    label=""
+    [disabled]="currentPage() === 1" 
+    (clicked)="goToPage(currentPage() - 1)"
+    class="pagination-nav-btn"
+  />
 
           <div class="pagination-numbers">
-            @for (page of pageNumbers(); track $index) {
-              @if (page === -1) {
-                <span class="pagination-ellipsis">...</span>
-              } @else {
-                <button 
-                  class="pagination-number-btn" 
-                  [class.active]="page === currentPage()"
-                  (click)="goToPage(page)"
-                >
-                  {{ page }}
-                </button>
-              }
-            }
-          </div>
+  @for (page of pageNumbers(); track $index) {
+    @if (page === -1) {
+      <span class="pagination-ellipsis">...</span>
+    } @else {
+      <app-button 
+        [label]="page.toString()"
+        [variant]="page === currentPage() ? 'primary' : 'ghost'"
+        class="pagination-number-btn"
+        [class.active]="page === currentPage()"
+        (clicked)="goToPage(page)"
+      />
+    }
+  }
+</div>
 
-          <button 
-            class="pagination-nav-btn" 
-            [disabled]="currentPage() === totalPages()" 
-            (click)="goToPage(currentPage() + 1)"
-          >
-            <i class="bi bi-chevron-right"></i>
-          </button>
+          <app-button 
+  variant="ghost"
+  icon="chevron-right"
+  label="Suivant"
+  [disabled]="currentPage() === totalPages()" 
+  (clicked)="goToPage(currentPage() + 1)"
+  class="pagination-nav-btn"
+/>
         </div>
         <div class="pagination-summary">
           Page {{ currentPage() }} sur {{ totalPages() }} ({{ totalClubs() }} clubs)
