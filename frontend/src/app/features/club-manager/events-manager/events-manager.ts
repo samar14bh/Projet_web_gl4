@@ -14,6 +14,8 @@ import {ButtonComponent} from '../../../shared/components/button/button';
 import {ModalComponent} from '../../../shared/components/modal/modal';
 import {EventFormComponent} from '../events/event-form/event-form';
 import {RegistrationsModalComponent} from '../events/registrations-modal/registrations-modal';
+import {environment} from '../../../../environments/environment';
+import {ToastService} from '../../../Core/services/toast.service';
 
 /**
  * PAGE 15 : Gérer les événements
@@ -29,6 +31,9 @@ import {RegistrationsModalComponent} from '../events/registrations-modal/registr
 })
 export class EventsManagerComponent {
   private readonly eventService = inject(EventService);
+
+// Dans la classe :
+ private readonly toastService = inject(ToastService);
 
   // ========== SIGNALS D'ÉTAT ==========
 
@@ -80,6 +85,22 @@ export class EventsManagerComponent {
 
     return filters;
   });
+  /**
+   * Obtenir l'URL complète d'une image
+   */
+  getImageUrl(path: string | null | undefined): string {
+    if (!path) {
+      return 'https://via.placeholder.com/400x200?text=No+Image';
+    }
+
+    // Si le chemin commence déjà par http, le retourner tel quel
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    // Sinon, ajouter l'URL du backend
+    return `${environment.uploadsUrl}${path}`;
+  }
 
   // ========== RESOURCE POUR LES ÉVÉNEMENTS (rxResource) ==========
 
@@ -169,17 +190,7 @@ export class EventsManagerComponent {
     this.selectedEvent.set(null);
   }
 
-  /**
-   * Succès de création/modification
-   */
-  onFormSuccess(event: Event) {
-    this.closeFormModal();
-    this.reloadEvents();
-    const message = this.selectedEvent()
-      ? `Événement "${event.title}" modifié avec succès !`
-      : `Événement "${event.title}" créé avec succès !`;
-    alert(message);
-  }
+
 
   /**
    * Annulation du formulaire
@@ -191,28 +202,7 @@ export class EventsManagerComponent {
   /**
    * Supprimer un événement
    */
-  deleteEvent(event: Event) {
-    const confirmed = confirm(
-      `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`
-    );
 
-    if (!confirmed) return;
-
-    this.isDeleting.set(true);
-
-    this.eventService.deleteEvent(event.id).subscribe({
-      next: () => {
-        this.isDeleting.set(false);
-        this.reloadEvents();
-        alert(`Événement "${event.title}" supprimé avec succès !`);
-      },
-      error: (error) => {
-        this.isDeleting.set(false);
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression de l\'événement');
-      },
-    });
-  }
 
   /**
    * Dupliquer un événement
@@ -303,5 +293,46 @@ export class EventsManagerComponent {
       [EventStatus.CANCELLED]: 'Annulé',
     };
     return labels[status] || status;
+  }
+  /**
+   * Succès de création/modification
+   */
+  onFormSuccess(event: Event) {
+    // Vérifier le mode AVANT de fermer le modal
+    const isEditMode = this.selectedEvent() !== null;
+
+    this.closeFormModal();
+    this.reloadEvents();
+
+    const message = isEditMode
+      ? `Événement "${event.title}" modifié avec succès !`
+      : `Événement "${event.title}" créé avec succès !`;
+    this.toastService.success(message);
+  }
+
+  /**
+   * Supprimer un événement
+   */
+  deleteEvent(event: Event) {
+    const confirmed = confirm(
+      `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`
+    );
+
+    if (!confirmed) return;
+
+    this.isDeleting.set(true);
+
+    this.eventService.deleteEvent(event.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.reloadEvents();
+        this.toastService.success(`Événement "${event.title}" supprimé avec succès !`);  // ← ICI
+      },
+      error: (error) => {
+        this.isDeleting.set(false);
+        console.error('Erreur lors de la suppression:', error);
+        this.toastService.error('Erreur lors de la suppression de l\'événement');  // ← ICI
+      },
+    });
   }
 }

@@ -123,7 +123,7 @@
             <!-- Image de couverture -->
             <div class="event-cover">
               @if (event.coverImage) {
-                <img [src]="event.coverImage" [alt]="event.title" />
+                <img [src]="getImageUrl(event.coverImage)" [alt]="event.title" />
               } @else {
                 <div class="event-cover-placeholder">
                   <i class="bi bi-calendar-event"></i>
@@ -188,7 +188,7 @@
                 <button class="btn-action" (click)="scanQRCodes(event)" title="Scanner QR codes">
                   <i class="bi bi-qr-code-scan"></i>
                 </button>
-                
+
                 <button
                   class="btn-action btn-action-danger"
                   (click)="deleteEvent(event)"
