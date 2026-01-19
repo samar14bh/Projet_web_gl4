@@ -166,6 +166,40 @@ async getRecommendations(
 
     return this.clubsService.update(id, updateClubDto);
   }
+  /**
+   * GET /api/clubs/:clubId/president
+   * Récupérer le président actuel du club
+   */
+  @Get(':clubId/president')
+  async getClubPresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ) {
+    return this.clubsService.getClubPresident(clubId);
+  }
+
+  /**
+   * POST /api/clubs/:clubId/president
+   * Assigner un nouveau président au club
+   */
+  @Post(':clubId/president')
+  async assignPresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Body('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.assignPresident(clubId, userId);
+  }
+
+  /**
+   * DELETE /api/clubs/:clubId/president
+   * Supprimer le président actuel du club
+   */
+  @Delete(':clubId/president')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removePresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ) {
+    return this.clubsService.removePresident(clubId);
+  }
 
   /**
    * GET /api/clubs

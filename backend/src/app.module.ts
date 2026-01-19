@@ -13,6 +13,7 @@ import { MailModule } from './mail/mail.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SseModule } from './sse/sse.module';
+import { UsersModule } from './users/user.module';
 
 
 // ... tes autres imports
@@ -44,7 +45,8 @@ import { SseModule } from './sse/sse.module';
     MailModule,
     PaymentsModule,
     NotificationsModule,
-    SseModule
+    SseModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],

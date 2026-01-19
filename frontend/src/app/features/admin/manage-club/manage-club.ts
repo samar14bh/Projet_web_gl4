@@ -13,7 +13,7 @@ import {ModalComponent} from '../../../shared/components/modal/modal';
 import {ClubService} from '../../../Core/services/club.service';
 import {Club, ClubFilters} from '../../../Core/models/club.model';
 import { ClubFormComponent } from './club-form/club-form';
-
+import { ClubPresidentModalComponent } from './club-president-modal/club-president-modal';
 /**
  * PAGE 18 : Manage Clubs
  * Gestion complète des clubs par l'administrateur
@@ -21,7 +21,7 @@ import { ClubFormComponent } from './club-form/club-form';
 @Component({
   selector: 'app-manage-clubs',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, ClubFormComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, ClubFormComponent,ClubPresidentModalComponent],
   templateUrl: './manage-club.html',
   styleUrl: './manage-club.css',
 })
@@ -44,6 +44,7 @@ export class ManageClubsComponent {
   isDetailsModalOpen = signal(false);
   isFormModalOpen = signal(false);
   selectedClub = signal<Club | null>(null);
+  isPresidentModalOpen = signal(false);
 
   // ========== COMPUTED FILTERS ==========
   filters = computed<ClubFilters>(() => ({
@@ -161,6 +162,29 @@ export class ManageClubsComponent {
   closeDeleteModal() {
     this.selectedClub.set(null);
     this.isDeleteModalOpen.set(false);
+  }
+  /**
+   * Ouvrir le modal de gestion du président
+   */
+  openPresidentModal(club: Club) {
+    this.selectedClub.set(club);
+    this.isPresidentModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal de président
+   */
+  closePresidentModal() {
+    this.selectedClub.set(null);
+    this.isPresidentModalOpen.set(false);
+  }
+
+  /**
+   * Gérer le succès de modification du président
+   */
+  onPresidentChanged() {
+    this.closePresidentModal();
+    this.refreshData();
   }
   /**
    * Gérer le succès de création/modification

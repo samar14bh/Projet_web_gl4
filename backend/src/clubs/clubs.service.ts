@@ -5,6 +5,7 @@ import { Club } from './entities/club.entity';
 import { unlink } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { MemberRole } from '../common/enums/member-role.enum';
 
 import {
   CreateClubDto,
@@ -23,6 +24,7 @@ import { PaginatedResult } from '../common/pagination/pagination.dto';
 
 import { Application } from 'src/memberships/entities/application.entity';
 import { Status } from 'src/common/enums';
+import { User } from '../users/entities/user.entity';
 
 /**
  * Service pour gérer les clubs
@@ -40,6 +42,8 @@ export class ClubsService {
     private readonly transactionRepository: Repository<Transaction>,
     @InjectRepository(Application)
     private readonly applicationRepository: Repository<Application>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
 
   ) { }
 
@@ -746,8 +750,111 @@ export class ClubsService {
       }
     }
   }
+  /**
+   * Récupérer le président actuel du club
+   */
+  async getClubPresident(clubId: number) {
+    const president = await this.membershipRepository.findOne({
+      where: {
+        club: { id: clubId },
+        role: MemberRole.PRESIDENT,
+      },
+      relations: ['user'],
+    });
 
+    if (!president) {
+      return null;
+    }
 
+    return {
+      id: president.id,
+      userId: president.user.id,
+      userName: `${president.user.name} ${president.user.lastName}`,
+      userEmail: president.user.email,
+      userImage: president.user.image,
+      dateDebut: president.dateDebut,
+    };
+  }
 
+  /**
+   * Assigner un nouveau président au club
+   */
+  async assignPresident(clubId: number, userId: number) {
+    // Vérifier que le club existe
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+    if (!club) {
+      throw new NotFoundException(`Club avec ID ${clubId} introuvable`);
+    }
 
+    // Vérifier que l'utilisateur existe
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Utilisateur avec ID ${userId} introuvable`);
+    }
+
+    // Supprimer l'ancien président s'il existe
+    const oldPresident = await this.membershipRepository.findOne({
+      where: {
+        club: { id: clubId },
+        role: MemberRole.PRESIDENT,
+      },
+    });
+
+    if (oldPresident) {
+      await this.membershipRepository.remove(oldPresident);
+    }
+
+    // Vérifier si l'utilisateur est déjà membre
+    let membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+      },
+    });
+
+    if (membership) {
+      // L'utilisateur est déjà membre, on change juste son rôle
+      membership.role = MemberRole.PRESIDENT;
+    } else {
+      // L'utilisateur n'est pas membre, on crée une nouvelle adhésion
+      membership = this.membershipRepository.create({
+        user,
+        club,
+        role: MemberRole.PRESIDENT,
+        dateDebut: new Date(),
+      });
+    }
+
+    await this.membershipRepository.save(membership);
+
+    return {
+      message: 'Président assigné avec succès',
+      president: {
+        id: membership.id,
+        userId: user.id,
+        userName: `${user.name} ${user.lastName}`,
+        userEmail: user.email,
+      },
+    };
+  }
+
+  /**
+   * Supprimer le président actuel du club
+   */
+  async removePresident(clubId: number) {
+    const president = await this.membershipRepository.findOne({
+      where: {
+        club: { id: clubId },
+        role: MemberRole.PRESIDENT,
+      },
+    });
+
+    if (!president) {
+      throw new NotFoundException('Aucun président trouvé pour ce club');
+    }
+
+    await this.membershipRepository.remove(president);
+
+    return { message: 'Président supprimé avec succès' };
+  }
 }

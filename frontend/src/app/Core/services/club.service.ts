@@ -184,6 +184,33 @@ export class ClubService {
       responseType: 'text' as 'json'
     });
   }
+  /**
+   * Récupérer le président d'un club
+   */
+  getClubPresident(clubId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Assigner un nouveau président
+   */
+  assignPresident(clubId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${clubId}/president`, { userId });
+  }
+
+  /**
+   * Supprimer le président actuel
+   */
+  removePresident(clubId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Récupérer tous les utilisateurs (pour la liste déroulante)
+   */
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/users`);
+  }
 
 
 
