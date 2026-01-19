@@ -17,14 +17,14 @@ export class SseService {
     onMessage: (data: any) => void,
     onError?: (error: any) => void
   ): Promise<void> {
-    console.log('[SSE] 🚀 connect() appelé');
+    console.log('[SSE] connect() appelé');
     this.disconnect();
 
     const token = this.authService.accessToken();
     console.log('[SSE] Token disponible:', token ? `Oui (${token.substring(0, 20)}...)` : 'NON');
     
     if (!token) {
-      console.error('[SSE] ❌ Pas de token disponible, abandon');
+      console.error('[SSE] Pas de token disponible, abandon');
       return;
     }
 
@@ -32,7 +32,7 @@ export class SseService {
     const url = `${environment.apiUrl}/notifications/sse`;
 
     try {
-      console.log('[SSE] 📡 Tentative de connexion vers:', url);
+      console.log('[SSE] Tentative de connexion vers:', url);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -45,17 +45,13 @@ export class SseService {
         signal: this.abortController.signal,
       });
 
-      console.log('[SSE] 📥 Réponse reçue, status:', response.status);
-
-      // ✅ Si token expiré (401), déconnecter et redemander la connexion
+      console.log('[SSE] Réponse reçue, status:', response.status);
       if (response.status === 401) {
-        console.warn('[SSE] ⚠️ Token expiré (401), reconnexion dans 2s...');
+        console.warn('[SSE] Token expiré (401), reconnexion dans 2s...');
         this.isConnected.set(false);
-        
-        // Attendre un peu que le token soit rafraîchi par l'intercepteur
         setTimeout(() => {
           if (this.authService.isAuthenticated()) {
-            console.log('[SSE] 🔄 Nouvelle tentative de connexion avec token rafraîchi');
+            console.log('[SSE] Nouvelle tentative de connexion avec token rafraîchi');
             this.connect(onMessage, onError);
           }
         }, 2000);
@@ -64,7 +60,7 @@ export class SseService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[SSE] ❌ Erreur HTTP:', response.status, errorText);
+        console.error('[SSE] Erreur HTTP:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
@@ -73,13 +69,13 @@ export class SseService {
       }
 
       this.isConnected.set(true);
-      console.log('[SSE] ✅✅✅ Connexion établie avec succès ✅✅✅');
+      console.log('[SSE]Connexion établie avec succès');
 
       this.reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
 
-      console.log('[SSE] 📖 Début de lecture du stream...');
+      console.log('[SSE] Début de lecture du stream...');
 
       while (true) {
         const { done, value } = await this.reader.read();
@@ -89,35 +85,30 @@ export class SseService {
           break;
         }
 
-        // Décoder le chunk
         buffer += decoder.decode(value, { stream: true });
         
-        console.log('[SSE] 📦 Chunk reçu, buffer size:', buffer.length);
-        
-        // Traiter les lignes complètes
+        console.log('[SSE] Chunk reçu, buffer size:', buffer.length);
         const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Garder la dernière ligne incomplète
-
+        buffer = lines.pop() || ''; 
         for (const line of lines) {
           const trimmedLine = line.trim();
           
-          console.log('[SSE] 📝 Ligne:', trimmedLine);
+          console.log('[SSE] Ligne:', trimmedLine);
           
           if (trimmedLine.startsWith('data: ')) {
             const data = trimmedLine.slice(6);
             
             try {
               const parsed = JSON.parse(data);
-              console.log('[SSE] 📨 Message reçu:', parsed);
+              console.log('[SSE] Message reçu:', parsed);
               onMessage(parsed);
             } catch (e) {
-              console.error('[SSE] ❌ Erreur parsing JSON:', e, 'Data:', data);
+              console.error('[SSE] Erreur parsing JSON:', e, 'Data:', data);
             }
           } else if (trimmedLine.startsWith(':')) {
-            // Commentaire SSE (keep-alive), ignorer
-            console.log('[SSE] 💓 Keep-alive reçu');
+            console.log('[SSE]  Keep-alive reçu');
           } else if (trimmedLine === '') {
-            console.log('[SSE] 📄 Ligne vide (séparateur de message)');
+            console.log('[SSE] Ligne vide (séparateur de message)');
           }
         }
       }
@@ -127,18 +118,16 @@ export class SseService {
         return;
       }
 
-      console.error('[SSE] ❌ Erreur de connexion:', error);
+      console.error('[SSE] Erreur de connexion:', error);
       this.isConnected.set(false);
       
       if (onError) {
         onError(error);
       }
-
-      // Reconnexion automatique si l'utilisateur est toujours authentifié
       if (this.authService.isAuthenticated()) {
-        console.log('[SSE] 🔄 Tentative de reconnexion dans 5s...');
+        console.log('[SSE] Tentative de reconnexion dans 5s...');
         this.reconnectTimeout = setTimeout(() => {
-          console.log('[SSE] 🔄 Reconnexion...');
+          console.log('[SSE] Reconnexion...');
           this.connect(onMessage, onError);
         }, 5000);
       }
@@ -146,7 +135,7 @@ export class SseService {
   }
 
   disconnect(): void {
-    console.log('[SSE] 🔌 Déconnexion...');
+    console.log('[SSE] Déconnexion...');
     
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -166,6 +155,6 @@ export class SseService {
     }
 
     this.isConnected.set(false);
-    console.log('[SSE] ✅ Déconnecté');
+    console.log('[SSE] Déconnecté');
   }
 }

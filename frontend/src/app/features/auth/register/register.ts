@@ -56,62 +56,47 @@ export class RegisterComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
-    // 1. Détection de la navigation (Retour arrière ou changement de route interne)
-    // On sauvegarde AVANT que le composant ne disparaisse
+    // On sauvegarde systématiquement lors d'une navigation interne
     this.router.events.pipe(
       filter(event => event instanceof NavigationStart),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
-      if (!this.successMessage()) {
-        this.saveFormData();
-      }
+      this.saveFormData();
     });
   }
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any): void {
-    if (!this.successMessage()) {
-      this.saveFormData();
-    }
+    // Sauvegarde lors de la fermeture de l'onglet ou refresh
+    this.saveFormData();
   }
 
   ngOnInit(): void {
-    // Ne pas restaurer si l'utilisateur est déjà connecté (évite les conflits)
     if (this.authService.isAuthenticated()) {
       return;
     }
 
     this.restoreFormData();
   
-    // 2. Sauvegarde automatique pendant la saisie
+    // Sauvegarde automatique en temps réel
     this.registerForm.valueChanges
       .pipe(
         debounceTime(500),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
-        if (!this.successMessage()) {
-          this.saveFormData();
-        }
+        this.saveFormData();
       });
   }
 
   ngOnDestroy(): void {
-    // Si l'inscription a réussi, on nettoie tout
-    if (this.successMessage()) {
-      this.clearFormData();
-    } else {
-      // Sinon, on tente une dernière sauvegarde de sécurité
-      this.saveFormData();
-    }
+    // On persiste les données même si le composant est détruit après un succès
+    this.saveFormData();
   }
 
   private saveFormData(): void {
     try {
       const formData = this.registerForm.getRawValue();
-      
-      // PROTECTION : On ne sauvegarde que s'il y a au moins un champ rempli
-      // Cela évite d'écraser une bonne sauvegarde par un formulaire vide lors d'un refresh/redirection
       const hasData = Object.values(formData).some(value => value && value !== '');
       
       if (hasData) {
@@ -124,10 +109,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
           };
           localStorage.setItem(this.IMAGE_STORAGE_KEY, JSON.stringify(imageData));
         }
-        console.log('✓ État du formulaire mis à jour localement');
       }
     } catch (error) {
-      // Gérer l'erreur QuotaExceeded si l'image en Base64 est trop lourde pour le localStorage
       console.warn('Erreur lors de la sauvegarde locale:', error);
     }
   }
@@ -137,7 +120,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
       const savedFormData = localStorage.getItem(this.FORM_STORAGE_KEY);
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
-        // On utilise patchValue avec emitEvent: false pour ne pas déclencher valueChanges immédiatement
         this.registerForm.patchValue(formData, { emitEvent: false });
         
         const savedImageData = localStorage.getItem(this.IMAGE_STORAGE_KEY);
@@ -146,11 +128,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
           this.selectedFileName.set(imageData.fileName);
           this.imagePreview.set(imageData.preview);
         }
-        console.log('Formulaire restauré depuis le cache local');
       }
     } catch (error) {
       console.error('Erreur lors de la restauration:', error);
-      this.clearFormData();
     }
   }
 
@@ -158,8 +138,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
     localStorage.removeItem(this.FORM_STORAGE_KEY);
     localStorage.removeItem(this.IMAGE_STORAGE_KEY);
   }
-
-  // --- Validateurs et Handlers (Inchangés mais intégrés) ---
 
   private minimumAgeValidator(minAge: number) {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -190,26 +168,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
     if (!input.files?.length) return;
 
     const file = input.files[0];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-
-    this.fileError.set('');
-
-    if (!allowedTypes.includes(file.type)) {
-      this.fileError.set('Format non supporté.');
-      return;
-    }
-
-    if (file.size > maxSize) {
-      this.fileError.set('Image trop lourde (max 5MB).');
-      return;
-    }
-
-    this.selectedFile.set(file);
-    this.selectedFileName.set(file.name);
-
     const reader = new FileReader();
     reader.onload = (e) => {
+      this.selectedFile.set(file);
+      this.selectedFileName.set(file.name);
       this.imagePreview.set(e.target?.result as string);
       this.saveFormData(); 
     };
@@ -235,7 +197,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.successMessage.set('✓ Compte créé avec succès !');
         this.isLoading.set(false);
-        this.clearFormData();
+        
+        // MODIFICATION : On ne supprime plus clearFormData() ici pour permettre le retour arrière
+        
         if (response.user) {
           this.authService.currentUser.set(response.user);
         }
@@ -252,6 +216,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Méthode appelée par le nouveau bouton
   clearSavedData(): void {
     this.clearFormData();
     this.registerForm.reset();
@@ -259,5 +224,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.selectedFileName.set('');
     this.imagePreview.set('');
     this.fileError.set('');
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 }

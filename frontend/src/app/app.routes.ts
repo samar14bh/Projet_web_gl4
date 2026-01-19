@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 import {roleGuard} from './Core/guards/role.guard';
+import { guestGuard } from './Core/guards/guest.guard';
 
 
 /**
@@ -107,12 +108,16 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login')
-          .then(m => m.LoginComponent)
+          .then(m => m.LoginComponent),
+        title: 'Connexion',
+        canActivate: [guestGuard]
       },
       {
         path: 'register',
         loadComponent: () => import('./features/auth/register/register')
-          .then(m => m.RegisterComponent)
+          .then(m => m.RegisterComponent),
+          title: 'Inscription',
+          canActivate: [guestGuard]
       },
       {
         path: 'verify-email',
