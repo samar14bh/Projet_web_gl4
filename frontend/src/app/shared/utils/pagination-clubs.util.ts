@@ -5,17 +5,34 @@ export interface PaginationConfig<T> {
   itemsPerPage?: number;
 }
 
-export interface PaginationControls {
+export interface PaginationControls<T> {
   currentPage: Signal<number>;
   totalPages: Signal<number>;
-  paginatedItems: Signal<any[]>;
+  paginatedItems: Signal<T[]>;
   goToPage: (page: number) => void;
   nextPage: () => void;
   prevPage: () => void;
   getPageNumbers: () => number[];
 }
 
-export function createPaginationClubs<T>(config: PaginationConfig<T>): PaginationControls {
+export function getPaginationSequence(current: number, total: number): number[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const sequence: number[] = [];
+  const neighbors = 1;
+
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= current - neighbors && i <= current + neighbors)) {
+      if (sequence.length > 0 && i - sequence[sequence.length - 1] > 1) {
+        sequence.push(-1); 
+      }
+      sequence.push(i);
+    }
+  }
+  return sequence;
+}
+
+export function createPaginationClubs<T>(config: PaginationConfig<T>): PaginationControls<T> {
   const itemsPerPage = config.itemsPerPage || 9;
   const currentPage = signal(1);
 
@@ -48,12 +65,7 @@ export function createPaginationClubs<T>(config: PaginationConfig<T>): Paginatio
   };
 
   const getPageNumbers = (): number[] => {
-    const total = totalPages();
-    const current = currentPage();
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    return [1, -1, current, -1, total];
+    return getPaginationSequence(currentPage(), totalPages());
   };
 
   return {

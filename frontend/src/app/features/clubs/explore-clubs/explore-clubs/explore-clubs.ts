@@ -15,6 +15,7 @@ import {
   handleSortChangeClubs 
 } from '../../../../shared/utils/filter-sort-clubs.util';
 import { createResource, createParameterizedResource } from '../../../../shared/utils/resource-loader.util';
+import { getPaginationSequence } from '../../../../shared/utils/pagination-clubs.util';
 
 @Component({
   selector: 'app-explore-clubs',
@@ -27,8 +28,6 @@ export class ExploreClubsComponent {
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
   readonly router = inject(Router);
-
-  // --- Configuration des Filtres et Tri ---
   private filterControls = createFilterControlsClubs({ hasCategory: true });
   private sortControls = createSortControlsClubs<'name' | 'members' | 'events' | 'createdAt'>('name');
   
@@ -40,13 +39,10 @@ export class ExploreClubsComponent {
   readonly currentPage = signal(1);
   readonly pageSize = signal(12);
 
-  // --- Gestion du Statut des Clubs ---
-  private clubStatusManager = createClubStatusManager({
-    clubService: this.clubService,
-    userId: computed(() => this.authService.currentUser()?.id)
-  });
+  private statusManager = createClubStatusManager(
+    computed(() => this.authService.currentUser()?.id)
+  );
 
-  // --- Ressources (Data Fetching) ---
   readonly filters = computed<ClubFilters>(() => ({
     status: 'active',
     categoryId: this.selectedCategory(),
@@ -70,7 +66,6 @@ export class ExploreClubsComponent {
     loader: () => this.clubService.getClubsStats()
   });
 
-  // --- Sélecteurs réactifs ---
   readonly clubs = computed(() => this.clubsRes.data()?.data || []);
   readonly totalClubs = computed(() => this.clubsRes.data()?.total || 0);
   readonly totalPages = computed(() => this.clubsRes.data()?.totalPages || 0);
@@ -79,33 +74,18 @@ export class ExploreClubsComponent {
   readonly stats = computed(() => this.statsRes.data() || {
     total: 0, active: 0, inactive: 0, totalMembers: 0, totalEvents: 0, totalRevenue: 0,
   } as ClubsStats);
-
-  readonly pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    // Logique d'affichage des ellipses (adaptée de pagination-clubs.util)
-    if (current <= 3) return [1, 2, 3, 4, -1, total];
-    if (current >= total - 2) return [1, -1, total - 3, total - 2, total - 1, total];
-    return [1, -1, current - 1, current, current + 1, -1, total];
-  });
+  readonly pageNumbers = computed(() => 
+    getPaginationSequence(this.currentPage(), this.totalPages())
+  );
 
   constructor() {
     effect(() => {
-      const clubsList = this.clubs();
-      const isAuth = this.isAuthenticated();
-
-      if (isAuth && clubsList.length > 0) {
-        this.clubStatusManager.loadAllStatuses(clubsList.map(c => Number(c.id)));
-      } else if (!isAuth) {
-        this.clubStatusManager.reset();
+      const ids = this.clubs().map(c => Number(c.id));
+      if (this.isAuthenticated() && ids.length > 0) {
+        this.statusManager.refresh(ids);
       }
     });
   }
-
-  // --- Actions ---
   onSearch(event: Event | string): void {
     handleSearchClubs(this.searchQuery, event, () => this.currentPage.set(1));
   }
@@ -132,10 +112,10 @@ export class ExploreClubsComponent {
       return;
     }
 
-    const status = this.clubStatusManager.getStatus(club.id).toLowerCase();
-    if (status.includes('non membre') || status.includes('rejetée')) {
+    const meta = this.statusManager.getMeta(club.id);
+    if (meta.status.includes('non membre') || meta.status.includes('rejetée')) {
       this.router.navigate(['/clubs', club.id, 'apply']);
-    } else if (status.includes('ancien membre')) {
+    } else if (meta.status.includes('ancien membre')) {
       this.router.navigate(['/clubs', club.id, 'renew']);
     } else {
       this.router.navigate(['/clubs', club.id]);
@@ -150,13 +130,8 @@ export class ExploreClubsComponent {
     this.currentPage.set(1);
   }
 
-  // Helper pour le template
   getClubMeta(clubId: number) {
-    return {
-      text: this.clubStatusManager.getButtonText(clubId),
-      variant: this.clubStatusManager.getButtonVariant(clubId),
-      disabled: this.clubStatusManager.isButtonDisabled(clubId)
-    };
+    return this.statusManager.getMeta(clubId);
   }
 
   formatNumber(num: number): string {

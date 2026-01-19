@@ -1,94 +1,49 @@
-import { signal, Signal } from '@angular/core';
+import { signal, Signal, computed, inject } from '@angular/core';
 import { ClubService } from '../../Core/services/club.service';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { forkJoin, of, map, catchError } from 'rxjs';
 
-export interface ClubStatusConfig {
-  clubService: ClubService;
-  userId: Signal<number | string | undefined>;
-}
+export function createClubStatusManager(userId: Signal<number | string | undefined>) {
+  const clubService = inject(ClubService);
+  const clubIds = signal<number[]>([]);
 
-export function createClubStatusManager(config: ClubStatusConfig) {
-  const userClubStatuses = signal<Map<number, string>>(new Map());
-  const isLoadingStatuses = signal(false);
+  const statusResource = rxResource({
+    params: () => ({ uid: userId(), ids: clubIds() }), 
+    stream: ({ params }) => {
+      if (!params.uid || params.ids.length === 0) return of(new Map<number, string>());
+      
+      const uid = Number(params.uid);
+      const requests = params.ids.map(id => 
+        clubService.getUserClubMembershipStatus(id, uid).pipe(
+          map(status => ({ id, status })),
+          catchError(() => of({ id, status: 'Non membre' }))
+        )
+      );
 
-  const loadAllStatuses = async (clubIds: number[]): Promise<void> => {
-    const userId = config.userId();
-    if (!userId || clubIds.length === 0) return;
-
-    const numericUserId = typeof userId === 'string' ? Number(userId) : userId;
-
-    isLoadingStatuses.set(true);
-    const currentMap = new Map<number, string>();
-
-    const statusPromises = clubIds.map(clubId =>
-      new Promise<void>((resolve) => {
-        config.clubService.getUserClubMembershipStatus(clubId, numericUserId).subscribe({
-          next: (response) => {
-            currentMap.set(clubId, response);
-            resolve();
-          },
-          error: () => {
-            currentMap.set(clubId, 'Non membre');
-            resolve();
-          }
-        });
-      })
-    );
-
-    await Promise.all(statusPromises);
-    userClubStatuses.set(new Map(currentMap));
-    isLoadingStatuses.set(false);
-  };
-
-  const getStatus = (clubId: number): string => {
-    return userClubStatuses().get(clubId) || 'Non membre';
-  };
-
-  const getButtonText = (clubId: number): string => {
-    const status = getStatus(clubId);
-    const statusLower = status.toLowerCase();
-
-    if (statusLower.startsWith('membre')) {
-      return statusLower === 'membre member' ? 'Membre' : status;
+      return forkJoin(requests).pipe(
+        map(results => new Map(results.map(r => [r.id, r.status])))
+      );
     }
+  });
 
-    if (statusLower.includes('candidature')) {
-      return status;
-    }
-
-    if (status === 'Ancien membre') {
-      return 'Renouveler adhésion';
-    }
-
-    return 'Rejoindre';
-  };
-
-  const getButtonVariant = (clubId: number): 'primary' | 'secondary' | 'danger' | 'ghost' => {
-    const statusLower = getStatus(clubId).toLowerCase();
-
-    if (statusLower.startsWith('membre')) return 'primary';
-    if (statusLower.includes('candidature')) return 'ghost';
-    if (statusLower === 'ancien membre') return 'secondary';
-
-    return 'primary';
-  };
-
-  const isButtonDisabled = (clubId: number): boolean => {
-    const statusLower = getStatus(clubId).toLowerCase();
-    return statusLower.startsWith('membre') || statusLower.includes('candidature en attente');
-  };
-
-  const reset = (): void => {
-    userClubStatuses.set(new Map());
-  };
+  const getStatus = (clubId: number) => statusResource.value()?.get(clubId) || 'Non membre';
 
   return {
-    userClubStatuses: userClubStatuses.asReadonly(),
-    isLoadingStatuses: isLoadingStatuses.asReadonly(),
-    loadAllStatuses,
-    getStatus,
-    getButtonText,
-    getButtonVariant,
-    isButtonDisabled,
-    reset
+    isLoading: statusResource.isLoading,
+    refresh: (ids: number[]) => clubIds.set(ids),
+    getMeta: (clubId: number) => {
+      const status = getStatus(clubId).toLowerCase();
+      const isMember = status.startsWith('membre');
+      const isPending = status.includes('en attente');
+
+      return {
+        text: status === 'ancien membre' ? 'Renouveler' : 
+              isMember ? status : 
+              (isPending ? 'En attente' : 'Rejoindre'),
+        variant: isMember ? 'primary' : (isPending ? 'ghost' : (status === 'ancien membre' ? 'secondary' : 'primary')) as any,
+        disabled: isMember || isPending,
+        status
+      };
+    }
   };
 }

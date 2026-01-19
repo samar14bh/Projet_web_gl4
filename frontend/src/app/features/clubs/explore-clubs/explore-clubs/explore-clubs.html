@@ -69,10 +69,8 @@
     </div>
     <app-button 
   label="Réinitialiser les filtres" 
-  variant="ghost" 
   icon="arrow-counterclockwise"
   (clicked)="resetFilters()"
-  class="reset-btn"
 />
   </div>
 
@@ -81,7 +79,7 @@
       <div class="spinner"></div>
       <p>Chargement des clubs...</p>
     </div>
-  } @else if (clubsRes.hasError()) {
+  } @else if (clubsRes.error()) {
     <div class="error-state">
       <i class="bi bi-exclamation-triangle"></i>
       <h3>Erreur de chargement</h3>
