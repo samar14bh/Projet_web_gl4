@@ -30,7 +30,12 @@ export class Application {
   @Column({ type: 'text', name: 'why_join' })
   whyJoin: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true, name: 'previous_club' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    name: 'previous_club',
+  })
   previousClub: string;
 
   @Column({ type: 'text', name: 'goals_in_club' })
@@ -64,13 +69,13 @@ export class Application {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Membership, (membership) => membership.applications, { nullable: true })
+  @ManyToOne(() => Membership, (membership) => membership.applications, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'membership_id' })
   membership: Membership;
-
 
   @ManyToOne(() => Club, { nullable: false })
   @JoinColumn({ name: 'club_id' })
   club: Club;
-
 }

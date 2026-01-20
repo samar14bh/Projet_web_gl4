@@ -24,7 +24,7 @@ export class ClubDetails {
   private readonly clubService = inject(ClubService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
-  private readonly USER_ID = 1;
+  private readonly USER_ID = 17;
 
   errorMessage = signal<string>('');
   private readonly mailService = inject(MailService);

@@ -33,8 +33,6 @@ export class Membership {
   })
   role: MemberRole;
 
-
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

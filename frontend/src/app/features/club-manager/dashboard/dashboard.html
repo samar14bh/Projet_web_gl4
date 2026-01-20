@@ -1,168 +1,248 @@
-<app-club-selector></app-club-selector>
-<div class="dashboard-container">
-    <div class="dashboard-page">
-        <!-- Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <h1>Dashboard Responsable [V2]</h1>
-                <p>Vue d'ensemble de votre club</p>
-            </div>
-            <div class="header-actions">
-                <button class="btn-primary">
-                    <i class="bi bi-plus-circle"></i>
-                    Nouvel événement
-                </button>
-            </div>
-        </div>
-
-        @if (loading()) {
-        <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Chargement...</p>
-        </div>
-        } @else {
-        <!-- Statistics Grid -->
-        <div class="stats-grid">
-            <app-stat-card title="Membres actifs" [value]="stats()?.activeMembers || 0" icon="people-fill"
-                variant="primary" [footer]="'Total: ' + (stats()?.totalMembers || 0) + ' membres'" />
-
-            <app-stat-card title="Demandes en attente" [value]="stats()?.pendingRequests || 0" icon="clock-history"
-                variant="warning" [trend]="(stats()?.pendingRequests || 0) > 0 ? 'up' : 'neutral'" />
-
-            <app-stat-card title="Revenus ce mois" [value]="formatCurrency(stats()?.monthlyRevenue || 0)"
-                icon="cash-coin" variant="success" [footer]="'Total: ' + formatCurrency(stats()?.totalRevenue || 0)" />
-
-            <app-stat-card title="Événements à venir" [value]="stats()?.upcomingEvents || 0" icon="calendar-event"
-                variant="secondary" [footer]="'Total: ' + (stats()?.totalEvents || 0) + ' événements'" />
-        </div>
-
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-            <!-- Pending Requests -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>
-                        <i class="bi bi-person-check"></i>
-                        Demandes d'adhésion
-                    </h3>
-                    @if ((stats()?.pendingRequests || 0) > 0) {
-                    <span class="badge badge-warning">{{ stats()?.pendingRequests }}</span>
-                    }
-                </div>
-                <div class="card-content">
-                    @if (pendingMembers().length === 0) {
-                    <div class="empty-state-small">
-                        <i class="bi bi-check-circle"></i>
-                        <p>Aucune demande en attente</p>
-                    </div>
-                    } @else {
-                    <div class="pending-list">
-                        @for (member of displayedPendingMembers(); track member.id) {
-                        <div class="pending-item">
-                            <div class="member-avatar">
-                                <i class="bi bi-person-circle"></i>
-                            </div>
-                            <div class="member-info">
-                                <h4>{{ member.name }} {{ member.lastName }}</h4>
-                                <p>{{ member.email }}</p>
-                                <span class="member-date">Demande: {{ formatDate(member.dateDebut) }}</span>
-                            </div>
-                            <div class="member-actions">
-                                <button class="btn-approve" (click)="approveMember(member.id)" title="Approuver">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
-                                <button class="btn-reject" (click)="rejectMember(member.id)" title="Rejeter">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                        }
-                    </div>
-                    @if (pendingMembers().length > 3) {
-                    <div class="see-more-container">
-                        <a routerLink="/club-manager/manage-members" class="btn-see-more">
-                            Voir toutes les demandes ({{ pendingMembers().length }})
-                            <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </div>
-                    }
-                    }
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>
-                        <i class="bi bi-lightning-charge"></i>
-                        Actions rapides
-                    </h3>
-                </div>
-                <div class="card-content">
-                    <div class="quick-actions">
-                        <a routerLink="/events" class="action-item">
-                            <div class="action-icon primary">
-                                <i class="bi bi-calendar-plus"></i>
-                            </div>
-                            <div class="action-info">
-                                <h4>Créer un événement</h4>
-                                <p>Organisez un nouvel événement</p>
-                            </div>
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-
-                        <a routerLink="/club-manager/manage-members" class="action-item">
-                            <div class="action-icon secondary">
-                                <i class="bi bi-people"></i>
-                            </div>
-                            <div class="action-info">
-                                <h4>Gérer les membres</h4>
-                                <p>Voir tous les membres</p>
-                            </div>
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-
-                        <a routerLink="/club-manager/manage-club" class="action-item">
-                            <div class="action-icon success">
-                                <i class="bi bi-gear"></i>
-                            </div>
-                            <div class="action-info">
-                                <h4>Paramètres du club</h4>
-                                <p>Modifier les informations</p>
-                            </div>
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-
-                        <a routerLink="/finances" class="action-item">
-                            <div class="action-icon accent">
-                                <i class="bi bi-graph-up"></i>
-                            </div>
-                            <div class="action-info">
-                                <h4>Voir les finances</h4>
-                                <p>Rapports et statistiques</p>
-                            </div>
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3>
-                    <i class="bi bi-activity"></i>
-                    Activité récente
-                </h3>
-                <button class="btn-text">Voir tout</button>
-            </div>
-            <div class="card-content">
-                <div class="empty-state-small">
-                    <i class="bi bi-inbox"></i>
-                    <p>Aucune activité récente</p>
-                </div>
-            </div>
-        </div>
-        }
+<div class="dashboard-page">
+  <!-- PREMIUM HEADER WITH GRADIENT -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Tableau de Bord</h1>
+        <p>Gère ton club avec intelligence et facilité</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="navigateToCreateEvent()">
+          <i class="bi bi-calendar-plus-fill"></i>
+          Nouvel Événement
+        </button>
+      </div>
     </div>
+  </div>
+
+  @if (loading()) {
+    <!-- LOADING STATE -->
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement de tes données...</p>
+    </div>
+  } @else {
+    <!-- ENHANCED STATISTICS CARDS -->
+    <div class="stats-grid">
+      <!-- Membres actifs -->
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-title">Membres Actifs</div>
+        <div class="stat-value">{{ stats()?.activeMembers || 0 }}</div>
+        <div class="stat-footer">sur {{ stats()?.totalMembers || 0 }} adhésions</div>
+      </div>
+
+      <!-- Événements à venir -->
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-title">Événements</div>
+        <div class="stat-value">{{ stats()?.upcomingEvents || 0 }}</div>
+        <div class="stat-footer">programmés à venir</div>
+      </div>
+
+      <!-- Demandes en attente -->
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-title">Demandes Actives</div>
+        <div class="stat-value">{{ stats()?.pendingRequests || 0 }}</div>
+        <div class="stat-footer">à valider rapidement</div>
+      </div>
+
+      <!-- Finances -->
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stat-title">Revenus ce Mois</div>
+        <div class="stat-value">{{ formatCurrency(stats()?.monthlyRevenue || 0) }}</div>
+        <div class="stat-footer">Total: {{ formatCurrency(stats()?.totalRevenue || 0) }}</div>
+      </div>
+    </div>
+
+    <!-- ENHANCED CONTENT SECTIONS -->
+    <div class="content-sections">
+
+      <!-- ÉVÉNEMENTS RÉCENTS SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <i class="bi bi-calendar2-week"></i>
+          </div>
+          <h3>Événements à Venir</h3>
+        </div>
+        <div class="section-body">
+          @if (upcomingEvents().length === 0) {
+            <div class="empty-state">
+                <span class="empty-state-icon">
+                  <i class="bi bi-inbox"></i>
+                </span>
+              <p>Aucun événement prévu</p>
+            </div>
+          } @else {
+            <div class="item-list">
+              @for (event of displayedEvents(); track event.id) {
+                <div class="list-item">
+                  <div class="item-avatar event">
+                    <i class="bi bi-calendar-check-fill"></i>
+                  </div>
+                  <div class="item-content">
+                    <h4 class="item-title">{{ event.name }}</h4>
+                    <p class="item-meta">{{ formatDate(event.startDate) }}</p>
+                  </div>
+                  <button class="btn-action-small btn-view" title="Voir l'événement">
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <button (click)="navigateToAllEvents()" class="view-all-btn">
+            <span>Tous les événements</span>
+            <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+
+      <!-- MEMBRES RÉCENTS SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <i class="bi bi-person-check-fill"></i>
+          </div>
+          <h3>Membres Récents</h3>
+        </div>
+        <div class="section-body">
+          @if (recentMembers().length === 0) {
+            <div class="empty-state">
+              <span class="empty-state-icon">
+                <i class="bi bi-clipboard-data"></i>
+              </span>
+              <p>Aucun membre pour le moment</p>
+            </div>
+          } @else {
+            <div class="item-list">
+              @for (member of displayedRecentMembers(); track member.id) {
+                <div class="list-item">
+                  <div class="item-avatar member">
+                    <i class="bi bi-person-fill"></i>
+                  </div>
+                  <div class="item-content">
+                    <h4 class="item-title">{{ member.name }} {{ member.lastName }}</h4>
+                    <p class="item-meta">Rejoint {{ formatDate(member.joinDate) }}</p>
+                  </div>
+                  <button class="btn-action-small btn-view" title="Voir le profil">
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <button (click)="navigateToAllMembers()" class="view-all-btn">
+            <span>Tous les membres</span>
+            <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- DEMANDES RÉCENTES SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <h3>Demandes Récentes</h3>
+        </div>
+        <div class="section-body">
+          @if (pendingMembers().length === 0) {
+            <div class="empty-state">
+                <span class="empty-state-icon">
+                  <i class="bi bi-check-circle"></i>
+                </span>
+              <p>Aucune demande à valider</p>
+            </div>
+          } @else {
+            <div class="item-list">
+              @for (member of displayedPendingMembers(); track member.id) {
+                <div class="list-item">
+                  <div class="item-avatar request">
+                    <i class="bi bi-person-plus-fill"></i>
+                  </div>
+                  <div class="item-content">
+                    <h4 class="item-title">{{ member.name }} {{ member.lastName }}</h4>
+                    <p class="item-meta">{{ member.email }}</p>
+                  </div>
+                  <div class="item-actions">
+                    <button
+                      class="btn-action-small btn-approve"
+                      (click)="approveMember(member.id)"
+                      title="Approuver cette demande">
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button
+                      class="btn-action-small btn-reject"
+                      (click)="rejectMember(member.id)"
+                      title="Rejeter cette demande">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          @if (pendingMembers().length > 5) {
+            <button (click)="navigateToMembers()" class="view-all-btn">
+              <span>Voir tout ({{ pendingMembers().length }})</span>
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MANAGEMENT SECTION -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-header-icon">
+          <i class="bi bi-lightning-fill"></i>
+        </div>
+        <h3>Accès Rapides</h3>
+      </div>
+      <div class="section-body">
+        <div class="action-grid">
+          <button (click)="navigateToAllEvents()" class="action-card" title="Créer un nouvel événement">
+            <div class="action-icon-large">
+              <i class="bi bi-calendar-plus-fill"></i>
+            </div>
+            <span>Nouvel Événement</span>
+          </button>
+          <button (click)="navigateToManageMembers()" class="action-card" title="Gérer les adhésions">
+            <div class="action-icon-large">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <span>Membres</span>
+          </button>
+          <button (click)="navigateToManageClub()" class="action-card" title="Paramètres du club">
+            <div class="action-icon-large">
+              <i class="bi bi-gear-fill"></i>
+            </div>
+            <span>Paramètres</span>
+          </button>
+          <button (click)="navigateToFinances()" class="action-card" title="Tableau de bord financier">
+            <div class="action-icon-large">
+              <i class="bi bi-bar-chart-fill"></i>
+            </div>
+            <span>Finances</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

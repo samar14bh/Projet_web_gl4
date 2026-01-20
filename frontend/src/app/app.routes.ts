@@ -154,19 +154,27 @@ export const routes: Routes = [
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'
       },
+      // Dashboard du club avec clubId
       {
-        path: 'club-manager/dashboard',  // ← PAGE 12
-        loadComponent: () => import('./features/club-manager/dashboard/dashboard').then(m => m.ClubManagerDashboardComponent),
-        title: 'Dashboard Responsable'
+        path: 'club-manager/:clubId/dashboard',
+        loadComponent: () => import('./features/club-manager/dashboard/dashboard')
+          .then(m => m.ClubManagerDashboardComponent),
+        title: 'Tableau de bord du club'
       },
+
+      // Gestion du club avec clubId
       {
-        path: 'club-manager/manage-club',  // ← PAGE 13
-        loadComponent: () => import('./features/club-manager/manage-club/manage-club').then(m => m.ManageClubComponent),
-        title: 'Gérer mon club'
+        path: 'club-manager/:clubId/manage-club',
+        loadComponent: () => import('./features/club-manager/manage-club/manage-club')
+          .then(m => m.ManageClubComponent),
+        title: 'Gérer le club'
       },
+
+      // Gestion des membres avec clubId
       {
-        path: 'club-manager/manage-members',  // ← PAGE 14
-        loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
+        path: 'club-manager/:clubId/manage-members',
+        loadComponent: () => import('./features/club-manager/manage-members/manage-members')
+          .then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
       }
 
