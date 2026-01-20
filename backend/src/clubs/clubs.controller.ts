@@ -36,8 +36,7 @@ async getRecommendations(
   @Req() req: any,
   @Query('limit', new DefaultValuePipe(3), ParseIntPipe) limit: number,
 ) {
-  // Ensure the userId exists in the request object
-  console.log('👤 User from request:', req.user);
+  console.log('User from request:', req.user);
   const rawUserId = req.user?.userId;
   
   if (rawUserId === undefined || rawUserId === null) {

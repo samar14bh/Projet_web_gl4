@@ -1,34 +1,44 @@
+import { 
+  Directive, 
+  ElementRef, 
+  OnDestroy, 
+  inject, 
+  input, 
+  output,
+  effect
+} from '@angular/core';
 
-import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 @Directive({
-  selector: '[appLazyLoading]'
+  selector: '[appLazyLoading]',
+  standalone: true
 })
-export class LazyLoading implements OnInit, OnDestroy {
-  private element = inject(ElementRef);
+export class LazyLoading implements OnDestroy {
+  private readonly element = inject(ElementRef);
   private observer?: IntersectionObserver;
-
-  @Input() rootMargin = '50px';
-  @Input() threshold = 0.1;
-  @Output() visible = new EventEmitter<void>();
-
-  ngOnInit() {
-    this.setupObserver();
+  rootMargin = input<string>('50px');
+  threshold = input<number>(0.1);
+  visible = output<void>();
+  constructor() {
+    effect((onCleanup) => {
+      this.setupObserver();
+      onCleanup(() => {
+        this.observer?.disconnect();
+      });
+    });
   }
 
   private setupObserver() {
     this.observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            this.visible.emit();
-            this.observer?.unobserve(this.element.nativeElement);
-          }
-        });
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          this.visible.emit();
+          this.observer?.unobserve(this.element.nativeElement);
+        }
       },
       {
         root: null,
-        rootMargin: this.rootMargin,
-        threshold: this.threshold
+        rootMargin: this.rootMargin(), 
+        threshold: this.threshold()   
       }
     );
 
@@ -39,5 +49,3 @@ export class LazyLoading implements OnInit, OnDestroy {
     this.observer?.disconnect();
   }
 }
-
-

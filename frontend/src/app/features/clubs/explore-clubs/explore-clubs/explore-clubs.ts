@@ -1,21 +1,16 @@
-import { Component, signal, computed, inject, effect } from '@angular/core';
+import { Component, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ClubService } from '../../../../Core/services/club.service';
 import { AuthService } from '../../../../Core/services/auth.service';
-import { Club, ClubFilters, ClubsStats } from '../../../../Core/models/club.model';
+import { ClubFilters, ClubsStats } from '../../../../Core/models/club.model';
 import { ClubComponent } from '../../club-component/club-component/club-component';
 import { createClubStatusManager } from '../../../../shared/utils/club-status.util';
-import { 
-  createFilterControlsClubs, 
-  createSortControlsClubs, 
-  handleSearchClubs, 
-  handleSortChangeClubs 
-} from '../../../../shared/utils/filter-sort-clubs.util';
 import { createResource, createParameterizedResource } from '../../../../shared/utils/resource-loader.util';
-import { getPaginationSequence } from '../../../../shared/utils/pagination-clubs.util';
+import { createServerPagination } from '../../../../shared/utils/server-pagination.util';
+import { createFilterSortState, handleSearch, handleSortChange } from '../../../../shared/utils/filter-sort-clubs.util';
 
 @Component({
   selector: 'app-explore-clubs',
@@ -28,17 +23,25 @@ export class ExploreClubsComponent {
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
   readonly router = inject(Router);
-  private filterControls = createFilterControlsClubs({ hasCategory: true });
-  private sortControls = createSortControlsClubs<'name' | 'members' | 'events' | 'createdAt'>('name');
   
-  readonly searchQuery = this.filterControls.searchQuery;
-  readonly selectedCategory = this.filterControls.categoryFilter!;
-  readonly sortBy = this.sortControls.sortBy;
-  readonly sortOrder = this.sortControls.sortOrder;
-  
-  readonly currentPage = signal(1);
-  readonly pageSize = signal(12);
+  private filterSortState = createFilterSortState<'name' | 'members' | 'events' | 'createdAt'>(
+    'name',
+    { hasCategory: true }
+  );
 
+  readonly searchQuery = this.filterSortState.filters.searchQuery;
+  readonly selectedCategory = this.filterSortState.filters.categoryFilter!;
+  readonly sortBy = this.filterSortState.sort.sortBy;
+  readonly sortOrder = this.filterSortState.sort.sortOrder;
+  
+  private serverPagination = createServerPagination({ 
+    pageSize: 12,
+    initialPage: 1 
+  });
+
+  readonly currentPage = this.serverPagination.currentPage;
+  readonly pageSize = this.serverPagination.pageSize;
+  
   private statusManager = createClubStatusManager(
     computed(() => this.authService.currentUser()?.id)
   );
@@ -65,7 +68,7 @@ export class ExploreClubsComponent {
   readonly statsRes = createResource({
     loader: () => this.clubService.getClubsStats()
   });
-
+  
   readonly clubs = computed(() => this.clubsRes.data()?.data || []);
   readonly totalClubs = computed(() => this.clubsRes.data()?.total || 0);
   readonly totalPages = computed(() => this.clubsRes.data()?.totalPages || 0);
@@ -74,8 +77,9 @@ export class ExploreClubsComponent {
   readonly stats = computed(() => this.statsRes.data() || {
     total: 0, active: 0, inactive: 0, totalMembers: 0, totalEvents: 0, totalRevenue: 0,
   } as ClubsStats);
+
   readonly pageNumbers = computed(() => 
-    getPaginationSequence(this.currentPage(), this.totalPages())
+    this.serverPagination.getPageNumbers(this.totalPages())
   );
 
   constructor() {
@@ -86,48 +90,28 @@ export class ExploreClubsComponent {
       }
     });
   }
+
   onSearch(event: Event | string): void {
-    handleSearchClubs(this.searchQuery, event, () => this.currentPage.set(1));
+    handleSearch(this.searchQuery, event, () => this.serverPagination.reset());
   }
 
   changeSortBy(field: any): void {
-    handleSortChangeClubs(this.sortControls, field, () => this.currentPage.set(1));
+    handleSortChange(this.filterSortState.sort, field, () => this.serverPagination.reset());
   }
 
   changeCategory(categoryId: number | 'all'): void {
     this.selectedCategory.set(categoryId);
-    this.currentPage.set(1);
+    this.serverPagination.reset();
   }
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages() && page !== -1) {
-      this.currentPage.set(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.serverPagination.goToPage(page, this.totalPages());
   }
 
-  handleClubAction(club: Club): void {
-    if (!this.isAuthenticated()) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    const meta = this.statusManager.getMeta(club.id);
-    if (meta.status.includes('non membre') || meta.status.includes('rejetée')) {
-      this.router.navigate(['/clubs', club.id, 'apply']);
-    } else if (meta.status.includes('ancien membre')) {
-      this.router.navigate(['/clubs', club.id, 'renew']);
-    } else {
-      this.router.navigate(['/clubs', club.id]);
-    }
-  }
 
   resetFilters(): void {
-    this.searchQuery.set('');
-    this.selectedCategory.set('all');
-    this.sortBy.set('name');
-    this.sortOrder.set('asc');
-    this.currentPage.set(1);
+    this.filterSortState.reset();
+    this.serverPagination.reset();
   }
 
   getClubMeta(clubId: number) {
@@ -137,4 +121,11 @@ export class ExploreClubsComponent {
   formatNumber(num: number): string {
     return num.toLocaleString('fr-FR');
   }
+  getUserClubStatus(clubId: number): string {
+    return this.statusManager.getMeta(clubId).status;
+  }
+
+  
+
+ 
 }

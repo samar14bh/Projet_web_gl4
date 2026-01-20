@@ -68,10 +68,10 @@
       </select>
     </div>
     <app-button 
-  label="Réinitialiser les filtres" 
-  icon="arrow-counterclockwise"
-  (clicked)="resetFilters()"
-/>
+      label="Réinitialiser les filtres" 
+      icon="arrow-counterclockwise"
+      (clicked)="resetFilters()"
+    />
   </div>
 
   @if (clubsRes.isLoading()) {
@@ -92,58 +92,58 @@
       <app-button label="Réinitialiser" variant="secondary" (clicked)="resetFilters()" />
     </div>
   } @else {
-    <div class="clubs-grid">
-      @for (club of clubs(); track club.id) {
-        @let meta = getClubMeta(club.id);
-        <app-club-component
-          [club]="club"
-          [showJoinButton]="true"
-          [joinButtonLabel]="meta.text"
-          [joinButtonVariant]="meta.variant"
-          [joinButtonDisabled]="meta.disabled"
-          [isAuthenticated]="isAuthenticated()"
-          (viewDetails)="router.navigate(['/clubs', club.id])"
-          (join)="handleClubAction($event)"
-        />
-      }
-    </div>
+   <div class="clubs-grid">
+  @for (club of clubs(); track club.id) {
+    @let meta = getClubMeta(club.id);
+    <app-club-component
+      [club]="club"
+      [showJoinButton]="true"
+      [joinButtonLabel]="meta.text"
+      [joinButtonVariant]="meta.variant"
+      [joinButtonDisabled]="meta.disabled"
+      [isAuthenticated]="isAuthenticated()"
+      [userClubStatus]="meta.status" 
+      [redirectAfterAction]="true">
+    </app-club-component>
+  }
+</div>
 
     @if (totalPages() > 1) {
       <div class="pagination-container">
         <div class="pagination-controls">
           <app-button 
-    variant="ghost"
-    icon="chevron-left"
-    label=""
-    [disabled]="currentPage() === 1" 
-    (clicked)="goToPage(currentPage() - 1)"
-    class="pagination-nav-btn"
-  />
+            variant="ghost"
+            icon="chevron-left"
+            label=""
+            [disabled]="currentPage() === 1" 
+            (clicked)="goToPage(currentPage() - 1)"
+            class="pagination-nav-btn"
+          />
 
           <div class="pagination-numbers">
-  @for (page of pageNumbers(); track $index) {
-    @if (page === -1) {
-      <span class="pagination-ellipsis">...</span>
-    } @else {
-      <app-button 
-        [label]="page.toString()"
-        [variant]="page === currentPage() ? 'primary' : 'ghost'"
-        class="pagination-number-btn"
-        [class.active]="page === currentPage()"
-        (clicked)="goToPage(page)"
-      />
-    }
-  }
-</div>
+            @for (page of pageNumbers(); track $index) {
+              @if (page === -1) {
+                <span class="pagination-ellipsis">...</span>
+              } @else {
+                <app-button 
+                  [label]="page.toString()"
+                  [variant]="page === currentPage() ? 'primary' : 'ghost'"
+                  class="pagination-number-btn"
+                  [class.active]="page === currentPage()"
+                  (clicked)="goToPage(page)"
+                />
+              }
+            }
+          </div>
 
           <app-button 
-  variant="ghost"
-  icon="chevron-right"
-  label="Suivant"
-  [disabled]="currentPage() === totalPages()" 
-  (clicked)="goToPage(currentPage() + 1)"
-  class="pagination-nav-btn"
-/>
+            variant="ghost"
+            icon="chevron-right"
+            label="Suivant"
+            [disabled]="currentPage() === totalPages()" 
+            (clicked)="goToPage(currentPage() + 1)"
+            class="pagination-nav-btn"
+          />
         </div>
         <div class="pagination-summary">
           Page {{ currentPage() }} sur {{ totalPages() }} ({{ totalClubs() }} clubs)

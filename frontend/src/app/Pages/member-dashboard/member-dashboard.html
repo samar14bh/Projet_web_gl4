@@ -161,27 +161,30 @@
   </section>
 
   <section class="suggestions-section">
-    <div class="section-header">
-      <h2>Clubs qui pourraient vous intéresser</h2>
-      <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
-    </div>
+  <div class="section-header">
+    <h2>Clubs qui pourraient vous intéresser</h2>
+    <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
+  </div>
 
-    @if (recommendedClubs().length > 0) {
-      <div class="clubs-recommendations-grid">
-        @for (club of recommendedClubs(); track club.id) {
-          <app-club-component 
-            [club]="club"
-            [isAuthenticated]="true"
-            [showJoinButton]="true"
-            (viewDetails)="navigateToClub(club.id)"
-            (join)="navigateToClub(club.id)">
-          </app-club-component>
-        }
-      </div>
-    } @else {
-      <div class="empty-recommendations">
-        <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
-      </div>
-    }
-  </section>
+  @if (recommendedClubs().length > 0) {
+    <div class="clubs-recommendations-grid">
+      @for (club of recommendedClubs(); track club.id) {
+        @let meta = getClubMeta(club.id);
+        <app-club-component 
+          [club]="club"
+          [isAuthenticated]="true"
+          [showJoinButton]="true"
+          [joinButtonLabel]="meta.text"
+          [joinButtonVariant]="meta.variant"
+          [joinButtonDisabled]="meta.disabled"
+          [userClubStatus]="meta.status"
+          [redirectAfterAction]="true" />
+      }
+    </div>
+  } @else {
+    <div class="empty-recommendations">
+      <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+    </div>
+  }
+</section>
 </div>

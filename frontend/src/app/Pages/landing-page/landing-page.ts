@@ -1,5 +1,5 @@
 
-import { Component, inject, computed, signal} from '@angular/core';
+import { Component, inject, computed, signal, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule,  } from '@angular/common';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -16,7 +16,8 @@ import { ButtonComponent } from '../../shared/components/button/button';
   standalone: true,
   imports: [CommonModule, ClubComponent, LazyLoading,HeaderComponent,FooterComponent,ButtonComponent],
   templateUrl: './landing-page.component.html',
-  styleUrls: ['./landing-page.component.css']
+  styleUrls: ['./landing-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LandingPageComponent {
   private router = inject(Router);
