@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { MembershipClubDto, UserRoleInClub } from '../../Core/dtos/membership-club.dto';
+import { UserRoleInClub } from '../../Core/dtos/membership-club.dto';
 import { ClubResponsabilityService } from '../../Core/services/club-responsability.service';
 import { ClubService } from '../../Core/services/club.service';
 import { AuthService } from '../../Core/services/auth.service';
@@ -29,10 +29,7 @@ export class ClubResponsability {
     console.log("in the constructor");
 
     this.route.paramMap.subscribe(params => {
-      console.log("this was called ")
       const membershipId = params.get('membershipId');
-      const currentUser = this.authService.currentUser();
-      console.log("membership id is ", membershipId);
 
       if (membershipId && (!this.club() || this.club()?.membershipId !== Number(membershipId)) ) {
         console.log("we are now here ")
