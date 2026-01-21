@@ -1,265 +1,292 @@
 <div class="manage-members-page">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-text">
-        <h1>Gérer les Membres</h1>
-        <p>Administrez les adhésions et validez les demandes</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-secondary" (click)="exportCSV()">
-          <i class="bi bi-download"></i>
-          Exporter CSV
-        </button>
+  <!-- HERO SECTION WITH CLUB DETAILS -->
+  <div class="hero-section" [style.backgroundImage]="clubDetails()?.coverImage ? 'url(' + clubDetails()?.coverImage + ')' : 'none'">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="club-header">
+        <div class="club-logo-wrapper">
+          @if (clubDetails()?.logo) {
+            <img [src]="clubDetails()?.logo" alt="Logo du club" />
+          } @else {
+            <i class="bi bi-building"></i>
+          }
+        </div>
+
+        <div class="club-title-info">
+          <h1>{{ clubDetails()?.name || 'Gestion des Membres' }}</h1>
+          <div class="quick-stats">
+            <span><i class="bi bi-people-fill"></i> {{ totalMembers() }} Membres</span>
+            <span><i class="bi bi-shield-check"></i> {{ bureauMembersCount() }} Bureau</span>
+            <span><i class="bi bi-hourglass-split"></i> {{ pendingCount() }} Demandes</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn-export" (click)="exportCSV()">
+            <i class="bi bi-download"></i>
+            Exporter CSV
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Stats Section - Dynamic based on active tab -->
-  <div class="stats-section">
-    @if (activeTab() === 'bureau' || activeTab() === 'members') {
-      <!-- Member Stats -->
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-people-fill"></i>
-        </div>
-        <div class="stat-label">Total Membres</div>
-        <div class="stat-value">{{ totalMembers() }}</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-shield-check"></i>
-        </div>
-        <div class="stat-label">Bureau</div>
-        <div class="stat-value">{{ bureauMembersCount() }}</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-person-check"></i>
-        </div>
-        <div class="stat-label">Membres Normaux</div>
-        <div class="stat-value">{{ regularMembersCount() }}</div>
-      </div>
-    } @else if (activeTab() === 'applications') {
-      <!-- Applications Stats -->
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-hourglass-split"></i>
-        </div>
-        <div class="stat-label">Demandes En Attente</div>
-        <div class="stat-value">{{ pendingCount() }}</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-check-circle"></i>
-        </div>
-        <div class="stat-label">Approuvées</div>
-        <div class="stat-value">{{ approvedCount() }}</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-icon">
-          <i class="bi bi-x-circle"></i>
-        </div>
-        <div class="stat-label">Rejetées</div>
-        <div class="stat-value">{{ rejectedCount() }}</div>
-      </div>
-    }
-  </div>
-
-  <!-- Tabs -->
-  <div class="content-card">
-    <app-tab-navigation [tabs]="tabs()" [activeTab]="activeTab()" (tabChange)="onTabChange($event)" />
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-      <!-- Bureau Tab -->
-      @if (activeTab() === 'bureau') {
-        <div class="members-section">
-          <div class="section-header">
-            <h3>Membres du Bureau</h3>
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- STATISTICS CARDS -->
+    <div class="stats-grid">
+      @if (activeTab() === 'bureau' || activeTab() === 'members') {
+        <!-- Member Stats -->
+        <div class="stat-card stat-card-1">
+          <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
           </div>
-
-          <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" [value]="searchQuery()" (input)="searchQuery.set($event.target.value)"
-                   placeholder="Rechercher dans le bureau..." />
-          </div>
-
-          @if (loading()) {
-            <div class="loading-state">
-              <div class="spinner"></div>
-              <p>Chargement des données...</p>
-            </div>
-          } @else if (filteredBureauMembers().length === 0) {
-            <div class="empty-state">
-              <i class="bi bi-shield-check"></i>
-              <h4>Aucun Membre du Bureau</h4>
-              <p>Il n'y a pas encore de membres du bureau</p>
-            </div>
-          } @else {
-            <div class="members-table">
-              <table>
-                <thead>
-                <tr>
-                  <th>Membre</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th>Date d'adhésion</th>
-                  <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                  @for (member of filteredBureauMembers(); track member.id) {
-                    <tr>
-                      <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <div class="member-avatar-small">
-                            <i class="bi bi-person-fill"></i>
-                          </div>
-                          <div>
-                            <div class="member-name">{{ member.name }} {{ member.lastName }}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{{ member.email }}</td>
-                      <td>
-                        <span class="badge" [class]="getRoleBadgeClass(member.role)">
-                          {{ getRoleLabel(member.role) }}
-                        </span>
-                      </td>
-                      <td>{{ formatDate(member.dateDebut) }}</td>
-                      <td>
-                        <div class="table-actions">
-                          <button class="btn-sm" (click)="openRoleModal(member)">
-                            <i class="bi bi-pencil-square"></i>
-                            Changer Rôle
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
+          <div class="stat-label">Total Membres</div>
+          <div class="stat-value">{{ totalMembers() }}</div>
+          <div class="stat-footer">membres actifs</div>
         </div>
-      }
 
-      <!-- Members Tab -->
-      @else if (activeTab() === 'members') {
-        <div class="members-section">
-          <div class="section-header">
-            <h3>Tous les Membres</h3>
+        <div class="stat-card stat-card-2">
+          <div class="stat-icon">
+            <i class="bi bi-shield-check"></i>
           </div>
-
-          <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" [value]="searchQuery()" (input)="searchQuery.set($event.target.value)"
-                   placeholder="Rechercher un membre..." />
-          </div>
-
-          @if (loading()) {
-            <div class="loading-state">
-              <div class="spinner"></div>
-              <p>Chargement des données...</p>
-            </div>
-          } @else if (filteredAllMembers().length === 0) {
-            <div class="empty-state">
-              <i class="bi bi-people"></i>
-              <h4>Aucun Membre</h4>
-              <p>Il n'y a pas encore de membres</p>
-            </div>
-          } @else {
-            <div class="members-table">
-              <table>
-                <thead>
-                <tr>
-                  <th>Membre</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th>Date d'adhésion</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                  @for (member of filteredAllMembers(); track member.id) {
-                    <tr>
-                      <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <div class="member-avatar-small">
-                            <i class="bi bi-person-fill"></i>
-                          </div>
-                          <div>
-                            <div class="member-name">{{ member.name }} {{ member.lastName }}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{{ member.email }}</td>
-                      <td>
-                        <span class="badge" [class]="getRoleBadgeClass(member.role)">
-                          {{ getRoleLabel(member.role) }}
-                        </span>
-                      </td>
-                      <td>{{ formatDate(member.dateDebut) }}</td>
-                      <td>
-                        <span class="badge badge-success">Actif</span>
-                      </td>
-                      <td>
-                        <div class="table-actions">
-                          <button class="btn-sm" (click)="openRoleModal(member)">
-                            <i class="bi bi-pencil-square"></i>
-                            Rôle
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
+          <div class="stat-label">Bureau</div>
+          <div class="stat-value">{{ bureauMembersCount() }}</div>
+          <div class="stat-footer">membres du bureau</div>
         </div>
-      }
 
-      <!-- Applications Tab -->
-      @else if (activeTab() === 'applications') {
-        <div class="members-section">
-          <div class="section-header">
-            <h3>Demandes d'Adhésion</h3>
+        <div class="stat-card stat-card-3">
+          <div class="stat-icon">
+            <i class="bi bi-person-check"></i>
           </div>
+          <div class="stat-label">Membres Normaux</div>
+          <div class="stat-value">{{ regularMembersCount() }}</div>
+          <div class="stat-footer">membres réguliers</div>
+        </div>
+      } @else if (activeTab() === 'applications') {
+        <!-- Applications Stats -->
+        <div class="stat-card stat-card-warning">
+          <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div class="stat-label">En Attente</div>
+          <div class="stat-value">{{ pendingCount() }}</div>
+          <div class="stat-footer">à traiter</div>
+        </div>
 
-          @if (loading()) {
-            <div class="loading-state">
-              <div class="spinner"></div>
-              <p>Chargement des demandes...</p>
-            </div>
-          } @else if (allApplications().length === 0) {
-            <div class="empty-state">
-              <i class="bi bi-inbox"></i>
-              <h4>Aucune Demande</h4>
-              <p>Il n'y a pas de demandes d'adhésion</p>
-            </div>
-          } @else {
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              @for (app of allApplications(); track app.id) {
-                <app-application-item
-                  [application]="app"
-                  (viewDetails)="handleViewApplicationDetails($event)">
-                </app-application-item>
-              }
-            </div>
-          }
+        <div class="stat-card stat-card-success">
+          <div class="stat-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div class="stat-label">Approuvées</div>
+          <div class="stat-value">{{ approvedCount() }}</div>
+          <div class="stat-footer">demandes acceptées</div>
+        </div>
+
+        <div class="stat-card stat-card-danger">
+          <div class="stat-icon">
+            <i class="bi bi-x-circle"></i>
+          </div>
+          <div class="stat-label">Rejetées</div>
+          <div class="stat-value">{{ rejectedCount() }}</div>
+          <div class="stat-footer">demandes refusées</div>
         </div>
       }
     </div>
-  </div>
 
-  <!-- Role Modal -->
+    <!-- TABS & CONTENT -->
+    <div class="section-card section-card-full">
+      <app-tab-navigation
+        [tabs]="tabs()"
+        [activeTab]="activeTab()"
+        (tabChange)="onTabChange($event)"
+      />
+
+      <div class="tab-content">
+        <!-- MEMBERS TAB -->
+        @if (activeTab() === 'members' || activeTab() === 'bureau') {
+          <div class="members-section">
+            <div class="section-header-row">
+              <h3>{{ activeTab() === 'bureau' ? 'Membres du Bureau' : 'Tous les Membres' }}</h3>
+              <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input
+                  type="text"
+                  [value]="searchQuery()"
+                  (input)="searchQuery.set($any($event.target).value); onSearchChange()"
+                  placeholder="Rechercher un membre..."
+                />
+              </div>
+            </div>
+
+            @if (loading()) {
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Chargement des données...</p>
+              </div>
+            } @else if (allMembers().length === 0) {
+              <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <h4>Aucun Membre</h4>
+                <p>{{ activeTab() === 'bureau' ? 'Aucun membre du bureau pour le moment' : 'Aucun membre pour le moment' }}</p>
+              </div>
+            } @else {
+              <div class="members-grid">
+                @for (member of allMembers(); track member.id) {
+                  <div class="member-card">
+                    <div class="member-card-header">
+                      <div class="member-avatar">
+                        @if (member.image) {
+                          <img [src]="member.image" [alt]="member.name + ' ' + member.lastName" />
+                        } @else {
+                          <i class="bi bi-person-fill"></i>
+                        }
+                      </div>
+                      <div class="member-info">
+                        <h4>{{ member.name }} {{ member.lastName }}</h4>
+                        <p>{{ member.email }}</p>
+                      </div>
+                    </div>
+                    <div class="member-card-body">
+                      <div class="member-detail">
+                        <span class="detail-label">Rôle</span>
+                        <span class="badge" [class]="getRoleBadgeClass(member.role)">
+                          {{ getRoleLabel(member.role) }}
+                        </span>
+                      </div>
+                      <div class="member-detail">
+                        <span class="detail-label">Adhésion</span>
+                        <span class="detail-value">{{ formatDate(member.joinDate) }}</span>
+                      </div>
+                    </div>
+                    <div class="member-card-actions">
+                      <button class="btn-action btn-primary" (click)="openRoleModal(member)" title="Modifier le rôle">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn-action btn-danger" (click)="openRemoveModal(member)" title="Retirer le membre">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- PAGINATION -->
+              <app-pagination
+                [currentPage]="membersPage()"
+                [totalPages]="membersTotalPages()"
+                (pageChange)="onMembersPageChange($event)"
+              />
+            }
+          </div>
+        }
+
+        <!-- APPLICATIONS TAB -->
+        @else if (activeTab() === 'applications') {
+          <div class="applications-section">
+            <div class="section-header-row">
+              <h3>Demandes d'Adhésion</h3>
+              <div class="status-filters">
+                @for (filter of statusFilters; track filter.value) {
+                  <button
+                    class="filter-btn"
+                    [class.active]="applicationStatus() === filter.value"
+                    (click)="onStatusFilterChange(filter.value)">
+                    <i class="bi" [class]="'bi-' + filter.icon"></i>
+                    {{ filter.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (loading()) {
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Chargement des demandes...</p>
+              </div>
+            } @else if (applicationsData().length === 0) {
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h4>Aucune Demande</h4>
+                <p>Il n'y a pas de demandes avec ce statut</p>
+              </div>
+            } @else {
+              <div class="applications-grid">
+                @for (app of applicationsData(); track app.id) {
+                  <div class="application-card">
+                    <div class="application-card-header">
+                      <div class="applicant-avatar">
+                        @if (app.userImage) {
+                          <img [src]="app.userImage" [alt]="app.userName" />
+                        } @else {
+                          <i class="bi bi-person-fill"></i>
+                        }
+                      </div>
+                      <div class="applicant-info">
+                        <h4>{{ app.userName }} {{ app.userLastName }}</h4>
+                        <p>{{ app.userEmail }}</p>
+                      </div>
+                      <span class="badge" [class]="getStatusBadgeClass(app.status)">
+                        {{ getStatusLabel(app.status) }}
+                      </span>
+                    </div>
+                    <div class="application-card-body">
+                      <div class="application-detail">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Date de demande</span>
+                        <span class="detail-value">{{ formatDate(app.createdAt) }}</span>
+                      </div>
+                      <div class="application-detail">
+                        <span class="detail-label"><i class="bi bi-telephone"></i> Téléphone</span>
+                        <span class="detail-value">{{ app.phoneNumber }}</span>
+                      </div>
+                    </div>
+                    <div class="application-card-actions">
+                      <!-- ✅ BOUTON DÉTAILS -->
+                      <button
+                        class="btn-action btn-icon-only"
+                        (click)="openApplicationDetailsModal(app)"
+                        title="Voir les détails">
+                        <i class="bi bi-eye"></i>
+                      </button>
+
+                      <!-- ✅ BOUTON APPROUVER (Seulement si PENDING) -->
+                      @if (isApplicationPending(app.status)) {
+                        <button
+                          class="btn-action btn-icon-success"
+                          (click)="approveMember(app.id)"
+                          title="Approuver la demande">
+                          <i class="bi bi-check-lg"></i>
+                        </button>
+                      }
+
+                      <!-- ✅ BOUTON REJETER (Seulement si PENDING) -->
+                      @if (isApplicationPending(app.status)) {
+                        <button
+                          class="btn-action btn-icon-danger"
+                          (click)="rejectMember(app.id)"
+                          title="Rejeter la demande">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- PAGINATION -->
+              <app-pagination
+                [currentPage]="applicationsPage()"
+                [totalPages]="applicationsTotalPages()"
+                (pageChange)="onApplicationsPageChange($event)"
+              />
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- ROLE MODAL -->
   @if (showRoleModal()) {
     <div class="modal-overlay" (click)="closeRoleModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -270,25 +297,259 @@
           </button>
         </div>
         <div class="modal-body">
-          <p style="margin: 0 0 20px 0; color: #64748B;">
-            Sélectionnez un nouveau rôle pour <strong>{{ selectedMember()?.name }} {{ selectedMember()?.lastName }}</strong>
+          <p class="modal-description">
+            Sélectionnez un nouveau rôle pour
+            <strong>{{ selectedMember()?.name }} {{ selectedMember()?.lastName }}</strong>
           </p>
-          <div class="role-dropdown">
-            <select [(ngModel)]="selectedRole" (change)="assignRole()">
-              <option value="">-- Aucun rôle (Membre) --</option>
-              <option value="president">Président</option>
-              <option value="treasurer">Trésorier</option>
-              <option value="secretary">Secrétaire</option>
-              <option value="vice-president">Vice-Président</option>
-            </select>
+          <div class="role-selector">
+            <label class="role-option">
+              <input
+                type="radio"
+                name="role"
+                value="MEMBER"
+                [(ngModel)]="selectedRole"
+              />
+              <span class="role-label">
+                <i class="bi bi-person"></i>
+                Membre
+              </span>
+            </label>
+            <label class="role-option">
+              <input
+                type="radio"
+                name="role"
+                value="PRESIDENT"
+                [(ngModel)]="selectedRole"
+              />
+              <span class="role-label">
+                <i class="bi bi-star-fill"></i>
+                Président
+              </span>
+            </label>
+            <label class="role-option">
+              <input
+                type="radio"
+                name="role"
+                value="TREASURER"
+                [(ngModel)]="selectedRole"
+              />
+              <span class="role-label">
+                <i class="bi bi-wallet2"></i>
+                Trésorier
+              </span>
+            </label>
+            <label class="role-option">
+              <input
+                type="radio"
+                name="role"
+                value="SECRETARY"
+                [(ngModel)]="selectedRole"
+              />
+              <span class="role-label">
+                <i class="bi bi-journal-text"></i>
+                Secrétaire
+              </span>
+            </label>
+            <label class="role-option">
+              <input
+                type="radio"
+                name="role"
+                value="RH"
+                [(ngModel)]="selectedRole"
+              />
+              <span class="role-label">
+                <i class="bi bi-people"></i>
+                Ressources Humaines
+              </span>
+            </label>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-sm" (click)="closeRoleModal()">Annuler</button>
-          <button class="btn-secondary" (click)="confirmRoleChange()" style="padding: 10px 24px; font-size: 14px;">
+          <button class="btn-modal btn-secondary" (click)="closeRoleModal()">Annuler</button>
+          <button class="btn-modal btn-primary" (click)="confirmRoleChange()">
             Confirmer
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- REMOVE MEMBER MODAL -->
+  @if (showRemoveModal()) {
+    <div class="modal-overlay" (click)="closeRemoveModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Retirer le Membre</h3>
+          <button class="modal-close" (click)="closeRemoveModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">
+            Êtes-vous sûr de vouloir retirer
+            <strong>{{ selectedMember()?.name }} {{ selectedMember()?.lastName }}</strong> du club ?
+          </p>
+          <p class="modal-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            Cette action est irréversible.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal btn-secondary" (click)="closeRemoveModal()">Annuler</button>
+          <button class="btn-modal btn-danger" (click)="confirmRemoveMember()">
+            Retirer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- APPLICATION DETAILS MODAL -->
+  @if (showApplicationDetailsModal() && selectedApplication()) {
+    <div class="modal-overlay" (click)="closeApplicationDetailsModal()">
+      <div class="modal-content modal-content-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-header-info">
+            <h3>Détails de la Demande</h3>
+            <span class="badge" [class]="getStatusBadgeClass(selectedApplication()?.status)">
+              {{ getStatusLabel(selectedApplication()?.status) }}
+            </span>
+          </div>
+          <button class="modal-close" (click)="closeApplicationDetailsModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body modal-body-large">
+          <!-- Applicant Info -->
+          <div class="application-detail-section applicant-section">
+            <div class="applicant-header-detail">
+              <div class="applicant-avatar-large">
+                @if (selectedApplication()?.userImage) {
+                  <img [src]="selectedApplication()?.userImage" [alt]="selectedApplication()?.userName" />
+                } @else {
+                  <i class="bi bi-person-fill"></i>
+                }
+              </div>
+              <div class="applicant-detail-info">
+                <h4>{{ selectedApplication()?.userName }} {{ selectedApplication()?.userLastName }}</h4>
+                <p>{{ selectedApplication()?.userEmail }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Details Grid -->
+          <div class="details-grid">
+            <!-- Left Column -->
+            <div class="detail-column">
+              <div class="detail-group">
+                <label class="detail-label-heading">Date de Demande</label>
+                <p class="detail-value-text">{{ formatDate(selectedApplication()?.createdAt) }}</p>
+              </div>
+
+              <div class="detail-group">
+                <label class="detail-label-heading">Numéro de Téléphone</label>
+                <p class="detail-value-text">{{ selectedApplication()?.phoneNumber }}</p>
+              </div>
+
+              <div class="detail-group">
+                <label class="detail-label-heading">Membre d'un Autre Club</label>
+                <p class="detail-value-text">
+                  @if (selectedApplication()?.isMemberOfOtherClub) {
+                    <span class="badge badge-danger">Oui</span>
+                  } @else {
+                    <span class="badge badge-success">Non</span>
+                  }
+                </p>
+              </div>
+
+              @if (selectedApplication()?.previousClub) {
+                <div class="detail-group">
+                  <label class="detail-label-heading">Club Précédent</label>
+                  <p class="detail-value-text">{{ selectedApplication()?.previousClub }}</p>
+                </div>
+              }
+            </div>
+
+            <!-- Right Column -->
+            <div class="detail-column">
+              @if (selectedApplication()?.availability) {
+                <div class="detail-group">
+                  <label class="detail-label-heading">Disponibilité</label>
+                  <p class="detail-value-text">{{ selectedApplication()?.availability }}</p>
+                </div>
+              }
+
+              @if (selectedApplication()?.skills) {
+                <div class="detail-group">
+                  <label class="detail-label-heading">Compétences</label>
+                  <p class="detail-value-text">{{ selectedApplication()?.skills }}</p>
+                </div>
+              }
+
+              @if (selectedApplication()?.expectations) {
+                <div class="detail-group">
+                  <label class="detail-label-heading">Attentes</label>
+                  <p class="detail-value-text">{{ selectedApplication()?.expectations }}</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Full Width Sections -->
+          <div class="detail-group full-width">
+            <label class="detail-label-heading">Pourquoi Rejoindre le Club</label>
+            <div class="detail-message-box">
+              {{ selectedApplication()?.whyJoin || 'Non fourni' }}
+            </div>
+          </div>
+
+          @if (selectedApplication()?.goalsInClub) {
+            <div class="detail-group full-width">
+              <label class="detail-label-heading">Objectifs dans le Club</label>
+              <div class="detail-message-box">
+                {{ selectedApplication()?.goalsInClub }}
+              </div>
+            </div>
+          }
+
+          @if (selectedApplication()?.additionalComments) {
+            <div class="detail-group full-width">
+              <label class="detail-label-heading">Commentaires Supplémentaires</label>
+              <div class="detail-message-box">
+                {{ selectedApplication()?.additionalComments }}
+              </div>
+            </div>
+          }
+
+          @if (selectedApplication()?.adminResponse) {
+            <div class="detail-group full-width">
+              <label class="detail-label-heading">Réponse Admin</label>
+              <div class="detail-message-box admin-response">
+                {{ selectedApplication()?.adminResponse }}
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (isApplicationPending(selectedApplication()?.status)) {
+          <div class="modal-footer modal-footer-actions">
+            <button class="btn-modal btn-secondary" (click)="closeApplicationDetailsModal()">Fermer</button>
+            <div class="modal-actions-group">
+              <button class="btn-modal btn-danger" (click)="rejectMember(selectedApplication()!.id)">
+                <i class="bi bi-x-lg"></i>
+                Rejeter
+              </button>
+              <button class="btn-modal btn-success" (click)="approveMember(selectedApplication()!.id)">
+                <i class="bi bi-check-lg"></i>
+                Approuver
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="modal-footer">
+            <button class="btn-modal btn-secondary" (click)="closeApplicationDetailsModal()">Fermer</button>
+          </div>
+        }
       </div>
     </div>
   }

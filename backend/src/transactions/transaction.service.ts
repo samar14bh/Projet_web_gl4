@@ -376,4 +376,30 @@ export class TransactionsService {
 
     return { start, end };
   }
+  async getMonthlyRevenueForClub(clubId: number): Promise<number> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const transactions = await this.transactionRepository.find({
+      where: {
+        clubId,
+        type: TransactionType.REVENUE,
+        date: Between(monthStart, monthEnd),
+      },
+    });
+
+    return transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  }
+
+  async getTotalRevenueForClub(clubId: number): Promise<number> {
+    const transactions = await this.transactionRepository.find({
+      where: {
+        clubId,
+        type: TransactionType.REVENUE,
+      },
+    });
+
+    return transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  }
 }

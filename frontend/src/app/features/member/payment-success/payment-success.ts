@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule} from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PaymentService } from '../../../Core/services/payment.service';
 
@@ -52,13 +52,13 @@ export class PaymentSuccessComponent implements OnInit {
       return {
         title: 'Paiement de cotisation confirmé !',
         description: 'Votre adhésion au club est maintenant active',
-        icon: 'bi-check-circle-fill',
+        icon: 'bi bi-check-circle-fill',
       };
     } else {
       return {
         title: 'Inscription confirmée !',
         description: 'Vous êtes maintenant inscrit à cet événement',
-        icon: 'bi-calendar-check-fill',
+        icon: 'bi bi-calendar-check-fill',
       };
     }
   });
@@ -90,9 +90,6 @@ export class PaymentSuccessComponent implements OnInit {
    */
   loadPaymentDetails(paymentId: number) {
     // Essayer de charger les détails complets du paiement
-    // Si la méthode n'existe pas dans PaymentService, c'est ok
-    // On affichera quand même la page de confirmation
-
     try {
       // Vérifier si la méthode existe
       if ('getPaymentDetails' in this.paymentService) {
@@ -103,17 +100,6 @@ export class PaymentSuccessComponent implements OnInit {
           error: (err: any) => {
             console.error('Erreur lors du chargement des détails du paiement:', err);
             // Ne pas bloquer sur l'erreur
-          }
-        });
-      } else {
-        console.log('Méthode getPaymentDetails non disponible');
-        // Charger les stats à la place pour afficher quelque chose
-        this.paymentService.getPaymentStats(+localStorage.getItem('userId')! || 0).subscribe({
-          next: (stats: any) => {
-            this.paymentDetails.set({ id: paymentId, stats });
-          },
-          error: (err: any) => {
-            console.error('Erreur chargement stats:', err);
           }
         });
       }
@@ -180,4 +166,13 @@ export class PaymentSuccessComponent implements OnInit {
   goToHome() {
     this.router.navigate(['/']);
   }
-}
+
+  formatDate(dateString: Date): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }}

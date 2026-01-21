@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Membership } from './entities/membership.entity';
 import { Application } from './entities/application.entity';
 import { CreateMembershipDto } from './dto/create-membership.dto';
-import { Status, MemberRole } from '../common/enums';
+import { MemberRole, Status } from '../common/enums';
+import { DashboardMemberDto } from '../club-manager/dto/dashboard-member.dto';
+import { MemberResponseDto } from '../club-manager/dto/member-response.dto';
+import { GetMembersQueryDto } from '../club-manager/dto/get-members-query.dto';
+import { GetApplicationsQueryDto } from '../club-manager/dto/get-applications-query.dto';
 
 /**
  * Service de Gestion des Adhésions
@@ -234,5 +238,307 @@ export class MembershipsService {
    */
   clearError() {
     // Pour une utilisation optionnelle
+  }
+  async getRecentMembers(clubId: number): Promise<DashboardMemberDto[]> {
+    const memberships = await this.membershipRepository.find({
+      where: {
+        club: { id: clubId },
+        dateFin: IsNull(),
+      },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: 5,
+    });
+    return memberships.map((m) => ({
+      id: m.id,
+      name: m.user.name,
+      lastName: m.user.lastName,
+      email: m.user.email,
+      joinDate: m.createdAt,
+    }));
+  }
+
+  async countActiveMembers(clubId: number): Promise<number> {
+    return this.membershipRepository.count({
+      where: {
+        club: { id: clubId },
+        dateFin: IsNull(),
+      },
+    });
+  }
+  async countPendingByClub(clubId: number): Promise<number> {
+    return this.applicationRepository.count({
+      where: {
+        club: { id: clubId },
+        status: Status.PENDING,
+      },
+    });
+  }
+
+  async getPendingApplicationsForDashboard(
+    clubId: number,
+  ): Promise<DashboardMemberDto[]> {
+    const applications = await this.applicationRepository.find({
+      where: {
+        club: { id: clubId },
+        status: Status.PENDING,
+      },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: 5,
+    });
+
+    return applications.map((app) => ({
+      id: app.id,
+      name: app.user.name,
+      lastName: app.user.lastName,
+      email: app.user.email,
+      joinDate: app.createdAt,
+      image: app.user.image,
+    }));
+  }
+  // Obtenir les membres avec pagination et filtres - PAGINATION INTÉGRÉE
+  async getMembersPaginated(clubId: number, query: GetMembersQueryDto) {
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const limit = query.limit && query.limit > 0 ? query.limit : 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.user', 'user')
+      .leftJoinAndSelect('membership.club', 'club')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere(
+        '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
+        { today: new Date() },
+      );
+
+    // Filtrer par rôle si spécifié
+    if (query.role) {
+      queryBuilder.andWhere('membership.role = :role', { role: query.role });
+    }
+
+    // Recherche par nom ou email
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(user.name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // Appliquer le tri et la pagination
+    queryBuilder.orderBy('membership.id', 'DESC').skip(skip).take(limit);
+
+    // Exécuter la requête
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: data.map((m) => this.mapToMemberResponse(m)),
+      total,
+      page,
+      limit,
+    };
+  }
+
+  // Compter les membres actifs d'un club
+  async countByClub(clubId: number): Promise<number> {
+    return this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere(
+        '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
+        { today: new Date() },
+      )
+      .getCount();
+  }
+
+  // Compter les membres avec un rôle spécifique
+  async countByClubAndRole(clubId: number, role: string): Promise<number> {
+    return this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere(
+        '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
+        { today: new Date() },
+      )
+      .andWhere('membership.role = :role', { role })
+      .getCount();
+  }
+
+  // Compter les membres du bureau (tous sauf role 'member')
+  async countByClubAndRoleNot(clubId: number, role: string): Promise<number> {
+    return this.membershipRepository
+      .createQueryBuilder('membership')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere(
+        '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
+        { today: new Date() },
+      )
+      .andWhere('membership.role != :role', { role })
+      .getCount();
+  }
+
+  // Mettre à jour le rôle d'un membre
+  async updateRole(membershipId: number, role?: string) {
+    const membership = await this.membershipRepository.findOne({
+      where: { id: membershipId },
+      relations: ['user', 'club'],
+    });
+
+    if (!membership) {
+      throw new Error('Membership not found');
+    }
+
+    membership.role = (role as any) || 'member';
+    await this.membershipRepository.save(membership);
+
+    return this.mapToMemberResponse(membership);
+  }
+
+  // Retirer un membre (définir date de fin)
+  async removeMembership(membershipId: number) {
+    const membership = await this.membershipRepository.findOne({
+      where: { id: membershipId },
+    });
+
+    if (!membership) {
+      throw new Error('Membership not found');
+    }
+
+    membership.dateFin = new Date();
+    await this.membershipRepository.save(membership);
+
+    return { message: 'Member removed successfully' };
+  }
+
+  // Mapper vers DTO de réponse
+  private mapToMemberResponse(membership: Membership): MemberResponseDto {
+    return {
+      id: membership.id,
+      name: membership.user?.name || '',
+      lastName: membership.user?.lastName || '',
+      email: membership.user?.email || '',
+      role: membership.role || 'member',
+      joinDate: membership.dateDebut?.toString() || '',
+      endDate: membership.dateFin?.toString(),
+      image: membership.user?.image,
+      status:
+        membership.dateFin && new Date(membership.dateFin) < new Date()
+          ? 'CANCELLED'
+          : 'ACTIVE',
+    };
+  }
+  // Obtenir les applications avec pagination et filtres - PAGINATION INTÉGRÉE
+  async getApplicationsPaginated(
+    clubId: number,
+    query: GetApplicationsQueryDto,
+  ) {
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const limit = query.limit && query.limit > 0 ? query.limit : 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.applicationRepository
+      .createQueryBuilder('application')
+      .leftJoinAndSelect('application.user', 'user')
+      .leftJoinAndSelect('application.club', 'club')
+      .where('application.club_id = :clubId', { clubId });
+
+    // Filtrer par statut si spécifié
+    if (query.status) {
+      queryBuilder.andWhere('application.status = :status', {
+        status: query.status,
+      });
+    }
+
+    // Appliquer le tri et la pagination
+    queryBuilder.orderBy('application.id', 'DESC').skip(skip).take(limit);
+
+    // Exécuter la requête
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: data.map((app) => this.mapToApplicationResponse(app)),
+      total,
+      page,
+      limit,
+    };
+  }
+
+  // Compter les applications par club et statut
+  async countByClubAndStatus(clubId: number, status: Status): Promise<number> {
+    return this.applicationRepository
+      .createQueryBuilder('application')
+      .where('application.club_id = :clubId', { clubId })
+      .andWhere('application.status = :status', { status })
+      .getCount();
+  }
+
+  // Mapper vers DTO de réponse complet
+  private mapToApplicationResponse(application: Application) {
+    return {
+      id: application.id,
+      status: application.status,
+      adminResponse: application.response || '',
+      whyJoin: application.whyJoin || '',
+      previousClub: application.previousClub,
+      goalsInClub: application.goalsInClub || '',
+      phoneNumber: application.phoneNumber || '',
+      skills: application.skills,
+      expectations: application.expectations,
+      availability: application.availability,
+      additionalComments: application.additionalComments,
+      isMemberOfOtherClub: application.isMemberOfOtherClub || false,
+      userId: application.user?.id || 0,
+      userName: application.user?.name || '',
+      userLastName: application.user?.lastName || '',
+      userEmail: application.user?.email || '',
+      userImage: application.user?.image,
+      clubId: application.club?.id || 0,
+      clubName: application.club?.name || '',
+      createdAt: application.createdAt?.toString() || '',
+      updatedAt: application.updatedAt?.toString() || '',
+    };
+  }
+  // ✅ OBTENIR LES MEMBRES DU BUREAU AVEC PAGINATION - NOUVELLE MÉTHODE
+  async getBureauMembersPaginated(clubId: number, query: GetMembersQueryDto) {
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const limit = query.limit && query.limit > 0 ? query.limit : 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.user', 'user')
+      .leftJoinAndSelect('membership.club', 'club')
+      .where('membership.club_id = :clubId', { clubId })
+      .andWhere(
+        '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
+        { today: new Date() },
+      )
+      .andWhere('membership.role != :role', { role: 'MEMBER' }); // ✅ FILTRE BUREAU
+
+    // Recherche par nom ou email
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(user.name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // Appliquer le tri et la pagination
+    queryBuilder.orderBy('membership.id', 'DESC').skip(skip).take(limit);
+
+    // Exécuter la requête
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    console.log(
+      `[Bureau Members] Club: ${clubId}, Page: ${page}, Total: ${total}, Returned: ${data.length}`,
+    );
+
+    return {
+      data: data.map((m) => this.mapToMemberResponse(m)),
+      total,
+      page,
+      limit,
+    };
   }
 }

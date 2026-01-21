@@ -1,21 +1,18 @@
-import { Component, signal, computed, OnInit, inject } from '@angular/core';
+import { Component, signal, computed, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { PaymentService } from '../../../Core/services/payment.service';
 import { AuthService } from '../../../Core/services/auth.service';
-import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
-import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
-import { TabItem } from '../../../shared/interfaces/components.interface';
 
 /**
- * PAGE 10: Mes Paiements
- * Affiche l'historique des paiements, les statistiques et les moyens de paiement
+ * PAGE: Mes Paiements
+ * Affiche l'historique des paiements (adhésions et événements)
  * Devise: Dinars Tunisiens (TND)
  */
 @Component({
   selector: 'app-my-payments',
   standalone: true,
-  imports: [CommonModule, RouterModule, StatCardComponent, TabNavigationComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './my-payments.html',
   styleUrl: './my-payments.css',
 })
@@ -30,31 +27,28 @@ export class MyPaymentsComponent implements OnInit {
   // ============================================
   // SIGNAUX - ÉTAT DE LA PAGE
   // ============================================
-  /** Onglet actif (historique ou moyens de paiement) */
-  activeTab = signal<string>('history');
 
   /** ID de l'utilisateur actuel */
   currentUserId = computed(() => Number(this.authService.currentUser()?.id) || 0);
 
-  // ============================================
-  // CONFIGURATION DES ONGLETS
-  // ============================================
-  tabs = signal<TabItem[]>([
-    { id: 'history', label: 'Historique des paiements', icon: 'clock-history' },
-    { id: 'methods', label: 'Moyens de paiement', icon: 'credit-card' },
-  ]);
+  /** En attente du chargement des données */
+  loading = signal(false);
+
+  /** Erreur lors du chargement */
+  error = signal<string | null>(null);
+
+  /** Téléchargement en cours */
+  downloading = signal(false);
 
   // ============================================
-  // SIGNAUX CALCULÉS - DONNÉES
+  // SIGNAUX - DONNÉES
   // ============================================
+
   /** Liste de tous les paiements */
-  payments = computed(() => this.paymentService.payments());
+  payments = signal<any[]>([]);
 
   /** Statistiques des paiements */
-  paymentStats = computed(() => this.paymentService.stats());
-
-  // Alias pour compatibilité avec le template
-  stats = computed(() => this.paymentStats());
+  paymentStats = signal<any>(null);
 
   /** Dépenses du mois en cours */
   totalSpentThisMonth = computed(() => this.paymentStats()?.totalSpentThisMonth || 0);
@@ -62,12 +56,13 @@ export class MyPaymentsComponent implements OnInit {
   /** Dépenses de l'année en cours */
   totalSpentThisYear = computed(() => this.paymentStats()?.totalSpentThisYear || 0);
 
-  /** En attente du chargement des données */
-  loading = computed(() => this.paymentService.loading());
+  /** Alias pour compatibilité avec le template */
+  stats = computed(() => this.paymentStats());
 
   // ============================================
   // SIGNAUX - FILTRAGE
   // ============================================
+
   /** Statut sélectionné pour le filtre */
   filterStatus = signal<string | null>(null);
 
@@ -83,13 +78,20 @@ export class MyPaymentsComponent implements OnInit {
   // ============================================
   // CONSTRUCTEUR
   // ============================================
-  constructor() { }
+  constructor() {
+    // Recharger les données quand l'utilisateur change
+    effect(() => {
+      const userId = this.currentUserId();
+      if (userId) {
+        this.loadData();
+      }
+    });
+  }
 
   // ============================================
   // CYCLE DE VIE
   // ============================================
   ngOnInit() {
-    // Vérifier que l'utilisateur est authentifié
     if (this.authService.isAuthenticated()) {
       this.loadData();
     } else {
@@ -108,21 +110,36 @@ export class MyPaymentsComponent implements OnInit {
     const userId = this.currentUserId();
     if (!userId) return;
 
+    this.loading.set(true);
+    this.error.set(null);
+
     // Charger les statistiques
-    this.paymentService.getPaymentStats(userId).subscribe();
+    this.paymentService.getPaymentStats(userId).subscribe({
+      next: (stats) => {
+        this.paymentStats.set(stats);
+      },
+      error: (err) => {
+        console.error('Erreur chargement statistiques:', err);
+      }
+    });
 
     // Charger l'historique des paiements
     this.paymentService.getPaymentHistory(userId, {
       page: 1,
-      limit: 20,
-    }).subscribe();
-  }
-
-  /**
-   * Changer d'onglet actif
-   */
-  onTabChange(tabId: string) {
-    this.activeTab.set(tabId);
+      limit: 50,
+    }).subscribe({
+      next: (response) => {
+        // Le service retourne soit un tableau, soit un objet avec 'data'
+        const paymentsList = Array.isArray(response) ? response : (response.data || response);
+        this.payments.set(paymentsList);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur chargement paiements:', err);
+        this.error.set('Impossible de charger vos paiements');
+        this.loading.set(false);
+      }
+    });
   }
 
   /**
@@ -142,11 +159,24 @@ export class MyPaymentsComponent implements OnInit {
   getStatusBadgeClass(status: string): string {
     const classes: Record<string, string> = {
       'CONFIRMED': 'status-badge completed',
+      'APPROVED': 'status-badge completed',
       'PENDING': 'status-badge pending',
       'REJECTED': 'status-badge failed',
-      'APPROVED': 'status-badge completed',
     };
     return classes[status] || 'status-badge';
+  }
+
+  /**
+   * Obtenir l'icône du statut
+   */
+  getStatusIcon(status: string): string {
+    const icons: Record<string, string> = {
+      'CONFIRMED': 'bi bi-check-circle-fill',
+      'APPROVED': 'bi bi-check-circle-fill',
+      'PENDING': 'bi bi-hourglass-split',
+      'REJECTED': 'bi bi-x-circle-fill',
+    };
+    return icons[status] || 'bi bi-question-circle';
   }
 
   /**
@@ -155,42 +185,67 @@ export class MyPaymentsComponent implements OnInit {
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       'CONFIRMED': 'Confirmé',
+      'APPROVED': 'Approuvé',
       'PENDING': 'En attente',
       'REJECTED': 'Rejeté',
-      'APPROVED': 'Approuvé',
     };
     return labels[status] || status;
+  }
+
+  /**
+   * Obtenir la classe CSS du type de paiement
+   */
+  getPaymentTypeClass(type: string): string {
+    return type === 'MEMBERSHIP' ? 'payment-type-badge membership' : 'payment-type-badge event';
+  }
+
+  /**
+   * Obtenir l'icône du type de paiement
+   */
+  getPaymentTypeIcon(type: string): string {
+    return type === 'MEMBERSHIP' ? 'bi bi-people-fill' : 'bi bi-calendar-event-fill';
   }
 
   /**
    * Obtenir le libellé du type de paiement
    */
   getPaymentTypeLabel(type: string): string {
-    return type === 'membership' ? 'Cotisation' : 'Événement';
+    return type === 'MEMBERSHIP' ? 'Cotisation' : 'Événement';
   }
 
   /**
    * Formater une date au format français
    */
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch (e) {
+      return dateString;
+    }
   }
 
   /**
    * Formater un montant en dinars tunisiens
    */
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+  formatCurrency(amount: number | null | undefined): string {
+    if (!amount) return '0.00 TND';
+
+    try {
+      const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+      return new Intl.NumberFormat('fr-TN', {
+        style: 'currency',
+        currency: 'TND',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(numAmount);
+    } catch (e) {
+      return `${amount} TND`;
+    }
   }
 
   // ============================================
@@ -201,6 +256,8 @@ export class MyPaymentsComponent implements OnInit {
    * Télécharger le reçu d'un paiement au format PDF
    */
   downloadReceipt(paymentId: number) {
+    this.downloading.set(true);
+
     this.paymentService.downloadReceipt(paymentId).subscribe({
       next: (blob: Blob) => {
         // Créer un lien de téléchargement
@@ -210,26 +267,20 @@ export class MyPaymentsComponent implements OnInit {
         link.download = `recu-paiement-${paymentId}.pdf`;
         link.click();
         window.URL.revokeObjectURL(url);
+        this.downloading.set(false);
       },
       error: (err: any) => {
         console.error('Erreur téléchargement reçu:', err);
-        alert('Erreur lors du téléchargement du reçu. Veuillez réessayer.');
+        this.error.set('Erreur lors du téléchargement du reçu. Veuillez réessayer.');
+        this.downloading.set(false);
       }
     });
   }
 
   /**
-   * Naviguer vers la page de paiement pour un club ou événement
+   * Voir les détails d'un événement
    */
-  navigateToPayment(clubId: number, eventId?: number) {
-    if (clubId && !eventId) {
-      this.router.navigate(['/payment'], {
-        queryParams: { type: 'membership', clubId }
-      });
-    } else if (eventId) {
-      this.router.navigate(['/payment'], {
-        queryParams: { type: 'event', eventId }
-      });
-    }
+  viewEvent(eventId: number) {
+    this.router.navigate(['/events', eventId]);
   }
 }

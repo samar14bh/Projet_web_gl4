@@ -1,41 +1,45 @@
 <div class="manage-club-page">
-  <!-- HERO SECTION (Inspired by club-details) -->
-  <div class="hero-section">
-    <div class="hero-background"></div>
+  <!-- NOTIFICATION MESSAGE -->
+  @if (notification().type) {
+    <div class="notification" [class]="'notification-' + notification().type">
+      <div class="notification-content">
+        <div class="notification-message">
+          @if (notification().type === 'success') {
+            <i class="bi bi-check-circle"></i>
+          } @else {
+            <i class="bi bi-exclamation-circle"></i>
+          }
+          <span>{{ notification().message }}</span>
+        </div>
+        <button class="notification-close" (click)="closeNotification()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- HERO SECTION WITH COVER IMAGE -->
+  <div class="hero-section" [style.backgroundImage]="clubCoverImage() ? 'url(' + clubCoverImage() + ')' : 'none'">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <!-- Top: Back button + Actions -->
+      <!-- Back Button -->
       <div class="hero-top">
-        <div class="back-link">
-          <button class="btn-back" (click)="goBack()">
-            <i class="bi bi-arrow-left"></i> Retour
-          </button>
-        </div>
-        <div class="hero-actions">
-          @if (activeTab() === 'info' && !editMode()) {
-            <button class="btn-primary" (click)="toggleEditMode()">
-              <i class="bi bi-pencil-fill"></i> Modifier
-            </button>
-          }
-        </div>
+        <button class="btn-back" (click)="goBack()">
+          <i class="bi bi-arrow-left"></i> Retour au dashboard
+        </button>
       </div>
 
-      <!-- Bottom: Club Header with Logo and Info -->
+      <!-- Club Header -->
       <div class="club-header">
-        <div class="club-logo-wrapper shadow-lg">
+        <div class="club-logo-wrapper">
           @if (clubLogo()) {
-            <img
-              [src]="clubLogo()"
-              alt="Logo du club"
-              class="club-logo-img"
-            />
+            <img [src]="clubLogo()" alt="Logo du club" />
           } @else {
-            <i class="bi bi-building club-logo-placeholder"></i>
+            <i class="bi bi-building"></i>
           }
         </div>
 
         <div class="club-title-info">
-          <span class="category-badge">Club Géré</span>
           <h1>{{ clubName() }}</h1>
           <div class="quick-stats">
             <span><i class="bi bi-people-fill"></i> {{ totalMembers() }} Membres</span>
@@ -51,7 +55,7 @@
   <main class="main-content">
     <!-- Stats Section -->
     <div class="stats-section">
-      <div class="stat-item">
+      <div class="stat-item stat-item-1">
         <div class="stat-icon">
           <i class="bi bi-people-fill"></i>
         </div>
@@ -59,7 +63,7 @@
         <div class="stat-value">{{ totalMembers() }}</div>
       </div>
 
-      <div class="stat-item">
+      <div class="stat-item stat-item-2">
         <div class="stat-icon">
           <i class="bi bi-calendar-event"></i>
         </div>
@@ -67,12 +71,20 @@
         <div class="stat-value">{{ totalEvents() }}</div>
       </div>
 
-      <div class="stat-item">
+      <div class="stat-item stat-item-3">
         <div class="stat-icon">
           <i class="bi bi-hourglass-split"></i>
         </div>
         <div class="stat-label">Demandes en Attente</div>
         <div class="stat-value">{{ pendingRequests() }}</div>
+      </div>
+
+      <div class="stat-item stat-item-4">
+        <div class="stat-icon">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stat-label">Revenus Mensuels</div>
+        <div class="stat-value">{{ formatCurrency(monthlyRevenue()) }}</div>
       </div>
     </div>
 
@@ -83,147 +95,90 @@
       <!-- Tab Content -->
       <div class="tab-content">
         @if (activeTab() === 'info') {
-          <!-- Club Information -->
+          <!-- Club Information Tab -->
           <div class="info-section">
-            @if (editMode()) {
-              <!-- Edit Mode -->
-              <form class="edit-form" (ngSubmit)="saveClubInfo()">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="clubName">Nom du club *</label>
-                    <input type="text" id="clubName" class="form-control" [(ngModel)]="clubName" name="clubName"
-                           required />
+            <!-- Left: À Propos Section -->
+            <div class="info-left">
+              <div class="about-card">
+                <!-- Category Badge -->
+                <div class="category-section">
+                  <div class="category-badge" [style.backgroundColor]="getCategoryInfo().color + '15'"
+                       [style.borderColor]="getCategoryInfo().color"
+                       [style.color]="getCategoryInfo().color">
+                    <i [class]="'bi ' + getCategoryInfo().icon"></i>
+                    {{ getCategoryInfo().name }}
                   </div>
                 </div>
+                <h3><i class="bi bi-info-circle"></i> À propos du club</h3>
+                <p>{{ clubDescription() || 'Aucune description disponible' }}</p>
+              </div>
+            </div>
 
-                <div class="form-group">
-                  <label for="clubDescription">Description</label>
-                  <textarea id="clubDescription" class="form-control" [(ngModel)]="clubDescription"
-                            name="clubDescription" rows="4"></textarea>
+            <!-- Right: Details Cards -->
+            <div class="info-right">
+              <!-- Card 1: Club Settings -->
+              <div class="detail-card detail-card-blue">
+                <div class="card-header">
+                  <i class="bi bi-gear"></i>
+                  <h4>Paramètres du club</h4>
                 </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="clubEmail">Email de contact *</label>
-                    <input type="email" id="clubEmail" class="form-control" [(ngModel)]="clubEmail"
-                           name="clubEmail" required />
-                  </div>
-                </div>
-
-                <div class="form-actions">
-                  <button type="button" class="btn-secondary" (click)="toggleEditMode()">
-                    Annuler
-                  </button>
-                  <button type="submit" class="btn-primary" [disabled]="saving()">
-                    @if (saving()) {
-                      <span class="spinner-sm"></span>
-                    }
-                    <span>Enregistrer</span>
-                  </button>
-                </div>
-              </form>
-            } @else {
-              <!-- View Mode -->
-              <div class="info-display">
-                <div class="club-info-header">
-                  <div class="club-logo">
-                    <i class="bi bi-building"></i>
-                  </div>
-                  <div class="club-details">
-                    <h2>{{ clubName() }}</h2>
-                    <p class="club-email">
-                      <i class="bi bi-envelope-fill"></i>
-                      {{ clubEmail() }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="info-grid">
-                  <div class="info-item">
-                    <span class="info-label">Description</span>
-                    <p class="info-value description">{{ clubDescription() || 'Aucune description' }}</p>
-                  </div>
-
-                  <div class="info-item">
-                    <span class="info-label">Type de club</span>
-                    <span class="badge" [class]="isPublic() ? 'badge-success' : 'badge-primary'">
+                <div class="card-content">
+                  <div class="detail-item">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-badge" [class]="isPublic() ? 'badge-sky' : 'badge-violet'">
                       {{ isPublic() ? 'Gratuit' : 'Payant' }}
                     </span>
                   </div>
 
                   @if (!isPublic()) {
-                    <div class="info-item">
-                      <span class="info-label">Cotisation annuelle</span>
-                      <p class="info-value price">{{ membershipFee() }} TND</p>
+                    <div class="detail-item">
+                      <span class="detail-label">Cotisation</span>
+                      <span class="detail-badge badge-sky">{{ formatCurrency(membershipFee()) }}</span>
                     </div>
                   }
 
-                  <div class="info-item">
-                    <span class="info-label">Approbation requise</span>
-                    <span class="badge" [class]="approvalRequired() ? 'badge-warning' : 'badge-success'">
-                      {{ approvalRequired() ? 'Oui' : 'Non' }}
+                  <div class="detail-item">
+                    <span class="detail-label">Approbation</span>
+                    <span class="detail-badge" [class]="approvalRequired() ? 'badge-violet' : 'badge-sky'">
+                      {{ approvalRequired() ? 'Requise' : 'Automatique' }}
                     </span>
                   </div>
 
-                  <div class="info-item">
-                    <span class="info-label">Status du club</span>
-                    <span class="badge badge-success">
+                  <div class="detail-item">
+                    <span class="detail-label">Statut</span>
+                    <span class="detail-badge badge-sky">
                       {{ isActive() ? 'Actif' : 'Inactif' }}
                     </span>
                   </div>
+                </div>
+              </div>
 
-                  <div class="info-item">
-                    <span class="info-label">Date de création</span>
-                    <p class="info-value">{{ formatDate(creationDate()) }}</p>
+              <!-- Card 2: Dates -->
+              <div class="detail-card detail-card-violet">
+                <div class="card-header">
+                  <i class="bi bi-calendar-check"></i>
+                  <h4>Informations</h4>
+                </div>
+                <div class="card-content">
+                  <div class="detail-item">
+                    <span class="detail-label">Créé le</span>
+                    <span class="detail-value">{{ formatDate(creationDate()) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value email">{{ clubEmail() }}</span>
                   </div>
                 </div>
               </div>
-            }
-          </div>
-        } @else if (activeTab() === 'members') {
-          <!-- Members Preview -->
-          <div class="preview-section">
-            <div class="section-header">
-              <h3>Membres récents</h3>
-              <a [routerLink]="['/club-manager', clubId(), 'manage-members']" class="btn-text">
-                Voir tous les membres
-                <i class="bi bi-arrow-right"></i>
-              </a>
             </div>
+          </div>
 
-            <div class="members-grid">
-              @for (member of recentMembers(); track member.id) {
-                <div class="member-card">
-                  <div class="member-avatar">
-                    <i class="bi bi-person-circle"></i>
-                  </div>
-                  <div class="member-info">
-                    <h4>{{ member.name }}</h4>
-                    <span class="badge" [class]="getRoleBadge(member.role)">
-                      {{ getRoleLabel(member.role) }}
-                    </span>
-                  </div>
-                  <div class="member-meta">
-                    <span class="join-date">
-                      <i class="bi bi-calendar2"></i>
-                      {{ formatDate(member.joinDate) }}
-                    </span>
-                  </div>
-                </div>
-              } @empty {
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                  <i class="bi bi-people" style="font-size: 48px; color: #e5e7eb; display: block; margin-bottom: 16px;"></i>
-                  <p style="color: #6b7280;">Aucun membre pour le moment</p>
-                </div>
-              }
-            </div>
-          </div>
         } @else if (activeTab() === 'events') {
-          <!-- Events Preview -->
+          <!-- Events Preview Tab -->
           <div class="preview-section">
             <div class="section-header">
               <h3>Événements à venir</h3>
-              <a routerLink="/events" class="btn-text">
+              <a routerLink="/events" [queryParams]="{ clubId: clubId() }" class="btn-text">
                 Voir tous les événements
                 <i class="bi bi-arrow-right"></i>
               </a>
@@ -257,57 +212,114 @@
               }
             </div>
           </div>
+
         } @else if (activeTab() === 'settings') {
-          <!-- Settings -->
-          <form class="settings-form" (ngSubmit)="saveSettings()">
-            <div class="settings-section">
-              <h4>Tarification</h4>
-              <div class="form-group">
-                <div class="toggle-group">
-                  <label class="toggle-label">
-                    <input type="checkbox" [(ngModel)]="isPublic" name="isPublic" class="toggle-input" />
-                    <span class="toggle-text">
-                      <strong>Club gratuit</strong>
-                      <small>Les membres peuvent rejoindre sans frais</small>
-                    </span>
-                  </label>
+          <!-- Settings Tab -->
+          <div class="settings-container">
+            <form class="settings-form" (ngSubmit)="saveSettings()">
+              <div class="settings-cards-grid">
+                <!-- Type Section -->
+                <div class="settings-section settings-section-violet">
+                  <div class="section-header-settings">
+                    <div class="section-icon">
+                      <i class="bi bi-globe"></i>
+                    </div>
+                    <div>
+                      <h4>Type de club</h4>
+                      <p>Choisissez si votre club est gratuit ou payant</p>
+                    </div>
+                  </div>
+
+                  <div class="settings-content">
+                    <div class="toggle-setting">
+                      <div class="toggle-info">
+                        <h5>Club gratuit</h5>
+                        <p>Les membres peuvent rejoindre sans frais d'adhésion</p>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" [(ngModel)]="isPublic" name="isPublic" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    @if (!isPublic()) {
+                      <div class="fee-input-wrapper">
+                        <div class="form-group">
+                          <label for="membershipFee">
+                            <i class="bi bi-wallet2"></i> Cotisation annuelle (TND)
+                          </label>
+                          <div class="input-group">
+                            <input
+                              type="number"
+                              id="membershipFee"
+                              class="form-control"
+                              [(ngModel)]="membershipFee"
+                              name="membershipFee"
+                              min="0"
+                              step="0.01"
+                              required
+                            />
+                            <span class="input-addon">TND</span>
+                          </div>
+                          <small class="hint-text">Montant prélevé lors de l'adhésion des membres</small>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Admission Section -->
+                <div class="settings-section settings-section-sky">
+                  <div class="section-header-settings">
+                    <div class="section-icon">
+                      <i class="bi bi-person-check"></i>
+                    </div>
+                    <div>
+                      <h4>Processus d'adhésion</h4>
+                      <p>Configurez comment les nouveaux membres rejoignent le club</p>
+                    </div>
+                  </div>
+
+                  <div class="settings-content">
+                    <div class="toggle-setting">
+                      <div class="toggle-info">
+                        <h5>Approbation requise</h5>
+                        <p>Les demandes d'adhésion doivent être approuvées manuellement</p>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" [(ngModel)]="approvalRequired" name="approvalRequired" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="info-box">
+                      <i class="bi bi-info-circle"></i>
+                      <div>
+                        <strong>Mode {{ approvalRequired() ? 'modéré' : 'automatique' }}</strong>
+                        <p>
+                          {{ approvalRequired()
+                          ? 'Les demandes nécessitent une validation avant adhésion'
+                          : 'Les nouveaux membres sont acceptés automatiquement'
+                          }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              @if (!isPublic()) {
-                <div class="form-group">
-                  <label for="membershipFee">Cotisation annuelle (TND) *</label>
-                  <input type="number" id="membershipFee" class="form-control" [(ngModel)]="membershipFee"
-                         name="membershipFee" min="0" step="0.01" required />
-                </div>
-              }
-            </div>
-
-            <div class="settings-section">
-              <h4>Adhésion</h4>
-              <div class="form-group">
-                <div class="toggle-group">
-                  <label class="toggle-label">
-                    <input type="checkbox" [(ngModel)]="approvalRequired" name="approvalRequired"
-                           class="toggle-input" />
-                    <span class="toggle-text">
-                      <strong>Approbation requise</strong>
-                      <small>Les demandes doivent être approuvées manuellement</small>
-                    </span>
-                  </label>
-                </div>
+              <!-- Action Buttons -->
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="saving()">
+                  @if (saving()) {
+                    <span class="spinner-sm"></span>
+                  }
+                  <i class="bi bi-check-circle"></i>
+                  <span>Enregistrer les paramètres</span>
+                </button>
               </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn-primary" [disabled]="saving()">
-                @if (saving()) {
-                  <span class="spinner-sm"></span>
-                }
-                <span>Enregistrer les paramètres</span>
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         }
       </div>
     </div>

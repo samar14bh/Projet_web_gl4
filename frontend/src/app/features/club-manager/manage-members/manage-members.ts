@@ -3,171 +3,130 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
-import { Member } from '../../../Core/interfaces/club-manager.interface';
-import { ApplicationResponseDto } from '../../../Core/dtos/application-response.dto';
+import {
+  Member,
+  MembersStats,
+  Application,
+  Club,
+  MemberRole,
+} from '../../../Core/interfaces/club-manager.interface';
 import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
 import { TabItem } from '../../../shared/interfaces/components.interface';
 import { ClubContextService } from '../../../Core/services/club-context.service';
-import {ApplicationItem} from '../../applications/application-item/application-item';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 
-/**
- * PAGE 14: Gestion des Membres du Club
- * Permet de gérer les adhésions, approuver/rejeter les demandes, assigner des rôles
- *
- * Route: /club-manager/:clubId/manage-members
- */
 @Component({
   selector: 'app-manage-members',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, ApplicationItem],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    TabNavigationComponent,
+    PaginationComponent,
+  ],
   templateUrl: './manage-members.html',
   styleUrl: './manage-members.css',
 })
 export class ManageMembersComponent implements OnInit {
-  // ============================================
   // SERVICES
-  // ============================================
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private clubContext = inject(ClubContextService);
   public clubManagerService = inject(ClubManagerService);
 
-  // ============================================
   // SIGNAUX - ÉTAT DE LA PAGE
-  // ============================================
-  /** Onglet actif (bureau, members, applications) */
-  activeTab = signal<string>('bureau');
-
-  /** ID du club extrait de l'URL */
+  activeTab = signal<string>('members');
   clubId = signal<number | null>(null);
-
-  /** Texte de recherche pour filtrer */
   searchQuery = signal('');
+  loading = signal(false);
 
-  /** Modal state */
+  // CLUB DATA
+  clubDetails = signal<Club | null>(null);
+  membersStats = signal<MembersStats | null>(null);
+
+  // MODAL STATE
   showRoleModal = signal(false);
+  showRemoveModal = signal(false);
+  showApplicationDetailsModal = signal(false);
   selectedMember = signal<Member | null>(null);
-  selectedRole = signal('');
+  selectedRole = signal<string>('');
+  selectedApplication = signal<Application | null>(null);
 
-  // ============================================
-  // SIGNAUX - DONNÉES LOCALES
-  // ============================================
-  /** Tous les membres */
+  // APPLICATION FILTER
+  applicationStatus = signal<string>('PENDING');
+
+  // PAGINATION
+  membersPage = signal(1);
+  membersLimit = signal(10);
+  membersTotal = signal(0);
+
+  applicationsPage = signal(1);
+  applicationsLimit = signal(10);
+  applicationsTotal = signal(0);
+
+  // DONNÉES LOCALES
   allMembers = signal<Member[]>([]);
+  applicationsData = signal<Application[]>([]);
 
-  /** Toutes les applications */
-  applicationsData = signal<ApplicationResponseDto[]>([]);
-
-  // ============================================
   // CONFIGURATION DES ONGLETS
-  // ============================================
   tabs = signal<TabItem[]>([
-    { id: 'bureau', label: 'Bureau', icon: 'shield-check' },
     { id: 'members', label: 'Tous les Membres', icon: 'people-fill' },
+    { id: 'bureau', label: 'Bureau', icon: 'shield-check' },
     { id: 'applications', label: 'Demandes', icon: 'inbox', badge: 0 },
   ]);
 
-  // ============================================
-  // SIGNAUX CALCULÉS - MEMBRES
-  // ============================================
+  // FILTRES DE STATUS D'APPLICATIONS
+  statusFilters = [
+    { value: 'PENDING', label: 'En Attente', icon: 'hourglass-split' },
+    { value: 'APPROVED', label: 'Approuvées', icon: 'check-circle' },
+    { value: 'REJECTED', label: 'Rejetées', icon: 'x-circle' },
+  ];
 
-  /** Membres du bureau (où role != MEMBER) */
-  bureauMembers = computed(() =>
-    this.allMembers().filter(m => m.role && m.role.toLowerCase() !== 'member')
+  // SIGNAUX CALCULÉS - STATS
+  totalMembers = computed(() => this.membersStats()?.totalMembers || 0);
+  bureauMembersCount = computed(() => this.membersStats()?.bureauMembers || 0);
+  regularMembersCount = computed(
+    () => this.membersStats()?.regularMembers || 0
+  );
+  pendingCount = computed(
+    () => this.membersStats()?.pendingApplications || 0
+  );
+  approvedCount = computed(
+    () => this.membersStats()?.approvedApplications || 0
+  );
+  rejectedCount = computed(
+    () => this.membersStats()?.rejectedApplications || 0
   );
 
-  /** Membres normaux (où role = MEMBER) */
-  regularMembers = computed(() =>
-    this.allMembers().filter(m => !m.role || m.role.toLowerCase() === 'member')
+  // PAGINATION CALCULÉE
+  membersTotalPages = computed(() =>
+    Math.ceil(this.membersTotal() / this.membersLimit())
+  );
+  applicationsTotalPages = computed(() =>
+    Math.ceil(this.applicationsTotal() / this.applicationsLimit())
   );
 
-  /** Tous les membres filtrés par recherche */
-  filteredAllMembers = computed(() => {
-    const query = this.searchQuery().toLowerCase();
-    return this.allMembers().filter(m =>
-      `${m.name} ${m.lastName}`.toLowerCase().includes(query) ||
-      m.email.toLowerCase().includes(query)
-    );
-  });
-
-  /** Membres du bureau filtrés */
-  filteredBureauMembers = computed(() => {
-    const query = this.searchQuery().toLowerCase();
-    return this.bureauMembers().filter(m =>
-      `${m.name} ${m.lastName}`.toLowerCase().includes(query) ||
-      m.email.toLowerCase().includes(query)
-    );
-  });
-
-  // ============================================
-  // SIGNAUX CALCULÉS - APPLICATIONS
-  // ============================================
-
-  /** Applications en attente */
-  pendingApplications = computed(() =>
-    this.applicationsData().filter(a => a.status === 'PENDING')
-  );
-
-  /** Applications approuvées */
-  approvedApplications = computed(() =>
-    this.applicationsData().filter(a => a.status === 'APPROVED')
-  );
-
-  /** Applications confirmées */
-  confirmedApplications = computed(() =>
-    this.applicationsData().filter(a => a.status === 'CONFIRMED')
-  );
-
-  /** Applications rejetées */
-  rejectedApplications = computed(() =>
-    this.applicationsData().filter(a => a.status === 'REJECTED')
-  );
-
-  /** Toutes les applications */
-  allApplications = computed(() => this.applicationsData());
-
-  // ============================================
-  // SIGNAUX CALCULÉS - STATS DYNAMIQUES
-  // ============================================
-
-  /** Total des membres */
-  totalMembers = computed(() => this.allMembers().length);
-
-  /** Nombre de membres du bureau */
-  bureauMembersCount = computed(() => this.bureauMembers().length);
-
-  /** Nombre de membres normaux */
-  regularMembersCount = computed(() => this.regularMembers().length);
-
-  /** Nombre de demandes en attente */
-  pendingCount = computed(() => this.pendingApplications().length);
-
-  /** Nombre de demandes approuvées */
-  approvedCount = computed(() => this.approvedApplications().length);
-
-  /** Nombre de demandes rejetées */
-  rejectedCount = computed(() => this.rejectedApplications().length);
-
-  /** En attente du chargement */
-  loading = computed(() => this.clubManagerService.loading());
-
-  // ============================================
-  // CONSTRUCTEUR
-  // ============================================
   constructor() {
     effect(() => {
       const id = this.clubId();
       if (id) {
-        this.loadData();
+        this.loadClubDetails();
+        this.loadMembersStats();
+        this.loadDataForActiveTab();
+      }
+    });
+
+    effect(() => {
+      const tab = this.activeTab();
+      if (this.clubId()) {
+        this.loadDataForActiveTab();
       }
     });
   }
 
-  // ============================================
-  // CYCLE DE VIE
-  // ============================================
   ngOnInit() {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       const id = params['clubId'];
       if (id) {
         this.clubId.set(+id);
@@ -178,229 +137,297 @@ export class ManageMembersComponent implements OnInit {
     });
   }
 
-  // ============================================
   // CHARGEMENT DES DONNÉES
-  // ============================================
-
-  /**
-   * Charger toutes les données
-   */
-  loadData() {
+  loadClubDetails() {
     const clubId = this.clubId();
     if (!clubId) return;
 
-    // Charger les membres approuvés
-    this.clubManagerService.getMembers(clubId, 'APPROVED').subscribe({
-      next: (response) => {
-        const members = (response.data || []).map((m: any) => ({
-          id: m.id,
-          name: m.user?.name || m.name,
-          lastName: m.user?.lastName || m.lastName,
-          email: m.user?.email || m.email,
-          role: m.role || 'member',
-          dateDebut: m.joinDate || m.createdAt,
-          dateFin: m.endDate,
-          status: 'active' as const
-        }));
-        this.allMembers.set(members);
+    this.clubManagerService.getClubDetails(clubId).subscribe({
+      next: (club) => {
+        this.clubDetails.set(club);
       },
-      error: (err: any) => {
-        console.error('Erreur chargement membres:', err);
-      }
+      error: (err) => console.error('Erreur chargement club:', err),
     });
-
-    // Charger toutes les applications (PENDING, APPROVED, CONFIRMED, REJECTED)
-    this.loadApplicationsByStatus('PENDING');
-    this.loadApplicationsByStatus('APPROVED');
-    this.loadApplicationsByStatus('CONFIRMED');
-    this.loadApplicationsByStatus('REJECTED');
   }
 
-  /**
-   * Charger les applications par statut
-   */
-  private loadApplicationsByStatus(status: string) {
+  loadMembersStats() {
     const clubId = this.clubId();
     if (!clubId) return;
 
-    // Note: Le service getMembers retourne les applications
-    // Vous pouvez créer une nouvelle méthode si besoin
-    this.clubManagerService.getMembers(clubId, status).subscribe({
-      next: (response) => {
-        const apps = (response.data || []).map((a: any) => this.mapToApplicationDto(a, status));
-        this.applicationsData.update(prev => [
-          ...prev.filter(p => p.status !== status),
-          ...apps
-        ]);
+    this.clubManagerService.getMembersStats(clubId).subscribe({
+      next: (stats) => {
+        this.membersStats.set(stats);
         this.updateApplicationBadge();
       },
-      error: (err: any) => {
-        console.error(`Erreur chargement applications ${status}:`, err);
-      }
+      error: (err) => console.error('Erreur chargement stats:', err),
     });
   }
 
-  /**
-   * Mapper les données du service vers ApplicationResponseDto
-   */
-  private mapToApplicationDto(data: any, status: string): ApplicationResponseDto {
-    return {
-      id: data.id,
-      status: status,
-      adminResponse: data.adminResponse,
-      whyJoin: data.whyJoin || '',
-      previousClub: data.previousClub,
-      goalsInClub: data.goalsInClub || '',
-      phoneNumber: data.phoneNumber || '',
-      skills: data.skills,
-      expectations: data.expectations,
-      availability: data.availability,
-      additionalComments: data.additionalComments,
-      isMemberOfOtherClub: data.isMemberOfOtherClub || false,
-      userId: data.user?.id || data.userId || 0,
-      userName: data.user?.name || data.userName || '',
-      userEmail: data.user?.email || data.userEmail || '',
-      clubId: data.clubId || 0,
-      clubName: data.clubName || '',
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt
-    };
+  loadDataForActiveTab() {
+    const tab = this.activeTab();
+    if (tab === 'members') {
+      this.loadMembers();
+    } else if (tab === 'bureau') {
+      this.loadBureauMembers();
+    } else if (tab === 'applications') {
+      this.loadApplications();
+    }
   }
 
-  /**
-   * Mettre à jour le badge du nombre de demandes
-   */
+  // ✅ CHARGEMENT TOUS LES MEMBRES
+  loadMembers() {
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    this.loading.set(true);
+    this.clubManagerService
+      .getMembers(
+        clubId,
+        this.membersPage(),
+        this.membersLimit(),
+        undefined,
+        this.searchQuery()
+      )
+      .subscribe({
+        next: (response) => {
+          this.allMembers.set(response.data);
+          this.membersTotal.set(response.total);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Erreur chargement membres:', err);
+          this.loading.set(false);
+        },
+      });
+  }
+
+  // ✅ CHARGEMENT MEMBRES DU BUREAU - CORRIGÉ
+  loadBureauMembers() {
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    this.loading.set(true);
+    this.clubManagerService
+      .getBureauMembers(
+        clubId,
+        this.membersPage(),
+        this.membersLimit(),
+        this.searchQuery()
+      )
+      .subscribe({
+        next: (response) => {
+          this.allMembers.set(response.data);
+          this.membersTotal.set(response.total); // ✅ Total correct du backend
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Erreur chargement bureau:', err);
+          this.loading.set(false);
+        },
+      });
+  }
+
+  // ✅ CHARGEMENT APPLICATIONS
+  loadApplications() {
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    this.loading.set(true);
+    this.clubManagerService
+      .getApplications(
+        clubId,
+        this.applicationsPage(),
+        this.applicationsLimit(),
+        this.applicationStatus()
+      )
+      .subscribe({
+        next: (response) => {
+          this.applicationsData.set(response.data);
+          this.applicationsTotal.set(response.total);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Erreur chargement applications:', err);
+          this.loading.set(false);
+        },
+      });
+  }
+
   private updateApplicationBadge() {
     const tabs = this.tabs();
     tabs[2].badge = this.pendingCount();
     this.tabs.set([...tabs]);
   }
 
-  // ============================================
   // GESTION DES ONGLETS
-  // ============================================
-
-  /**
-   * Changer d'onglet
-   */
   onTabChange(tabId: string) {
     this.activeTab.set(tabId);
+    this.membersPage.set(1);
+    this.applicationsPage.set(1);
+    this.searchQuery.set('');
   }
 
-  // ============================================
-  // GESTION DES RÔLES - MODAL
-  // ============================================
+  // RECHERCHE
+  onSearchChange() {
+    this.membersPage.set(1);
+    this.loadDataForActiveTab();
+  }
 
-  /**
-   * Ouvrir le modal d'assignation de rôle
-   */
+  // PAGINATION
+  onMembersPageChange(page: number) {
+    this.membersPage.set(page);
+    this.loadDataForActiveTab();
+  }
+
+  onApplicationsPageChange(page: number) {
+    this.applicationsPage.set(page);
+    this.loadApplications();
+  }
+
+  // GESTION DES RÔLES - MODAL
   openRoleModal(member: Member) {
     this.selectedMember.set(member);
-    this.selectedRole.set(member.role || 'member');
+    this.selectedRole.set(member.role?.toUpperCase() || 'MEMBER');
     this.showRoleModal.set(true);
   }
 
-  /**
-   * Fermer le modal
-   */
   closeRoleModal() {
     this.showRoleModal.set(false);
     this.selectedMember.set(null);
     this.selectedRole.set('');
   }
 
-  /**
-   * Confirmer le changement de rôle
-   */
   confirmRoleChange() {
     const member = this.selectedMember();
     const role = this.selectedRole();
 
     if (!member) return;
 
-    // TODO: Appeler le service pour mettre à jour le rôle
-    console.log(`Mise à jour du rôle de ${member.name} à ${role}`);
-
-    // Mettre à jour localement
-    this.allMembers.update(members =>
-      members.map(m =>
-        m.id === member.id ? { ...m, role } : m
-      )
-    );
-
-    this.closeRoleModal();
+    this.clubManagerService.assignRole(member.id, role as MemberRole).subscribe({
+      next: () => {
+        this.closeRoleModal();
+        this.loadDataForActiveTab();
+        this.loadMembersStats();
+      },
+      error: (err) => {
+        console.error('Erreur assignation rôle:', err);
+        alert('Erreur lors de l\'assignation du rôle');
+      },
+    });
   }
 
-  // ============================================
+  // RETIRER UN MEMBRE
+  openRemoveModal(member: Member) {
+    this.selectedMember.set(member);
+    this.showRemoveModal.set(true);
+  }
+
+  closeRemoveModal() {
+    this.showRemoveModal.set(false);
+    this.selectedMember.set(null);
+  }
+
+  confirmRemoveMember() {
+    const member = this.selectedMember();
+    if (!member) return;
+
+    this.clubManagerService.removeMember(member.id).subscribe({
+      next: () => {
+        this.closeRemoveModal();
+        this.loadDataForActiveTab();
+        this.loadMembersStats();
+      },
+      error: (err) => {
+        console.error('Erreur retrait membre:', err);
+        alert('Erreur lors du retrait du membre');
+      },
+    });
+  }
+
   // GESTION DES APPLICATIONS
-  // ============================================
+  onStatusFilterChange(status: string) {
+    this.applicationStatus.set(status);
+    this.applicationsPage.set(1);
+    this.loadApplications();
+  }
 
-  /**
-   * Approuver une demande d'adhésion
-   */
+  openApplicationDetailsModal(application: Application) {
+    this.selectedApplication.set(application);
+    this.showApplicationDetailsModal.set(true);
+  }
+
+  closeApplicationDetailsModal() {
+    this.showApplicationDetailsModal.set(false);
+    this.selectedApplication.set(null);
+  }
+
   approveMember(applicationId: number) {
-    this.clubManagerService.updateMemberStatus(applicationId, 'APPROVED').subscribe({
-      next: () => {
-        this.loadData();
-      },
-      error: (err: any) => {
-        console.error('Erreur approbation:', err);
-        alert('Erreur lors de l\'approbation');
-      }
-    });
+    this.clubManagerService
+      .updateApplicationStatus(applicationId, 'APPROVED')
+      .subscribe({
+        next: () => {
+          this.closeApplicationDetailsModal();
+          this.loadApplications();
+          this.loadMembersStats();
+        },
+        error: (err) => {
+          console.error('Erreur approbation:', err);
+          alert("Erreur lors de l'approbation");
+        },
+      });
   }
 
-  /**
-   * Rejeter une demande d'adhésion
-   */
   rejectMember(applicationId: number) {
-    this.clubManagerService.updateMemberStatus(applicationId, 'REJECTED').subscribe({
-      next: () => {
-        this.loadData();
-      },
-      error: (err: any) => {
-        console.error('Erreur rejet:', err);
-        alert('Erreur lors du rejet');
-      }
-    });
+    this.clubManagerService
+      .updateApplicationStatus(applicationId, 'REJECTED')
+      .subscribe({
+        next: () => {
+          this.closeApplicationDetailsModal();
+          this.loadApplications();
+          this.loadMembersStats();
+        },
+        error: (err) => {
+          console.error('Erreur rejet:', err);
+          alert('Erreur lors du rejet');
+        },
+      });
   }
 
-  /**
-   * Gérer l'affichage des détails d'une application
-   */
-  handleViewApplicationDetails(applicationId: number): void {
-    const app = this.allApplications().find(a => a.id === applicationId);
-    if (app) {
-      console.log('Voir les détails de:', app);
-      // TODO: Ouvrir un modal ou naviguer vers une page de détails
-      alert(`Voir les détails de ${app.userName}`);
-    }
-  }
-
-  // ============================================
   // EXPORT DES DONNÉES
-  // ============================================
-
-  /**
-   * Exporter la liste des membres en CSV
-   */
   exportCSV() {
     try {
-      console.log('Export CSV en cours de développement');
-      alert('La fonctionnalité d\'export est en développement');
+      const csvContent = this.generateCSV();
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `membres-${this.clubId()}-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Erreur export:', error);
-      alert('Erreur lors de l\'export');
+      alert("Erreur lors de l'export");
     }
   }
 
-  // ============================================
-  // FORMATAGE
-  // ============================================
+  private generateCSV(): string {
+    const headers = ['Nom', 'Prénom', 'Email', 'Rôle', "Date d'adhésion"];
+    const rows = this.allMembers().map((m) => [
+      m.lastName,
+      m.name,
+      m.email,
+      this.getRoleLabel(m.role),
+      this.formatDate(m.joinDate),
+    ]);
 
-  /**
-   * Formater une date
-   */
+    const csvRows = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ];
+    return csvRows.join('\n');
+  }
+
+  // FORMATAGE
   formatDate(dateString: string | Date | null | undefined): string {
     try {
       if (!dateString) return '-';
@@ -416,65 +443,55 @@ export class ManageMembersComponent implements OnInit {
     }
   }
 
-  /**
-   * Obtenir la classe CSS du badge du rôle
-   */
   getRoleBadgeClass(role: string | undefined): string {
-    if (!role) return 'badge-default';
+    if (!role || role.toUpperCase() === 'MEMBER') return 'badge-default';
+    const normalizedRole = role.toUpperCase().replace('_', '-');
     const classes: Record<string, string> = {
-      'president': 'badge-primary',
-      'vice-president': 'badge-primary',
-      'treasurer': 'badge-success',
-      'secretary': 'badge-warning',
-      'member': 'badge-default',
+      PRESIDENT: 'badge-primary',
+      'VICE-PRESIDENT': 'badge-primary',
+      TREASURER: 'badge-success',
+      SECRETARY: 'badge-warning',
+      RH: 'badge-info',
     };
-    return classes[role.toLowerCase()] || 'badge-default';
+    return classes[normalizedRole] || 'badge-default';
   }
 
-  /**
-   * Obtenir le libellé du rôle en français
-   */
   getRoleLabel(role: string | undefined): string {
-    if (!role) return 'Membre';
+    if (!role || role.toUpperCase() === 'MEMBER') return 'Membre';
+    const normalizedRole = role.toUpperCase().replace('_', '-');
     const labels: Record<string, string> = {
-      'president': 'Président',
-      'vice-president': 'Vice-Président',
-      'treasurer': 'Trésorier',
-      'secretary': 'Secrétaire',
-      'member': 'Membre',
+      PRESIDENT: 'Président',
+      TREASURER: 'Trésorier',
+      SECRETARY: 'Secrétaire',
+      RH: 'Ressources Humaines',
     };
-    return labels[role.toLowerCase()] || role;
+    return labels[normalizedRole] || role;
   }
 
-  /**
-   * Obtenir la classe CSS du badge du statut
-   */
   getStatusBadgeClass(status: string | undefined): string {
     if (!status) return 'badge-default';
     const classes: Record<string, string> = {
-      'PENDING': 'badge-warning',
-      'APPROVED': 'badge-success',
-      'CONFIRMED': 'badge-primary',
-      'REJECTED': 'badge-danger',
+      PENDING: 'badge-warning',
+      APPROVED: 'badge-success',
+      CONFIRMED: 'badge-primary',
+      REJECTED: 'badge-danger',
     };
     return classes[status] || 'badge-default';
   }
 
-  /**
-   * Obtenir le libellé du statut
-   */
   getStatusLabel(status: string | undefined): string {
     if (!status) return 'Inconnu';
     const labels: Record<string, string> = {
-      'PENDING': 'En Attente',
-      'APPROVED': 'Approuvée',
-      'CONFIRMED': 'Confirmée',
-      'REJECTED': 'Rejetée',
+      PENDING: 'En Attente',
+      APPROVED: 'Approuvée',
+      CONFIRMED: 'Confirmée',
+      REJECTED: 'Rejetée',
     };
     return labels[status] || status;
   }
 
-  assignRole() {
-    alert('La fonctionnalité d\'assignation de rôle est en développement');
+  // Helper pour vérifier si une application est en attente
+  isApplicationPending(status: string | undefined): boolean {
+    return status === 'PENDING';
   }
 }

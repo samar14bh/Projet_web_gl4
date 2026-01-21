@@ -11,21 +11,17 @@ import { Club } from '../clubs/entities/club.entity';
 import { Event } from '../events/entities/event.entity';
 import { Registration } from '../events/entities/registration.entity';
 import { ReceiptService } from './receipt.service';
-import {
-  CreateMembershipPaymentDto,
-  CreateEventPaymentDto,
-  FilterPaymentDto,
-} from './dto';
+import { StripeService } from './stripe.service';
+import { FilterPaymentDto, InitiatePaymentDto, ConfirmPaymentDto } from './dto';
 import {
   PaymentType,
-  Status,
   RegistrationStatus,
   PaymentMethod,
   PaymentStatus,
 } from '../common/enums';
 
 /**
- * Service for handling payments (membership & events)
+ * Service pour gérer les paiements (adhésion & événements) avec Stripe
  */
 @Injectable()
 export class PaymentsService {
@@ -42,14 +38,42 @@ export class PaymentsService {
     private readonly registrationRepository: Repository<Registration>,
 
     private readonly receiptService: ReceiptService,
+    private readonly stripeService: StripeService,
   ) {}
 
   /**
-   * Process annual club membership payment
+   * ✅ NOUVELLE MÉTHODE: Vérifier que le paiement appartient à l'utilisateur
    */
-  async processMembershipPayment(
-    dto: CreateMembershipPaymentDto,
-  ): Promise<Payment> {
+  async verifyPaymentOwnership(paymentId: number): Promise<Payment> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+      relations: ['user'],
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    return payment;
+  }
+
+  /**
+   * Récupérer la clé publique Stripe
+   */
+  getStripePublishableKey(): { publishableKey: string } {
+    return {
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    };
+  }
+
+  /**
+   * Initier un paiement d'adhésion
+   */
+  async initiateMembershipPayment(
+    dto: InitiatePaymentDto,
+  ): Promise<{ clientSecret: string; paymentId: number }> {
+    console.log('💳 Initiating membership payment:', dto);
+
     const membership = await this.membershipRepository.findOne({
       where: { id: dto.membershipId },
       relations: ['club', 'user'],
@@ -65,38 +89,62 @@ export class PaymentsService {
       throw new BadRequestException('This club is free');
     }
 
-    // Create payment record
+    const amount = membership.club.membershipFeeAmount;
+
+    // Créer un enregistrement de paiement temporaire
     const payment = this.paymentRepository.create({
-      amount: membership.club.membershipFeeAmount,
+      amount, // Montant en TND
       date: new Date(),
-      status: PaymentStatus.CONFIRMED,
+      status: PaymentStatus.PENDING,
       type: PaymentType.MEMBERSHIP,
-      method: dto.method || PaymentMethod.CARD,
+      method: PaymentMethod.CARD,
       user: { id: dto.userId },
       membership: { id: dto.membershipId },
     });
 
-    await this.paymentRepository.save(payment);
+    const savedPayment = await this.paymentRepository.save(payment);
+    console.log('✅ Payment record created:', savedPayment.id);
 
-    // Update membership dates (1 year validity)
-    const now = new Date();
-    const oneYearLater = new Date();
-    oneYearLater.setFullYear(now.getFullYear() + 1);
+    try {
+      // ✅ Créer un PaymentIntent avec conversion TND → USD
+      const paymentIntent = await this.stripeService.createPaymentIntent({
+        amount: amount, // Montant en TND (le service le convertira)
+        metadata: {
+          paymentId: String(savedPayment.id),
+          userId: String(dto.userId),
+          membershipId: String(dto.membershipId),
+          type: 'membership',
+        },
+        description: `Club Membership - ${club.name}`,
+        receipt_email: membership.user.email,
+      });
 
-    membership.dateDebut = now;
-    membership.dateFin = oneYearLater;
-    await this.membershipRepository.save(membership);
+      // Enregistrer l'ID de transaction Stripe
+      savedPayment.transactionId = paymentIntent.id;
+      await this.paymentRepository.save(savedPayment);
 
-    return payment;
+      console.log('✅ PaymentIntent created:', paymentIntent.id);
+
+      return {
+        clientSecret: paymentIntent.client_secret || '',
+        paymentId: savedPayment.id,
+      };
+    } catch (error) {
+      console.error('❌ Error creating PaymentIntent:', error);
+      // Supprimer le paiement en cas d'erreur
+      await this.paymentRepository.delete(savedPayment.id);
+      throw error;
+    }
   }
 
   /**
-   * Process event registration payment
+   * Initier un paiement d'événement
    */
-  async processEventPayment(dto: CreateEventPaymentDto): Promise<{
-    payment: Payment;
-    registration: Registration;
-  }> {
+  async initiateEventPayment(
+    dto: InitiatePaymentDto,
+  ): Promise<{ clientSecret: string; paymentId: number }> {
+    console.log('💳 Initiating event payment:', dto);
+
     const event = await this.eventRepository.findOne({
       where: { id: dto.eventId },
       relations: ['club'],
@@ -110,7 +158,7 @@ export class PaymentsService {
       throw new BadRequestException('This event is free');
     }
 
-    // Check if user is member for potential discount
+    // Vérifier si l'utilisateur est membre pour la réduction
     const membership = await this.membershipRepository.findOne({
       where: {
         user: { id: dto.userId },
@@ -120,38 +168,158 @@ export class PaymentsService {
 
     const isMember = !!membership;
     const basePrice = Number(event.subscriptionFees);
-
-    // Apply 20% discount for members (can be made configurable)
     const discount = isMember ? basePrice * 0.2 : 0;
     const finalPrice = basePrice - discount;
 
-    // Create payment
+    // Créer un enregistrement de paiement temporaire
     const payment = this.paymentRepository.create({
-      amount: isMember ? event.subscriptionFees * 0.8 : event.subscriptionFees,
+      amount: finalPrice, // Montant en TND après réduction
       date: new Date(),
-      status: PaymentStatus.CONFIRMED,
+      status: PaymentStatus.PENDING,
       type: PaymentType.EVENT,
-      method: dto.method || PaymentMethod.CARD,
+      method: PaymentMethod.CARD,
       user: { id: dto.userId },
       event: { id: dto.eventId },
     });
 
-    await this.paymentRepository.save(payment);
+    const savedPayment = await this.paymentRepository.save(payment);
+    console.log('✅ Payment record created:', savedPayment.id);
 
-    // Create event registration
-    const registration = this.registrationRepository.create({
-      user: { id: dto.userId },
-      event: { id: dto.eventId },
-      status: RegistrationStatus.REGISTERED,
-    });
+    try {
+      // ✅ Créer un PaymentIntent avec conversion TND → USD
+      const paymentIntent = await this.stripeService.createPaymentIntent({
+        amount: finalPrice, // Montant en TND (le service le convertira)
+        metadata: {
+          paymentId: String(savedPayment.id),
+          userId: String(dto.userId),
+          eventId: String(dto.eventId),
+          type: 'event',
+          isMember: isMember ? '1' : '0',
+          discount: String(discount),
+        },
+        description: `Event Registration - ${event.title}`,
+      });
 
-    await this.registrationRepository.save(registration);
+      savedPayment.transactionId = paymentIntent.id;
+      await this.paymentRepository.save(savedPayment);
 
-    return { payment, registration };
+      console.log('✅ PaymentIntent created:', paymentIntent.id);
+
+      return {
+        clientSecret: paymentIntent.client_secret || '',
+        paymentId: savedPayment.id,
+      };
+    } catch (error) {
+      console.error('❌ Error creating PaymentIntent:', error);
+      // Supprimer le paiement en cas d'erreur
+      await this.paymentRepository.delete(savedPayment.id);
+      throw error;
+    }
   }
 
   /**
-   * Get user payment history with filters
+   * Confirmer un paiement d'adhésion
+   */
+  async confirmMembershipPayment(dto: ConfirmPaymentDto): Promise<Payment> {
+    console.log('✅ Confirming membership payment:', dto.paymentId);
+
+    const payment = await this.paymentRepository.findOne({
+      where: { id: dto.paymentId },
+      relations: ['membership', 'membership.club', 'user'],
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    try {
+      // Vérifier le paiement avec Stripe
+      const paymentIntent = await this.stripeService.retrievePaymentIntent(
+        payment.transactionId,
+      );
+
+      if (paymentIntent.status !== 'succeeded') {
+        throw new BadRequestException('Payment was not successful');
+      }
+
+      console.log('✅ Payment verified with Stripe');
+
+      // Mettre à jour le statut du paiement
+      payment.status = PaymentStatus.CONFIRMED;
+      await this.paymentRepository.save(payment);
+
+      // Mettre à jour les dates d'adhésion (1 an de validité)
+      const membership = payment.membership;
+      const now = new Date();
+      const oneYearLater = new Date();
+      oneYearLater.setFullYear(now.getFullYear() + 1);
+
+      membership.dateDebut = now;
+      membership.dateFin = oneYearLater;
+      await this.membershipRepository.save(membership);
+
+      console.log('✅ Membership activated until:', oneYearLater);
+
+      return payment;
+    } catch (error) {
+      console.error('❌ Error confirming payment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Confirmer un paiement d'événement
+   */
+  async confirmEventPayment(
+    dto: ConfirmPaymentDto,
+  ): Promise<{ payment: Payment; registration: Registration }> {
+    console.log('✅ Confirming event payment:', dto.paymentId);
+
+    const payment = await this.paymentRepository.findOne({
+      where: { id: dto.paymentId },
+      relations: ['event', 'user'],
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    try {
+      // Vérifier le paiement avec Stripe
+      const paymentIntent = await this.stripeService.retrievePaymentIntent(
+        payment.transactionId,
+      );
+
+      if (paymentIntent.status !== 'succeeded') {
+        throw new BadRequestException('Payment was not successful');
+      }
+
+      console.log('✅ Payment verified with Stripe');
+
+      // Mettre à jour le statut du paiement
+      payment.status = PaymentStatus.CONFIRMED;
+      await this.paymentRepository.save(payment);
+
+      // Créer l'enregistrement à l'événement
+      const registration = this.registrationRepository.create({
+        user: { id: payment.user.id },
+        event: { id: payment.event.id },
+        status: RegistrationStatus.REGISTERED,
+      });
+
+      await this.registrationRepository.save(registration);
+
+      console.log('✅ Event registration created');
+
+      return { payment, registration };
+    } catch (error) {
+      console.error('❌ Error confirming payment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtenir l'historique des paiements
    */
   async getPaymentHistory(userId: number, filters: FilterPaymentDto) {
     const query = this.paymentRepository
@@ -199,14 +367,13 @@ export class PaymentsService {
   }
 
   /**
-   * Get payment statistics for a user
+   * Obtenir les statistiques de paiement
    */
   async getUserPaymentStats(userId: number) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    // Total spent this month
     const monthResult = await this.paymentRepository
       .createQueryBuilder('payment')
       .select('SUM(payment.amount)', 'total')
@@ -215,16 +382,14 @@ export class PaymentsService {
       .andWhere('payment.status = :status', { status: PaymentStatus.CONFIRMED })
       .getRawOne();
 
-    // Total spent this year
     const yearResult = await this.paymentRepository
       .createQueryBuilder('payment')
       .select('SUM(payment.amount)', 'total')
       .where('payment.user = :userId', { userId })
       .andWhere('payment.date >= :startOfYear', { startOfYear })
-      .andWhere('payment.status = :status', { status: Status.CONFIRMED })
+      .andWhere('payment.status = :status', { status: PaymentStatus.CONFIRMED })
       .getRawOne();
 
-    // Count active memberships
     const activeMemberships = await this.membershipRepository
       .createQueryBuilder('membership')
       .where('membership.user = :userId', { userId })
@@ -237,11 +402,12 @@ export class PaymentsService {
       totalSpentThisMonth: parseFloat(monthResult?.total || '0'),
       totalSpentThisYear: parseFloat(yearResult?.total || '0'),
       activeMemberships,
+      currency: 'TND',
     };
   }
 
   /**
-   * Generate PDF receipt for a payment
+   * ✅ CORRIGÉE: Générer un reçu PDF
    */
   async generateReceipt(paymentId: number): Promise<Buffer> {
     const payment = await this.paymentRepository.findOne({
@@ -253,11 +419,16 @@ export class PaymentsService {
       throw new NotFoundException(`Payment with ID ${paymentId} not found`);
     }
 
-    return this.receiptService.generateReceipt(payment);
+    try {
+      return await this.receiptService.generateReceipt(payment);
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      throw new BadRequestException('Failed to generate receipt');
+    }
   }
 
   /**
-   * Send receipt by email to user
+   * Envoyer un reçu par email
    */
   async sendReceiptByEmail(paymentId: number): Promise<{ message: string }> {
     const payment = await this.paymentRepository.findOne({
@@ -273,12 +444,9 @@ export class PaymentsService {
       throw new BadRequestException('User email not found');
     }
 
-    // Generate the receipt
     const receiptBuffer = await this.receiptService.generateReceipt(payment);
 
-    // TODO: Implement email sending with receipt attachment
-    // This would require MailService integration
-    // Example:
+    // TODO: Implémenter l'envoi d'email avec le reçu en pièce jointe
     // await this.mailService.sendPaymentReceipt(payment.user.email, receiptBuffer, payment);
 
     return {

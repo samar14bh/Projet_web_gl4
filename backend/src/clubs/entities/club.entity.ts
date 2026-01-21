@@ -51,6 +51,9 @@ export class Club {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  @Column({ name: 'approval_required', default: true, nullable: true })
+  approvalRequired: boolean;
+
   @Column({ type: 'date', name: 'creation_date' })
   creationDate: Date;
 

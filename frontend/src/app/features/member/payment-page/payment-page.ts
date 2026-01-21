@@ -1,29 +1,46 @@
-import { Component, signal, computed, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  inject,
+  NgZone,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { PaymentService } from '../../../Core/services/payment.service';
 import { ClubService } from '../../../Core/services/club.service';
 import { EventService } from '../../../Core/services/event.service';
 import { AuthService } from '../../../Core/services/auth.service';
 import { MemberService } from '../../../Core/services/member.service';
 
+declare var Stripe: any;
+
 /**
- * PAGE 11: Page de Paiement
- * Gère le paiement des adhésions de club et des inscriptions aux événements
- * Devise: Dinars Tunisiens (TND)
+ * Payment Page - Stripe Integration (version corrigée)
  */
 @Component({
   selector: 'app-payment-page',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './payment-page.html',
-  styleUrl: './payment-page.css',
+  styleUrls: ['./payment-page.css'],
 })
-export class PaymentPageComponent implements OnInit {
-  // ============================================
-  // SERVICES
-  // ============================================
+export class PaymentPageComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
+  // Services via inject()
   private paymentService = inject(PaymentService);
   private clubService = inject(ClubService);
   private eventService = inject(EventService);
@@ -31,155 +48,294 @@ export class PaymentPageComponent implements OnInit {
   private memberService = inject(MemberService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
-  // ============================================
-  // SIGNAUX - CONTEXTE DE PAIEMENT
-  // ============================================
-  /** Type de paiement: adhésion au club ou inscription à événement */
+  // Stripe objects
+  private stripe: any;
+  private elements: any;
+  private cardElement: any;
+  private expiryElement: any;
+  private cvcElement: any;
+
+  // Subscriptions
+  private queryParamsSub?: Subscription;
+
+  // Signals
   paymentType = signal<'membership' | 'event'>('membership');
-
-  /** ID du club (pour les paiements d'adhésion) */
   clubId = signal<number | null>(null);
-
-  /** ID de l'événement (pour les paiements d'événement) */
   eventId = signal<number | null>(null);
-
-  /** ID de l'utilisateur actuel */
+  membershipId = signal<number | null>(null);
   userId = computed(() => Number(this.authService.currentUser()?.id) || 0);
 
-  /** Méthode de paiement sélectionnée */
-  selectedMethod = signal<'CARD' | 'CASH'>('CARD');
-
-  // ============================================
-  // SIGNAUX - DONNÉES DU PAIEMENT
-  // ============================================
-  /** Détails du club */
   clubDetails = signal<any>(null);
-
-  /** Détails de l'événement */
   eventDetails = signal<any>(null);
-
-  /** Remise pour les adhésions actives */
   membershipDiscount = signal<number>(0);
 
-  /** ID de l'adhésion */
-  membershipId = signal<number | null>(null);
-
-  // ============================================
-  // SIGNAUX - FORMULAIRE DE PAIEMENT
-  // ============================================
-  /** Numéro de la carte bancaire */
-  cardNumber = signal('');
-
-  /** Nom du titulaire de la carte */
-  cardName = signal('');
-
-  /** Date d'expiration de la carte (MM/YY) */
-  cardExpiry = signal('');
-
-  /** Code de sécurité CVV */
-  cardCVV = signal('');
-
-  // ============================================
-  // SIGNAUX - ÉTATS
-  // ============================================
-  /** En attente du chargement des données */
   loading = signal(false);
-
-  /** En cours de traitement du paiement */
   processing = signal(false);
-
-  /** Erreur fatale (données manquantes) */
   error = signal<string | null>(null);
-
-  /** Erreur de validation du formulaire */
   formError = signal<string | null>(null);
+  cardError = signal<string | null>(null);
+  elementsReady = signal(false);
 
-  // ============================================
-  // SIGNAUX CALCULÉS - MONTANTS
-  // ============================================
-  /** Montant total du paiement à effectuer */
-  amount = computed(() => {
-    if (this.paymentType() === 'membership' && this.clubDetails()) {
-      return this.clubDetails().membershipFeeAmount || 0;
-    } else if (this.paymentType() === 'event' && this.eventDetails()) {
-      const basePrice = Number(this.eventDetails().subscriptionFees || 0);
-      const discount = this.membershipDiscount();
-      return basePrice - discount;
-    }
-    return 0;
-  });
+  // Form
+  paymentForm: FormGroup;
 
-  /** Montant de base avant réduction */
+  // Computed amounts
   baseAmount = computed(() => {
     if (this.paymentType() === 'event' && this.eventDetails()) {
       return Number(this.eventDetails().subscriptionFees || 0);
     }
-    return this.amount();
+    if (this.paymentType() === 'membership' && this.clubDetails()) {
+      return this.clubDetails().membershipFeeAmount || 0;
+    }
+    return 0;
   });
 
-  /** Vérifie s'il y a une réduction appliquée */
+  amount = computed(() => {
+    const base = this.baseAmount();
+    const discount = this.membershipDiscount();
+    return Math.max(0, base - discount);
+  });
+
   hasDiscount = computed(() => this.membershipDiscount() > 0);
 
-  /** Titre de la page de paiement */
-  title = computed(() => {
-    if (this.paymentType() === 'membership' && this.clubDetails()) {
-      return `Adhésion - ${this.clubDetails().name}`;
-    } else if (this.paymentType() === 'event' && this.eventDetails()) {
-      return `Inscription - ${this.eventDetails().title}`;
-    }
-    return 'Paiement';
-  });
+  constructor() {
+    this.paymentForm = this.fb.group({
+      cardName: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      saveCard: [false],
+    });
+  }
 
-  ngOnInit() {
-    // Vérifier que l'utilisateur est authentifié
+  async ngOnInit() {
+    // Vérifier authentification
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
       return;
     }
 
-    // Récupérer les paramètres de requête
-    this.route.queryParams.subscribe(params => {
-      if (params['type']) {
-        this.paymentType.set(params['type']);
-      }
+    // Charger le script Stripe
+    await this.loadStripeScript();
+
+    // Charger la clé publishable depuis le backend
+    await this.loadStripePublishableKey();
+
+    // Souscrire aux query params
+    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
+      if (params['type']) this.paymentType.set(params['type']);
       if (params['clubId']) {
         this.clubId.set(+params['clubId']);
-        this.loadClubDetails();
+        this.loadClubDetails(+params['clubId']);
       }
       if (params['eventId']) {
         this.eventId.set(+params['eventId']);
         this.loadEventDetails();
       }
-    });
-  }
 
-  /**
-   * Charger les détails du club
-   */
-  loadClubDetails() {
-    const clubId = this.clubId();
-    if (!clubId) return;
-
-    this.loading.set(true);
-    this.clubService.getClubById(clubId).subscribe({
-      next: (club) => {
-        this.clubDetails.set(club);
-        this.checkMembershipStatus(clubId);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Impossible de charger les détails du club');
-        console.error('Erreur chargement club:', err);
-        this.loading.set(false);
+      // Default fallback si nécessaire
+      if (!params['clubId'] && !params['eventId']) {
+        if (this.paymentType() === 'membership') {
+          this.loadClubDetails(1);
+        }
       }
     });
   }
 
-  /**
-   * Charger les détails de l'événement
-   */
-  loadEventDetails() {
+  async ngAfterViewInit() {
+    // Petit délai pour s'assurer que le DOM est rendu
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // Forcer détection
+    this.cdr.detectChanges();
+
+    // Vérifier la présence des conteneurs Stripe et initialiser si nécessaire
+    const cardDiv = document.getElementById('card-number-element');
+    const expiryDiv = document.getElementById('expiry-element');
+    const cvcDiv = document.getElementById('cvc-element');
+
+    if (!cardDiv || !expiryDiv || !cvcDiv) {
+      this.error.set('Erreur: Les champs de paiement ne sont pas disponibles');
+      return;
+    }
+
+    if (this.stripe && !this.elementsReady()) {
+      this.initializeStripeElements();
+    }
+  }
+
+  ngOnDestroy() {
+    // Destruction des éléments Stripe
+    try {
+      this.cardElement?.destroy?.();
+      this.expiryElement?.destroy?.();
+      this.cvcElement?.destroy?.();
+    } catch {
+      // ignore
+    }
+
+    // Unsubscribe
+    this.queryParamsSub?.unsubscribe();
+  }
+
+  /** Charge dynamiquement le script Stripe si besoin */
+  private async loadStripeScript(): Promise<void> {
+    if ((window as any).Stripe) {
+      return;
+    }
+
+    const existingScript = document.getElementById('stripe-script');
+    if (existingScript) {
+      // attendre l'arrivée de l'objet Stripe
+      await new Promise<void>((resolve) => {
+        const check = setInterval(() => {
+          if ((window as any).Stripe) {
+            clearInterval(check);
+            resolve();
+          }
+        }, 100);
+      });
+      return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.id = 'stripe-script';
+      script.src = 'https://js.stripe.com/v3/';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Stripe script'));
+      document.head.appendChild(script);
+    });
+  }
+
+  /** Récupère la clé publishable depuis le backend et initialise Stripe */
+  private async loadStripePublishableKey() {
+    try {
+      const response = await firstValueFrom(
+        this.paymentService.getStripePublishableKey()
+      );
+      if (response?.publishableKey) {
+        this.stripe = (window as any).Stripe(response.publishableKey);
+      } else {
+        this.error.set('Impossible de charger la configuration Stripe');
+      }
+    } catch {
+      this.error.set('Erreur de configuration du paiement');
+    }
+  }
+
+  /** Initialise Stripe Elements et les monte */
+  private initializeStripeElements() {
+    if (!this.stripe) {
+      this.error.set('Stripe non initialisé');
+      return;
+    }
+
+    try {
+      this.elements = this.stripe.elements();
+
+      const baseStyle = {
+        base: {
+          fontSize: '16px',
+          color: '#0f172a',
+          fontFamily: '"Inter", system-ui, sans-serif',
+          '::placeholder': {
+            color: '#9ca3af',
+          },
+        },
+        invalid: {
+          color: '#ef4444',
+        },
+      };
+
+      this.cardElement = this.elements.create('cardNumber', {
+        style: baseStyle,
+        placeholder: 'Numéro de carte',
+      });
+
+      this.expiryElement = this.elements.create('cardExpiry', {
+        style: baseStyle,
+        placeholder: 'MM/YY',
+      });
+
+      this.cvcElement = this.elements.create('cardCvc', {
+        style: baseStyle,
+        placeholder: 'CVC',
+      });
+
+      this.ngZone.runOutsideAngular(() => {
+        try {
+          this.cardElement.mount('#card-number-element');
+          this.expiryElement.mount('#expiry-element');
+          this.cvcElement.mount('#cvc-element');
+
+          // Ajouter listeners après montage
+          this.addElementListeners();
+        } catch {
+          this.ngZone.run(() =>
+            this.error.set('Erreur lors du montage des éléments Stripe')
+          );
+        }
+      });
+
+      this.ngZone.run(() => {
+        this.elementsReady.set(true);
+        this.cdr.detectChanges();
+      });
+    } catch {
+      this.error.set("Erreur lors de l'initialisation des champs de paiement");
+    }
+  }
+
+  /** Ajoute listeners aux éléments Stripe */
+  private addElementListeners() {
+    if (!this.cardElement || !this.expiryElement || !this.cvcElement) return;
+
+    this.cardElement.on('change', (event: any) => {
+      this.ngZone.run(() => {
+        this.cardError.set(event.error ? event.error.message : null);
+      });
+    });
+
+    this.expiryElement.on('change', (event: any) => {
+      this.ngZone.run(() => {
+        if (event.error) this.cardError.set(event.error.message);
+      });
+    });
+
+    this.cvcElement.on('change', (event: any) => {
+      this.ngZone.run(() => {
+        if (event.error) this.cardError.set(event.error.message);
+      });
+    });
+  }
+
+  /** Charger infos du club */
+  private loadClubDetails(clubId?: number) {
+    const id = clubId || this.clubId();
+    if (!id) return;
+
+    this.loading.set(true);
+    this.clubService.getClubById(id).subscribe({
+      next: (club) => {
+        this.clubDetails.set(club);
+        this.checkMembershipStatus(id);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Impossible de charger les détails du club');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  /** Charger infos de l'événement */
+  private loadEventDetails() {
     const eventId = this.eventId();
     if (!eventId) return;
 
@@ -187,21 +343,18 @@ export class PaymentPageComponent implements OnInit {
     this.eventService.getEventById(eventId).subscribe({
       next: (event) => {
         this.eventDetails.set(event);
-        this.checkMembershipDiscount(event.club.id);
+        if (event?.club?.id) this.checkMembershipDiscount(event.club.id);
         this.loading.set(false);
       },
-      error: (err) => {
-        this.error.set('Impossible de charger les détails de l\'événement');
-        console.error('Erreur chargement événement:', err);
+      error: () => {
+        this.error.set("Impossible de charger les détails de l'événement");
         this.loading.set(false);
-      }
+      },
     });
   }
 
-  /**
-   * Vérifier le statut d'adhésion au club
-   */
-  checkMembershipStatus(clubId: number) {
+  /** Vérifier adhésion utilisateur */
+  private checkMembershipStatus(clubId: number) {
     const userId = this.userId();
     if (!userId) return;
 
@@ -209,216 +362,179 @@ export class PaymentPageComponent implements OnInit {
       next: (result) => {
         if (result.exists && result.membership) {
           this.membershipId.set(result.membership.id);
-          // Vérifier si l'utilisateur est déjà membre actif
-          if (this.paymentType() === 'membership' && result.membership.status === 'ACTIVE') {
+          if (
+            this.paymentType() === 'membership' &&
+            result.membership.status === 'ACTIVE'
+          ) {
             this.formError.set('Vous êtes déjà membre actif de ce club');
           }
+        } else {
+          this.membershipId.set(0);
         }
       },
-      error: (err) => {
-        console.error('Erreur vérification adhésion:', err);
-      }
+      error: () => {
+        // silent
+      },
     });
   }
 
-  /**
-   * Vérifier si l'utilisateur a une remise (adhésion active)
-   */
-  checkMembershipDiscount(clubId: number) {
+  /** Vérifier réduction */
+  private checkMembershipDiscount(clubId: number) {
     const userId = this.userId();
     if (!userId) return;
 
     this.memberService.checkMembership(userId, clubId).subscribe({
       next: (result) => {
         if (result.exists && result.membership?.status === 'ACTIVE') {
-          // Appliquer 20% de remise pour les membres actifs
           const basePrice = Number(this.eventDetails()?.subscriptionFees || 0);
-          this.membershipDiscount.set(basePrice * 0.2);
+          const discount = basePrice * 0.2;
+          this.membershipDiscount.set(discount);
         }
       },
-      error: (err) => {
-        console.error('Erreur vérification remise:', err);
-      }
+      error: () => {
+        // silent
+      },
     });
   }
 
-  /**
-   * Traiter le paiement selon le type
-   */
-  processPayment() {
+  /** Formatage de la monnaie (utilise PaymentService) */
+  formatCurrency(amountInTnd: number): string {
+    return this.paymentService.formatCurrencyForDisplay(amountInTnd);
+  }
+
+  /** Lancement du processus de paiement (submit) */
+  async processPayment() {
     this.formError.set(null);
 
-    // Valider le formulaire si paiement par carte
-    if (this.selectedMethod() === 'CARD' && !this.validateForm()) {
+    if (!this.paymentForm.valid) {
+      this.formError.set('Veuillez remplir tous les champs correctement');
+      return;
+    }
+
+    if (!this.elementsReady()) {
+      this.formError.set('Les champs de paiement ne sont pas prêts');
       return;
     }
 
     this.processing.set(true);
 
-    if (this.paymentType() === 'membership') {
-      this.processMembershipPayment();
-    } else {
-      this.processEventPayment();
+    try {
+      if (this.paymentType() === 'membership') {
+        await this.processMembershipPayment();
+      } else {
+        await this.processEventPayment();
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.error?.message || error?.message || 'Erreur lors du paiement';
+      this.formError.set(errorMessage);
+      this.processing.set(false);
     }
   }
 
-  /**
-   * Traiter le paiement d'adhésion au club
-   */
-  processMembershipPayment() {
-    const clubId = this.clubId();
+  /** Traitement paiement adhésion */
+  private async processMembershipPayment() {
     const userId = this.userId();
+    const clubId = this.clubId();
     const membershipId = this.membershipId();
 
-    if (!clubId) {
-      this.error.set('Club non spécifié');
-      this.processing.set(false);
-      return;
+    if (!userId || !clubId) {
+      throw new Error('Données manquantes pour le paiement');
     }
 
-    if (!membershipId) {
-      this.formError.set('Adhésion introuvable. Veuillez rejoindre le club avant de payer.');
-      this.processing.set(false);
-      return;
+    const response = await firstValueFrom(
+      this.paymentService.initiateMembershipPayment(userId, membershipId || clubId)
+    );
+
+    if (!response?.clientSecret) {
+      throw new Error('Erreur initialisation paiement');
     }
 
-    this.paymentService.processMembershipPayment({
-      membershipId,
-      clubId,
-      userId,
-      method: this.selectedMethod()
-    }).subscribe({
-      next: (payment) => {
-        this.processing.set(false);
-        // Rediriger vers la page de succès
-        this.router.navigate(['/payment/success'], {
-          queryParams: {
-            paymentId: payment.id,
-            type: 'membership'
-          }
-        });
+    const pmResult = await this.stripe.createPaymentMethod({
+      type: 'card',
+      card: this.cardElement,
+      billing_details: {
+        name: this.paymentForm.get('cardName')?.value,
+        email: this.paymentForm.get('email')?.value,
       },
-      error: (err) => {
-        this.processing.set(false);
-        this.formError.set(err.error?.message || 'Erreur lors du paiement. Veuillez réessayer.');
-        console.error('Erreur paiement adhésion:', err);
-      }
     });
+
+    if (pmResult.error) {
+      throw new Error(pmResult.error.message);
+    }
+
+    const confirmResult = await this.stripe.confirmCardPayment(response.clientSecret, {
+      payment_method: pmResult.paymentMethod.id,
+    });
+
+    if (confirmResult.error) {
+      throw new Error(confirmResult.error.message);
+    }
+
+    if (confirmResult.paymentIntent?.status === 'succeeded') {
+      await firstValueFrom(
+        this.paymentService.confirmMembershipPayment(
+          response.paymentId,
+          confirmResult.paymentIntent.id
+        )
+      );
+
+      this.router.navigate(['/payment/success'], {
+        queryParams: { paymentId: response.paymentId, type: 'membership' },
+      });
+    }
   }
 
-  /**
-   * Traiter le paiement d'inscription à un événement
-   */
-  processEventPayment() {
+  /** Traitement paiement événement */
+  private async processEventPayment() {
     const eventId = this.eventId();
     const userId = this.userId();
 
-    if (!eventId) {
-      this.error.set('Événement non spécifié');
-      this.processing.set(false);
-      return;
+    if (!eventId || !userId) {
+      throw new Error('Données manquantes pour le paiement');
     }
 
-    this.paymentService.processEventPayment({
-      eventId,
-      userId,
-      method: this.selectedMethod()
-    }).subscribe({
-      next: (result) => {
-        this.processing.set(false);
-        // Rediriger vers la page de succès
-        this.router.navigate(['/payment/success'], {
-          queryParams: {
-            paymentId: result.payment.id,
-            type: 'event'
-          }
-        });
+    const response = await firstValueFrom(
+      this.paymentService.initiateEventPayment(userId, eventId)
+    );
+
+    if (!response?.clientSecret) {
+      throw new Error('Erreur initialisation paiement');
+    }
+
+    const pmResult = await this.stripe.createPaymentMethod({
+      type: 'card',
+      card: this.cardElement,
+      billing_details: {
+        name: this.paymentForm.get('cardName')?.value,
+        email: this.paymentForm.get('email')?.value,
       },
-      error: (err) => {
-        this.processing.set(false);
-        this.formError.set(err.error?.message || 'Erreur lors du paiement. Veuillez réessayer.');
-        console.error('Erreur paiement événement:', err);
-      }
     });
-  }
 
-  /**
-   * Valider le formulaire de paiement par carte
-   */
-  validateForm(): boolean {
-    // Vérifier le numéro de carte (16 chiffres)
-    if (!this.cardNumber() || this.cardNumber().replace(/\s/g, '').length !== 16) {
-      this.formError.set('Numéro de carte invalide (16 chiffres requis)');
-      return false;
+    if (pmResult.error) {
+      throw new Error(pmResult.error.message);
     }
 
-    // Vérifier le nom du titulaire
-    if (!this.cardName() || this.cardName().trim().length < 3) {
-      this.formError.set('Nom du titulaire invalide');
-      return false;
+    const confirmResult = await this.stripe.confirmCardPayment(response.clientSecret, {
+      payment_method: pmResult.paymentMethod.id,
+    });
+
+    if (confirmResult.error) {
+      throw new Error(confirmResult.error.message);
     }
 
-    // Vérifier la date d'expiration (MM/YY)
-    if (!this.cardExpiry() || !this.cardExpiry().match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
-      this.formError.set('Date d\'expiration invalide (format: MM/YY)');
-      return false;
+    if (confirmResult.paymentIntent?.status === 'succeeded') {
+      await firstValueFrom(
+        this.paymentService.confirmEventPayment(response.paymentId, confirmResult.paymentIntent.id)
+      );
+
+      this.router.navigate(['/payment/success'], {
+        queryParams: { paymentId: response.paymentId, type: 'event' },
+      });
     }
-
-    // Vérifier le CVV (3 chiffres)
-    if (!this.cardCVV() || this.cardCVV().length !== 3 || isNaN(Number(this.cardCVV()))) {
-      this.formError.set('CVV invalide (3 chiffres requis)');
-      return false;
-    }
-
-    return true;
   }
 
-  /**
-   * Formater le numéro de carte avec des espaces
-   */
-  formatCardNumber(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.substring(0, 16);
-    // Ajouter des espaces tous les 4 chiffres
-    const formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-    this.cardNumber.set(formattedValue);
-  }
-
-  /**
-   * Formater la date d'expiration (MM/YY)
-   */
-  formatExpiry(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length >= 2) {
-      value = value.substring(0, 2) + '/' + value.substring(2, 4);
-    }
-    this.cardExpiry.set(value);
-  }
-
-  /**
-   * Formater le CVV (3 chiffres uniquement)
-   */
-  formatCVV(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.substring(0, 3);
-    this.cardCVV.set(value);
-  }
-
-  /**
-   * Formater le montant en dinars tunisiens
-   */
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('fr-TN', {
-      style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  }
-
-  /**
-   * Annuler le paiement et retourner aux clubs
-   */
+  /** Annuler */
   cancel() {
     if (confirm('Êtes-vous sûr de vouloir annuler le paiement ?')) {
       this.router.navigate(['/clubs']);
