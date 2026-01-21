@@ -120,6 +120,25 @@ export class ClubService {
   createClub(dto: CreateClubDto): Observable<Club> {
     return this.http.post<Club>(this.apiUrl, dto);
   }
+  /**
+   * Créer un club avec upload de logo (FormData)
+   */
+  createClubWithLogo(formData: FormData): Observable<Club> {
+    return this.http.post<Club>(this.apiUrl, formData);
+  }
+  /**
+   * Mettre à jour un club avec upload de fichiers
+   */
+  updateClubWithLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/update-with-files`, formData);
+  }
+
+  /**
+   * Upload du logo d'un club
+   */
+  uploadLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/logo`, formData);
+  }
 
   /**
    * Mettre à jour un club
@@ -165,6 +184,33 @@ export class ClubService {
     return this.http.get<string>(`${this.apiUrl}/status/${clubId}/${userId}`, {
       responseType: 'text' as 'json'
     });
+  }
+  /**
+   * Récupérer le président d'un club
+   */
+  getClubPresident(clubId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Assigner un nouveau président
+   */
+  assignPresident(clubId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${clubId}/president`, { userId });
+  }
+
+  /**
+   * Supprimer le président actuel
+   */
+  removePresident(clubId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Récupérer tous les utilisateurs (pour la liste déroulante)
+   */
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/users`);
   }
 
 

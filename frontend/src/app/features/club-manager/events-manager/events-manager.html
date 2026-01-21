@@ -2,11 +2,11 @@
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Gérer les événements</h1>
+      <h1 class="page-title">Mes événements</h1>
       <p class="page-subtitle">Créez et gérez tous vos événements</p>
     </div>
     <app-button
-      label="+ Créer un événement"
+      label="Créer un événement"
       variant="primary"
       icon="plus-lg"
       (clicked)="openCreateModal()"
@@ -123,7 +123,7 @@
             <!-- Image de couverture -->
             <div class="event-cover">
               @if (event.coverImage) {
-                <img [src]="event.coverImage" [alt]="event.title" />
+                <img [src]="getImageUrl(event.coverImage)" [alt]="event.title" />
               } @else {
                 <div class="event-cover-placeholder">
                   <i class="bi bi-calendar-event"></i>
@@ -188,9 +188,7 @@
                 <button class="btn-action" (click)="scanQRCodes(event)" title="Scanner QR codes">
                   <i class="bi bi-qr-code-scan"></i>
                 </button>
-                <button class="btn-action" (click)="duplicateEvent(event)" title="Dupliquer">
-                  <i class="bi bi-files"></i>
-                </button>
+
                 <button
                   class="btn-action btn-action-danger"
                   (click)="deleteEvent(event)"

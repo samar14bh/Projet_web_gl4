@@ -88,6 +88,19 @@ export class EventService {
   duplicateEvent(id: number): Observable<Event> {
     return this.http.post<Event>(`${this.apiUrl}/${id}/duplicate`, {});
   }
+  /**
+   * Créer un événement avec upload d'image
+   */
+  createEventWithFile(formData: FormData): Observable<Event> {
+    return this.http.post<Event>(this.apiUrl, formData);
+  }
+
+  /**
+   * Mettre à jour un événement avec upload d'image
+   */
+  updateEventWithFile(id: number, formData: FormData): Observable<Event> {
+    return this.http.patch<Event>(`${this.apiUrl}/${id}/update-with-file`, formData);
+  }
 
 
   /**

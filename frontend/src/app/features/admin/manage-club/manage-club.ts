@@ -12,7 +12,8 @@ import {ButtonComponent} from '../../../shared/components/button/button';
 import {ModalComponent} from '../../../shared/components/modal/modal';
 import {ClubService} from '../../../Core/services/club.service';
 import {Club, ClubFilters} from '../../../Core/models/club.model';
-
+import { ClubFormComponent } from './club-form/club-form';
+import { ClubPresidentModalComponent } from './club-president-modal/club-president-modal';
 /**
  * PAGE 18 : Manage Clubs
  * Gestion complète des clubs par l'administrateur
@@ -20,7 +21,7 @@ import {Club, ClubFilters} from '../../../Core/models/club.model';
 @Component({
   selector: 'app-manage-clubs',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, ClubFormComponent,ClubPresidentModalComponent],
   templateUrl: './manage-club.html',
   styleUrl: './manage-club.css',
 })
@@ -29,6 +30,7 @@ export class ManageClubsComponent {
   private readonly clubService = inject(ClubService);
 
   // ========== SIGNALS D'ÉTAT ==========
+
   selectedStatus = signal<'all' | 'active' | 'inactive'>('all');
   selectedCategory = signal<number | 'all'>('all');
   searchQuery = signal('');
@@ -42,6 +44,7 @@ export class ManageClubsComponent {
   isDetailsModalOpen = signal(false);
   isFormModalOpen = signal(false);
   selectedClub = signal<Club | null>(null);
+  isPresidentModalOpen = signal(false);
 
   // ========== COMPUTED FILTERS ==========
   filters = computed<ClubFilters>(() => ({
@@ -160,6 +163,37 @@ export class ManageClubsComponent {
     this.selectedClub.set(null);
     this.isDeleteModalOpen.set(false);
   }
+  /**
+   * Ouvrir le modal de gestion du président
+   */
+  openPresidentModal(club: Club) {
+    this.selectedClub.set(club);
+    this.isPresidentModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal de président
+   */
+  closePresidentModal() {
+    this.selectedClub.set(null);
+    this.isPresidentModalOpen.set(false);
+  }
+
+  /**
+   * Gérer le succès de modification du président
+   */
+  onPresidentChanged() {
+    this.closePresidentModal();
+    this.refreshData();
+  }
+  /**
+   * Gérer le succès de création/modification
+   */
+  onClubCreated() {
+    this.isFormModalOpen.set(false);
+    this.selectedClub.set(null);
+    this.refreshData(); // Recharger la liste
+  }
 
   // ========== MÉTHODES CRUD ==========
 
@@ -225,5 +259,23 @@ export class ManageClubsComponent {
 
   formatNumber(num: number): string {
     return num.toLocaleString('fr-FR');
+  }
+
+  /**
+   * Obtenir l'URL complète d'une image
+   */
+  getImageUrl(path: string | null): string {
+    console.log('path:', path);
+    if (!path) {
+      return 'https://via.placeholder.com/400x200?text=No+Image';
+    }
+
+    // Si le chemin commence déjà par http, le retourner tel quel
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    // Sinon, ajouter l'URL du backend
+    return `http://localhost:3000${path}`;
   }
 }

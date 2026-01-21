@@ -33,16 +33,45 @@
 
     <!-- Image de couverture -->
     <div class="form-group">
-      <label for="coverImage" class="form-label">Image de couverture (URL)</label>
-      <input
-        type="url"
-        id="coverImage"
-        formControlName="coverImage"
-        class="form-input"
-        placeholder="https://example.com/image.jpg"
-      />
-    </div>
+      <label class="form-label">Image de couverture</label>
 
+      <!-- Zone d'upload -->
+      @if (!coverImagePreview()) {
+        <div class="upload-zone">
+          <input
+            type="file"
+            id="coverImage"
+            accept="image/png,image/jpeg,image/jpg"
+            (change)="onCoverImageSelected($event)"
+            class="file-input"
+          />
+          <label for="coverImage" class="upload-label">
+            <div class="upload-icon">🖼️</div>
+            <p class="upload-text">Cliquez pour choisir une image</p>
+            <p class="upload-hint">PNG, JPG ou JPEG (max 5 MB)</p>
+          </label>
+        </div>
+      }
+
+      <!-- Preview de l'image -->
+      @if (coverImagePreview()) {
+        <div class="image-preview-container">
+          <img [src]="coverImagePreview()" alt="Aperçu" class="image-preview" />
+          <button
+            type="button"
+            (click)="removeCoverImage()"
+            class="remove-image-btn"
+            title="Supprimer l'image"
+          >
+            ✕
+          </button>
+        </div>
+      }
+
+      @if (imageError()) {
+        <span class="error-message">{{ imageError() }}</span>
+      }
+    </div>
     <!-- Dates -->
     <div class="form-row">
       <div class="form-group">
@@ -198,7 +227,7 @@
         type="submit"
         icon="check-lg"
         [loading]="isSubmitting()"
-        [disabled]="eventForm.invalid"
+        [disabled]="eventForm.invalid || isSubmitting()"
       />
     </div>
   </form>

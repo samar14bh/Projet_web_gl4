@@ -9,8 +9,13 @@ import {
   Query,
   ParseIntPipe,
   HttpCode,
-  HttpStatus, Req,
+  HttpStatus,
+  Req,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { extname } from 'path';
+import { diskStorage } from 'multer';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -18,6 +23,7 @@ import { FilterEventDto } from './dto/filter-event.dto';
 import { EventStatus } from '../common/enums';
 import { PaginatedResult } from "../common/pagination/pagination.dto";
 import { UserEventDto } from "./dto/user-event.dto";
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 /**
  * Controller pour la gestion des événements
@@ -26,13 +32,55 @@ import { UserEventDto } from "./dto/user-event.dto";
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) { }
-
   /**
    * POST /api/events
    * Créer un nouvel événement
    */
   @Post()
-  create(@Body() createEventDto: CreateEventDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'coverImage', maxCount: 1 },
+    ], {
+      storage: diskStorage({
+        destination: './uploads/events',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `coverImage-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(new Error('Seulement JPG, JPEG, PNG'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  create(
+    @Body() body: any,
+    @UploadedFiles() files: { coverImage?: Express.Multer.File[] },
+  ) {
+    const createEventDto: CreateEventDto = {
+      title: body.title,
+      description: body.description,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      address: body.address,
+      capacity: body.capacity ? parseInt(body.capacity, 10) : undefined,
+      memberOnly: body.memberOnly === 'true',
+      status: body.status,
+      sPaid: body.sPaid,
+      subscriptionFees: parseFloat(body.subscriptionFees),
+      clubId: parseInt(body.clubId, 10),
+    };
+
+    // Ajouter le chemin de l'image si uploadée
+    if (files?.coverImage?.[0]) {
+      createEventDto.coverImage = `/uploads/events/${files.coverImage[0].filename}`;
+    }
+
     return this.eventsService.create(createEventDto);
   }
 
@@ -116,13 +164,54 @@ export class EventsController {
   }
 
   /**
-   * PATCH /api/events/:id
+   * PATCH /api/events/:id/update-with-file
+   * Mettre à jour un événement avec upload de fichier
    */
-  @Patch(':id')
-  update(
+  @Patch(':id/update-with-file')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'coverImage', maxCount: 1 },
+    ], {
+      storage: diskStorage({
+        destination: './uploads/events',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `coverImage-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(new Error('Seulement JPG, JPEG, PNG'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  updateWithFile(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateEventDto: UpdateEventDto,
+    @Body() body: any,
+    @UploadedFiles() files: { coverImage?: Express.Multer.File[] },
   ) {
+    const updateEventDto: UpdateEventDto = {
+      title: body.title,
+      description: body.description,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      address: body.address,
+      capacity: body.capacity ? parseInt(body.capacity, 10) : undefined,
+      memberOnly: body.memberOnly === 'true',
+      status: body.status,
+      sPaid: body.sPaid,
+      subscriptionFees: parseFloat(body.subscriptionFees),
+    };
+
+    // Ajouter la nouvelle image si uploadée
+    if (files?.coverImage?.[0]) {
+      updateEventDto.coverImage = `/uploads/events/${files.coverImage[0].filename}`;
+    }
+
     return this.eventsService.update(id, updateEventDto);
   }
 
