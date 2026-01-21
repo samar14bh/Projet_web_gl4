@@ -1,84 +1,143 @@
 import { Injectable } from '@nestjs/common';
+import { EventsService } from '../events/events.service';
+import { ClubsService } from '../clubs/clubs.service';
+import { ClubStatsDto } from './dto/club-stat.dto';
+import { MembershipsService } from '../memberships/memberships.service';
+import { Status } from '../common/enums';
+import { TransactionsService } from '../transactions/transaction.service';
+import { UpdateClubSettingsDto } from './dto/update-club-settings.dto';
+import { GetMembersQueryDto } from './dto/get-members-query.dto';
+import { GetApplicationsQueryDto } from './dto/get-applications-query.dto';
+import { AssignRoleDto } from './dto/assign-role.dto';
+import { MembersStatsDto } from './dto/members-stats.dto';
 
 @Injectable()
 export class ClubManagerService {
-  getClubStats(clubId: number) {
-    // TODO: Implement logic to fetch club statistics
-    return { message: `Stats for club ${clubId}` };
+  constructor(
+    private readonly clubService: ClubsService,
+    private readonly eventsService: EventsService,
+    private readonly membershipsService: MembershipsService,
+    private readonly transactionsService: TransactionsService,
+  ) {}
+
+  // ========================
+  // DASHBOARD STATS
+  // ========================
+  async getDashboardStats(clubId: number): Promise<ClubStatsDto> {
+    const [
+      clubStats,
+      pendingCount,
+      upcomingEventsCount,
+      totalEventsCount,
+      totalRevenue,
+      monthlyRevenue,
+    ] = await Promise.all([
+      this.clubService.getClubStats2(clubId),
+      this.membershipsService.countByClubAndStatus(clubId, Status.PENDING),
+      this.eventsService.countUpcomingByClub(clubId),
+      this.eventsService.countEventsByClub(clubId),
+      this.transactionsService.getTotalRevenueForClub(clubId),
+      this.transactionsService.getMonthlyRevenueForClub(clubId),
+    ]);
+
+    return {
+      ...clubStats,
+      pendingRequests: pendingCount,
+      upcomingEvents: upcomingEventsCount,
+      totalEvents: totalEventsCount,
+      totalRevenue: totalRevenue,
+      monthlyRevenue: monthlyRevenue,
+    };
   }
 
-  getPendingRequests(clubId: number) {
-    // TODO: Implement logic to fetch pending requests
-    return { message: `Pending requests for club ${clubId}` };
+  // ========================
+  // CLUB SETTINGS
+  // ========================
+  async updateClubSettings(
+    clubId: number,
+    updateSettingsDto: UpdateClubSettingsDto,
+  ) {
+    return this.clubService.updateClubSettings(clubId, updateSettingsDto);
   }
 
-  getUpcomingEvents(clubId: number) {
-    // TODO: Implement logic to fetch upcoming events
-    return { message: `Upcoming events for club ${clubId}` };
+  // ========================
+  // MEMBERS MANAGEMENT
+  // ========================
+
+  // ✅ OBTENIR TOUS LES MEMBRES
+  async getMembers(clubId: number, query: GetMembersQueryDto) {
+    return this.membershipsService.getMembersPaginated(clubId, query);
   }
 
-  approveMember(memberId: number) {
-    // TODO: Implement logic to approve a member
-    return { message: `Member ${memberId} approved` };
+  // ✅ OBTENIR LES MEMBRES DU BUREAU - NOUVELLE MÉTHODE
+  async getBureauMembers(clubId: number, query: GetMembersQueryDto) {
+    return this.membershipsService.getBureauMembersPaginated(clubId, query);
   }
 
-  rejectMember(memberId: number) {
-    // TODO: Implement logic to reject a member
-    return { message: `Member ${memberId} rejected` };
+  // ✅ OBTENIR LES STATISTIQUES DES MEMBRES
+  async getMembersStats(clubId: number): Promise<MembersStatsDto> {
+    const [
+      totalMembers,
+      bureauMembers,
+      regularMembers,
+      pendingApplications,
+      approvedApplications,
+      rejectedApplications,
+    ] = await Promise.all([
+      this.membershipsService.countByClub(clubId),
+      this.membershipsService.countByClubAndRoleNot(clubId, 'MEMBER'),
+      this.membershipsService.countByClubAndRole(clubId, 'MEMBER'),
+      this.membershipsService.countByClubAndStatus(clubId, Status.PENDING),
+      this.membershipsService.countByClubAndStatus(clubId, Status.APPROVED),
+      this.membershipsService.countByClubAndStatus(clubId, Status.REJECTED),
+    ]);
+
+    return {
+      totalMembers,
+      bureauMembers,
+      regularMembers,
+      pendingApplications,
+      approvedApplications,
+      rejectedApplications,
+    };
   }
 
-  updateClubInfo(id: number, body: any) {
-    // TODO: Implement logic to update club information
-    return { message: `Club ${id} info updated`, data: body as unknown };
+  // ✅ ASSIGNER UN RÔLE À UN MEMBRE
+  async assignRole(membershipId: number, assignRoleDto: AssignRoleDto) {
+    return this.membershipsService.updateRole(membershipId, assignRoleDto.role);
   }
 
-  updateClubPricing(id: number, body: any) {
-    // TODO: Implement logic to update club pricing
-    return { message: `Club ${id} pricing updated`, data: body as unknown };
+  // ✅ RETIRER UN MEMBRE
+  async removeMember(membershipId: number) {
+    return this.membershipsService.removeMembership(membershipId);
   }
 
-  updateClubSettings(id: number, body: any) {
-    // TODO: Implement logic to update club settings
-    return { message: `Club ${id} settings updated`, data: body as unknown };
+  // ========================
+  // APPLICATIONS MANAGEMENT
+  // ========================
+
+  // ✅ OBTENIR LES DEMANDES D'ADHÉSION
+  async getApplications(clubId: number, query: GetApplicationsQueryDto) {
+    return this.membershipsService.getApplicationsPaginated(clubId, query);
   }
 
-  getMembers(clubId: number, query: any) {
-    // TODO: Implement logic to fetch members with filters and pagination
-    return { message: `Members for club ${clubId}`, query: query as unknown };
+  // ✅ METTRE À JOUR LE STATUT D'UNE APPLICATION
+  async updateApplicationStatus(id: number, status: Status) {
+    return this.membershipsService.updateStatus(id, status);
   }
 
-  getMemberRequests(clubId: number) {
-    // TODO: Implement logic to fetch member requests
-    return { message: `Member requests for club ${clubId}` };
+  // ========================
+  // DASHBOARD DATA
+  // ========================
+  async getPendingRequests(clubId: number) {
+    return this.membershipsService.getPendingApplicationsForDashboard(clubId);
   }
 
-  promoteMember(memberId: number) {
-    // TODO: Implement logic to promote a member
-    return { message: `Member ${memberId} promoted` };
+  async getRecentMembers(clubId: number) {
+    return this.membershipsService.getRecentMembers(clubId);
   }
 
-  removeMember(memberId: number) {
-    // TODO: Implement logic to remove a member
-    return { message: `Member ${memberId} removed` };
-  }
-
-  suspendMember(memberId: number) {
-    // TODO: Implement logic to suspend a member
-    return { message: `Member ${memberId} suspended` };
-  }
-
-  sendBulkMessage(memberIds: number[], _message: string) {
-    // TODO: Implement logic to send bulk messages
-    return { message: `Message sent to members`, memberIds };
-  }
-
-  getMemberPaymentHistory(memberId: number) {
-    // TODO: Implement logic to fetch member payment history
-    return { message: `Payment history for member ${memberId}` };
-  }
-
-  exportMembers(clubId: number) {
-    // TODO: Implement logic to export members as CSV
-    return { message: `Exported members for club ${clubId}` };
+  async getUpcomingEvents(clubId: number) {
+    return this.eventsService.getUpcomingEventsForDashboard(clubId);
   }
 }

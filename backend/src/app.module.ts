@@ -13,6 +13,7 @@ import { MailModule } from './mail/mail.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SseModule } from './sse/sse.module';
+import {ClubManagerModule} from "./club-manager/club-manager.module";
 import { DocumentModule } from './documents/document.module';
 
 
@@ -31,7 +32,7 @@ import { DocumentModule } from './documents/document.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false,
+      synchronize: true,
       logging: true,
     }),
     EventsModule,
@@ -43,9 +44,8 @@ import { DocumentModule } from './documents/document.module';
     DashboardModule,
     AuthModule,
     MailModule,
-
+    ClubManagerModule,
     PaymentsModule,
-
     NotificationsModule,
     SseModule,
     DocumentModule

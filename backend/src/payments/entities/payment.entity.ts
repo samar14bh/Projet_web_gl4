@@ -1,4 +1,3 @@
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -12,14 +11,24 @@ import { User } from '../../users/entities/user.entity';
 import { Membership } from '../../memberships/entities/membership.entity';
 import { Event } from '../../events/entities/event.entity';
 import { PaymentStatus, PaymentType } from '../../common/enums';
-import { PaymentMethod } from '../../common/enums/payment-method.enum';
+import { PaymentMethod } from '../../common/enums';
 
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2, transformer: {
+      to: (value: number | string | null) => value,
+      from: (value: any) => {
+        // Convertir le résultat de la BD en nombre JavaScript
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') return parseFloat(value);
+        if (value?.toNumber) return value.toNumber();
+        if (value?._d !== undefined) return parseFloat(value._d);
+        return parseFloat(String(value));
+      }
+    }})
   amount: number;
 
   @Column()

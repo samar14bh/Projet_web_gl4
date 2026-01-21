@@ -1,99 +1,116 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
   Query,
 } from '@nestjs/common';
 import { ClubManagerService } from './club-manager.service';
+import { Status } from '../common/enums';
+import { UpdateClubSettingsDto } from './dto/update-club-settings.dto';
+import { GetMembersQueryDto } from './dto/get-members-query.dto';
+import { GetApplicationsQueryDto } from './dto/get-applications-query.dto';
+import { AssignRoleDto } from './dto/assign-role.dto';
 
 @Controller('club-manager')
 export class ClubManagerController {
-  constructor(private readonly clubManagerService: ClubManagerService) {}
+  constructor(private readonly service: ClubManagerService) {}
 
-  @Get('stats/:clubId')
-  getClubStats(@Param('clubId') clubId: number) {
-    return this.clubManagerService.getClubStats(clubId);
+  // ========================
+  // DASHBOARD
+  // ========================
+  @Get(':clubId/dashboard/stats')
+  getStats(@Param('clubId') clubId: number) {
+    return this.service.getDashboardStats(+clubId);
   }
 
-  @Get('pending-requests/:clubId')
-  getPendingRequests(@Param('clubId') clubId: number) {
-    return this.clubManagerService.getPendingRequests(clubId);
+  @Get(':clubId/dashboard/pending-members')
+  getPending(@Param('clubId') clubId: number) {
+    return this.service.getPendingRequests(+clubId);
   }
 
-  @Get('upcoming-events/:clubId')
-  getUpcomingEvents(@Param('clubId') clubId: number) {
-    return this.clubManagerService.getUpcomingEvents(clubId);
+  @Get(':clubId/dashboard/recent-members')
+  getRecentMembers(@Param('clubId') clubId: number) {
+    return this.service.getRecentMembers(+clubId);
   }
 
-  @Post('approve-member')
-  approveMember(@Body() body: { memberId: number }) {
-    return this.clubManagerService.approveMember(body.memberId);
+  @Get(':clubId/dashboard/upcoming-events')
+  getEvents(@Param('clubId') clubId: number) {
+    return this.service.getUpcomingEvents(+clubId);
   }
 
-  @Post('reject-member')
-  rejectMember(@Body() body: { memberId: number }) {
-    return this.clubManagerService.rejectMember(body.memberId);
+  // ========================
+  // CLUB SETTINGS
+  // ========================
+  @Patch(':clubId/settings')
+  updateClubSettings(
+    @Param('clubId') clubId: number,
+    @Body() updateSettingsDto: UpdateClubSettingsDto,
+  ) {
+    return this.service.updateClubSettings(+clubId, updateSettingsDto);
   }
 
-  @Put('clubs/:id')
-  updateClubInfo(@Param('id') id: number, @Body() body: any) {
-    return this.clubManagerService.updateClubInfo(id, body);
+  // ========================
+  // MEMBERS MANAGEMENT
+  // ========================
+
+  // ✅ OBTENIR TOUS LES MEMBRES
+  @Get(':clubId/members')
+  getMembers(
+    @Param('clubId') clubId: number,
+    @Query() query: GetMembersQueryDto,
+  ) {
+    return this.service.getMembers(+clubId, query);
   }
 
-  @Put('clubs/:id/pricing')
-  updateClubPricing(@Param('id') id: number, @Body() body: any) {
-    return this.clubManagerService.updateClubPricing(id, body);
+  // ✅ OBTENIR LES MEMBRES DU BUREAU - NOUVEL ENDPOINT
+  @Get(':clubId/members/bureau')
+  getBureauMembers(
+    @Param('clubId') clubId: number,
+    @Query() query: GetMembersQueryDto,
+  ) {
+    return this.service.getBureauMembers(+clubId, query);
   }
 
-  @Put('clubs/:id/settings')
-  updateClubSettings(@Param('id') id: number, @Body() body: any) {
-    return this.clubManagerService.updateClubSettings(id, body);
+  // ✅ OBTENIR LES STATISTIQUES DES MEMBRES
+  @Get(':clubId/members/stats')
+  getMembersStats(@Param('clubId') clubId: number) {
+    return this.service.getMembersStats(+clubId);
   }
 
-  @Get('members/:clubId')
-  getMembers(@Param('clubId') clubId: number, @Query() query: any) {
-    return this.clubManagerService.getMembers(clubId, query);
+  // ✅ ASSIGNER UN RÔLE À UN MEMBRE
+  @Patch('members/:membershipId/role')
+  assignRole(
+    @Param('membershipId') membershipId: number,
+    @Body() assignRoleDto: AssignRoleDto,
+  ) {
+    return this.service.assignRole(+membershipId, assignRoleDto);
   }
 
-  @Get('member-requests/:clubId')
-  getMemberRequests(@Param('clubId') clubId: number) {
-    return this.clubManagerService.getMemberRequests(clubId);
+  // ✅ RETIRER UN MEMBRE
+  @Delete('members/:membershipId')
+  removeMember(@Param('membershipId') membershipId: number) {
+    return this.service.removeMember(+membershipId);
   }
 
-  @Post('members/:memberId/promote')
-  promoteMember(@Param('memberId') memberId: number) {
-    return this.clubManagerService.promoteMember(memberId);
+  // ========================
+  // APPLICATIONS MANAGEMENT
+  // ========================
+
+  // ✅ OBTENIR LES DEMANDES D'ADHÉSION
+  @Get(':clubId/applications')
+  getApplications(
+    @Param('clubId') clubId: number,
+    @Query() query: GetApplicationsQueryDto,
+  ) {
+    return this.service.getApplications(+clubId, query);
   }
 
-  @Delete('members/:memberId')
-  removeMember(@Param('memberId') memberId: number) {
-    return this.clubManagerService.removeMember(memberId);
-  }
-
-  @Post('members/:memberId/suspend')
-  suspendMember(@Param('memberId') memberId: number) {
-    return this.clubManagerService.suspendMember(memberId);
-  }
-
-  @Post('members/bulk-message')
-  sendBulkMessage(@Body() body: { memberIds: number[]; message: string }) {
-    return this.clubManagerService.sendBulkMessage(
-      body.memberIds,
-      body.message,
-    );
-  }
-
-  @Get('members/:memberId/payment-history')
-  getMemberPaymentHistory(@Param('memberId') memberId: number) {
-    return this.clubManagerService.getMemberPaymentHistory(memberId);
-  }
-
-  @Get('members/:clubId/export')
-  exportMembers(@Param('clubId') clubId: number) {
-    return this.clubManagerService.exportMembers(clubId);
+  // ✅ METTRE À JOUR LE STATUT D'UNE APPLICATION
+  @Patch('applications/:id/status')
+  updateStatus(@Param('id') id: number, @Body() body: { status: Status }) {
+    return this.service.updateApplicationStatus(+id, body.status);
   }
 }

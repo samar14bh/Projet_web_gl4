@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
+import {roleGuard} from './Core/guards/role.guard';
+import {CheckoutComponent} from './features/checkout/checkout';
+import {PaymentPageComponent} from './features/member/payment-page/payment-page';
 import { roleGuard } from './Core/guards/role.guard';
 
 
@@ -139,34 +142,50 @@ export const routes: Routes = [
         title: 'Inscription réussie'
       },
       {
-        path: 'payment',  // ← PAGE 11: Payment Page
-        loadComponent: () => import('./features/member/payment-page/payment-page').then(m => m.PaymentPageComponent),
-
-        title: 'Paiement'
+        path: 'payment',
+        loadComponent: () => import('./features/member/payment-page/payment-page')
+          .then(m => m.PaymentPageComponent),
+        data: { title: 'Paiement Sécurisé' }
       },
       {
-        path: 'payment/success',  // Payment Success Page
-        loadComponent: () => import('./features/member/payment-success/payment-success').then(m => m.PaymentSuccessComponent),
-        title: 'Paiement confirmé'
+        path: 'checkout',
+        loadComponent: () => import('./features/checkout/checkout')
+          .then(m => m.CheckoutComponent),
+        data: { title: 'Finaliser votre achat' }
       },
+      {
+        path: 'payment/success',
+        loadComponent: () => import('./features/member/payment-success/payment-success')
+          .then(m => m.PaymentSuccessComponent),
+        data: { title: 'Paiement réussi' }
+      },
+
       {
         path: 'my-payments',  // ← PAGE 10
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'
       },
+      // Dashboard du club avec clubId
       {
-        path: 'club-manager/dashboard',  // ← PAGE 12
-        loadComponent: () => import('./features/club-manager/dashboard/dashboard').then(m => m.ClubManagerDashboardComponent),
-        title: 'Dashboard Responsable'
+        path: 'club-manager/:clubId/dashboard',
+        loadComponent: () => import('./features/club-manager/dashboard/dashboard')
+          .then(m => m.ClubManagerDashboardComponent),
+        title: 'Tableau de bord du club'
       },
+
+      // Gestion du club avec clubId
       {
-        path: 'club-manager/manage-club',  // ← PAGE 13
-        loadComponent: () => import('./features/club-manager/manage-club/manage-club').then(m => m.ManageClubComponent),
-        title: 'Gérer mon club'
+        path: 'club-manager/:clubId/manage-club',
+        loadComponent: () => import('./features/club-manager/manage-club/manage-club')
+          .then(m => m.ManageClubComponent),
+        title: 'Gérer le club'
       },
+
+      // Gestion des membres avec clubId
       {
-        path: 'club-manager/manage-members',  // ← PAGE 14
-        loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
+        path: 'club-manager/:clubId/manage-members',
+        loadComponent: () => import('./features/club-manager/manage-members/manage-members')
+          .then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
       },
       {
