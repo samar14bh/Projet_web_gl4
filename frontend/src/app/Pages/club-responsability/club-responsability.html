@@ -1,0 +1,144 @@
+<div class="responsability-container" *ngIf="club()">
+    <!-- Header Section -->
+    <header class="club-header">
+        <div class="header-content">
+            <div class="club-visual">
+                <img *ngIf="club()?.logo" [src]="club()?.logo" alt="Club Logo" class="club-logo-large">
+                <div *ngIf="!club()?.logo" class="club-icon-placeholder">
+                    <i class="bi bi-shield-shaded"></i>
+                </div>
+            </div>
+            <div class="club-info">
+                <div class="title-row">
+                    <h1>{{ club()?.name }}</h1>
+                    <span class="role-badge" [attr.data-role]="club()?.userRole">
+                        <i class="bi bi-person-badge"></i>
+                        {{ club()?.userRole }}
+                    </span>
+                </div>
+                <p class="club-description">{{ club()?.description }}</p>
+                <div class="membership-meta">
+                    <span><i class="bi bi-calendar3"></i> Membre depuis : {{ club()?.dateDebut | date:'mediumDate'
+                        }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Actions Grid -->
+    <section class="actions-section">
+        <h2 class="section-title">Mes Responsabilités</h2>
+        <div class="actions-grid">
+            <!-- Tableau de bord -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY, UserRole.TREASURER, UserRole.RH])) {
+            <div class="action-card" routerLink="/club-manager/dashboard" style="--accent-color: #4f46e5">
+                <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
+                <div class="card-body">
+                    <h3>Tableau de bord</h3>
+                    <p>Vue d'ensemble de l'activité du club</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Documents -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY])) {
+              <div
+                class="action-card"
+                [routerLink]="['/club-responsability', club()?.id, 'documents']"
+                style="--accent-color: #0891b2"
+              >
+                <div class="card-icon"><i class="bi bi-files"></i></div>
+                <div class="card-body">
+                    <h3>Documents</h3>
+                    <p>Consulter et gérer les fichiers du club</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Téléchargements -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY])) {
+            <div class="action-card" routerLink="/documents/downloads" style="--accent-color: #0d9488">
+                <div class="card-icon"><i class="bi bi-download"></i></div>
+                <div class="card-body">
+                    <h3>Téléchargements</h3>
+                    <p>Récupérer les documents officiels</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Finances -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.TREASURER])) {
+            <div class="action-card" routerLink="/finances" style="--accent-color: #059669">
+                <div class="card-icon"><i class="bi bi-cash-coin"></i></div>
+                <div class="card-body">
+                    <h3>Finances</h3>
+                    <p>Gérer la trésorerie et les budgets</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Statuts de paiement -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.TREASURER])) {
+            <div class="action-card" routerLink="/finances/payments" style="--accent-color: #2563eb">
+                <div class="card-icon"><i class="bi bi-credit-card"></i>
+                </div>
+                <div class="card-body">
+                    <h3>Statuts de paiement</h3>
+                    <p>Suivi des cotisations des membres</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Membres -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.RH])) {
+            <div class="action-card" routerLink="/club-manager/manage-members" style="--accent-color: #7c3aed">
+                <div class="card-icon"><i class="bi bi-people"></i></div>
+                <div class="card-body">
+                    <h3>Membres</h3>
+                    <p>Gérer la liste des membres actifs</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Candidatures -->
+            @if (hasRole([UserRole.PRESIDENT, UserRole.RH])) {
+            <div class="action-card" routerLink="/club-manager/manage-members" style="--accent-color: #db2777">
+                <div class="card-icon"><i class="bi bi-file-earmark-person"></i></div>
+                <div class="card-body">
+                    <h3>Candidatures</h3>
+                    <p>Examiner les nouvelles demandes d'adhésion</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+
+            <!-- Configuration Club -->
+            @if (hasRole([UserRole.PRESIDENT])) {
+            <div class="action-card" routerLink="/club-manager/manage-club" style="--accent-color: #4b5563">
+                <div class="card-icon"><i class="bi bi-gear"></i></div>
+                <div class="card-body">
+                    <h3>Configuration Club</h3>
+                    <p>Modifier les informations du club</p>
+                </div>
+                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+            </div>
+            }
+        </div>
+    </section>
+</div>
+
+<!-- Fallback if no club data -->
+<div class="no-data-container" *ngIf="!club()">
+    <div class="empty-state">
+        <i class="bi bi-exclamation-circle"></i>
+        <h2>Données introuvables</h2>
+        <p>Veuillez sélectionner un club depuis le bureau dans la barre latérale.</p>
+        <button routerLink="/dashboard" class="btn-primary">Retour au Dashboard</button>
+    </div>
+</div>

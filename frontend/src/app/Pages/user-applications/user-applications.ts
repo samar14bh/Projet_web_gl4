@@ -5,7 +5,7 @@ import {ApplicationList} from '../../features/applications/application-list/appl
 import {CommonModule} from '@angular/common';
 import {Loader} from '../../shared/components/loader/loader';
 import {Error} from '../../shared/components/error/error';
-
+import {AuthService} from '../../Core/services/auth.service';
 @Component({
   selector: 'app-user-applications',
   imports: [
@@ -21,13 +21,15 @@ import {Error} from '../../shared/components/error/error';
 export class UserApplications {
   private readonly membershipService = inject(MembershipService);
   private readonly router = inject(Router);
-  private readonly USER_ID = 1;
+  private readonly USER_ID = inject(AuthService).currentUser()?.id ?? 0;
 
   applications = resource({
-    params:()=>({ userId: this.USER_ID }),
+    params:()=>({ userId: Number(this.USER_ID )}),
     loader: async ({ params }) => {
       try {
         return await this.membershipService.getApplicationsByUser(params.userId).toPromise() ?? [];
+        console.log("the applications are ", this.applications);
+        console.log("the user id is ", params.userId);
       } catch {
         return [];
       }

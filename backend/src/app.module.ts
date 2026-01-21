@@ -14,6 +14,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SseModule } from './sse/sse.module';
 import {ClubManagerModule} from "./club-manager/club-manager.module";
+import { DocumentModule } from './documents/document.module';
 
 
 // ... tes autres imports
@@ -46,7 +47,8 @@ import {ClubManagerModule} from "./club-manager/club-manager.module";
     ClubManagerModule,
     PaymentsModule,
     NotificationsModule,
-    SseModule
+    SseModule,
+    DocumentModule
   ],
   controllers: [],
   providers: [],

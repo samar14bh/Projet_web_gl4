@@ -4,6 +4,7 @@ import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 import {roleGuard} from './Core/guards/role.guard';
 import {CheckoutComponent} from './features/checkout/checkout';
 import {PaymentPageComponent} from './features/member/payment-page/payment-page';
+import { roleGuard } from './Core/guards/role.guard';
 
 
 /**
@@ -126,15 +127,15 @@ export const routes: Routes = [
         title: 'Inscription réussie'
       },
 
-       {
-      path: 'notifications',
-      loadComponent: () => import('./Pages/notifications/notifications')
-        .then(m => m.NotificationComponent),
-      title: 'Notifications',
-         canActivate: [roleGuard],
+      {
+        path: 'notifications',
+        loadComponent: () => import('./Pages/notifications/notifications')
+          .then(m => m.NotificationComponent),
+        title: 'Notifications',
+        canActivate: [roleGuard],
         data: { role: 'USER' }
-    },
-       {
+      },
+      {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
@@ -186,14 +187,25 @@ export const routes: Routes = [
         loadComponent: () => import('./features/club-manager/manage-members/manage-members')
           .then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
+      },
+      {
+        path: 'club-responsability/:membershipId',
+        loadComponent: () => import('./Pages/club-responsability/club-responsability').then(m => m.ClubResponsability),
+        title: 'Responsabilités Club'
+      },
+      {
+        path: 'club-responsability/:clubId/documents',
+        loadComponent: () => import('./Pages/club-documents/club-documents').then(m => m.ClubDocuments),
+        title: 'Documents du Club'
       }
 
 
-,
-    {path: '**',
-      component: PageNotFound,
+      ,
+      {
+        path: '**',
+        component: PageNotFound,
         title: 'Page non trouvée'
-    }
+      }
 
     ]
   }

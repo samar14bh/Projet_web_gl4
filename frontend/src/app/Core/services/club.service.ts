@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, httpResource } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Club,
@@ -11,6 +11,7 @@ import {
   UpdateClubDto,
 } from '../models/club.model';
 import { environment } from '../../../environments/environment';
+import { MembershipClubDto } from '../dtos/membership-club.dto';
 
 /**
  * Service pour gérer les clubs (Admin)
@@ -165,6 +166,23 @@ export class ClubService {
       responseType: 'text' as 'json'
     });
   }
+
+
+  getClubsWithSpecialMemberships(userId: number | string): Observable<MembershipClubDto[]> {
+    return this.http.get<MembershipClubDto[]>(`${environment.apiUrl}/memberships/special-memberships/users/${userId}`);
+  }
+
+  /**
+   * Récupérer les clubs avec adhésion spéciale via httpResource (Angular 20)
+   */
+  getClubsWithSpecialMembershipsResource(userId: () => string | number | undefined) {
+    return httpResource<MembershipClubDto[]>(() => {
+      const id = userId();
+      if (!id) return undefined;
+      return `${environment.apiUrl}/memberships/special-memberships/users/${id}`;
+    });
+  }
+
 
 
 
