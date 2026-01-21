@@ -700,111 +700,27 @@ async getRecommendations(
     .createQueryBuilder('club')
     .leftJoin('club.category', 'category')
     .leftJoin('club.memberships', 'membership')
-    .leftJoin('club.events', 'event') 
+    .leftJoin('club.events', 'event')
     .select([
       'club.id AS id',
       'club.name AS name',
       'club.description AS description',
       'club.logo AS logo',
-      'club.cover_image AS coverImage', 
+      'club.cover_image AS coverImage',
       'club.creation_date AS creationDate',
-      'club.membership_fee_amount AS membershipFeeAmount',  
+      'club.membership_fee_amount AS membershipFeeAmount',
       'club.isActive AS isActive',
-      'category.id AS categoryId', 
+      'category.id AS categoryId',
       'category.name AS categoryName',
       'COUNT(DISTINCT membership.id) AS members',
-      'COUNT(DISTINCT event.id) AS events',  
+      'COUNT(DISTINCT event.id) AS events',
     ])
     .where('club.isActive = :isActive', { isActive: true })
     .groupBy('club.id')
     .addGroupBy('category.id')
     .addGroupBy('category.name');
 
-  if (joinedClubIds.length > 0) {
-    query.andWhere('club.id NOT IN (:...joinedIds)', {
-      joinedIds: joinedClubIds,
-  async getRecommendations(userId: number, limit: number = 3): Promise<any[]> {
-    if (!userId || isNaN(userId)) {
-      return [];
-    }
 
-    // 1️⃣ Clubs déjà rejoints
-    const memberships = await this.membershipRepository.find({
-      where: { user: { id: userId } },
-      relations: ['club', 'club.category'],
-    });
-
-    const joinedClubIds = memberships
-      .map((m) => m.club?.id)
-      .filter((id): id is number => typeof id === 'number');
-
-  let results = await query.limit(limit).getRawMany();
-  if (results.length === 0) {
-    results = await this.clubRepository
-    const preferredCategoryIds = [
-      ...new Set(
-        memberships
-          .map((m) => m.club?.category?.id)
-          .filter((id): id is number => typeof id === 'number'),
-      ),
-    ];
-
-    // 2️⃣ Query principale avec stats
-    const query = this.clubRepository
-      .createQueryBuilder('club')
-      .leftJoin('club.category', 'category')
-      .leftJoin('club.memberships', 'membership')
-      .leftJoin('club.events', 'event')
-      .select([
-        'club.id AS id',
-        'club.name AS name',
-        'club.description AS description',
-        'club.logo AS logo',
-        'club.cover_image AS coverImage',
-        'club.creation_date AS creationDate',
-        'club.membership_fee_amount AS membershipFeeAmount',
-        'club.isActive AS isActive',
-        'category.id AS categoryId',
-        'category.name AS categoryName',
-        'COUNT(DISTINCT membership.id) AS members',
-        'COUNT(DISTINCT event.id) AS events',
-      ])
-      .where('club.isActive = true')
-      .andWhere(joinedClubIds.length > 0 
-        ? 'club.id NOT IN (:...joinedIds)' 
-        : '1=1', 
-        { joinedIds: joinedClubIds }
-      )
-      .groupBy('club.id')
-      .addGroupBy('category.id')
-      .addGroupBy('category.name')
-      .orderBy('members', 'DESC')  
-      .limit(limit)
-      .getRawMany();
-  }
-  return results.map(club => ({
-    id: Number(club.id),
-    name: club.name,
-    description: club.description,
-    logo: club.logo,
-    coverImage: club.coverImage,
-    creationDate: club.creationDate,
-    membershipFeeAmount: Number(club.membershipFeeAmount) || 0,
-    isActive: club.isActive,
-    categoryId: Number(club.categoryId),
-    categoryName: club.categoryName,
-    members: Number(club.members) || 0,
-    events: Number(club.events) || 0,
-  }));
-        'club.logo AS logo', // 👈 Ajouté
-        'club.creation_date AS creationDate', // 👈 Ajouté
-        'club.isActive AS isActive',
-        'category.name AS categoryName',
-        'COUNT(membership.id) AS members',
-      ])
-      .where('club.isActive = :isActive', { isActive: true })
-      .groupBy('club.id')
-      .addGroupBy('category.name');
 
     if (joinedClubIds.length > 0) {
       query.andWhere('club.id NOT IN (:...joinedIds)', {
@@ -845,15 +761,39 @@ async getRecommendations(
 
     return results;
   }
+
+
+
+
+
   async getClubStats2(clubId: number) {
     const totalMembers = await this.membershipRepository.count({
       where: { club: { id: clubId } },
     });
 
-  return results;
-}
+
+
+    const activeMembers = await this.membershipRepository.count({
+      where: { club: { id: clubId }, dateFin: IsNull() },
+    });
+
+    return {
+      totalMembers,
+      activeMembers,
+    };
+  }
   private async deleteFile(filePath?: string) {
     if (!filePath) return;
+    const fullPath = join(process.cwd(), filePath);
+
+    if (existsSync(fullPath)) {
+      try {
+        await unlink(fullPath);
+      } catch (err) {
+        console.error('Erreur suppression fichier:', fullPath, err);
+      }
+    }
+  }
 
 async getUserClubMembershipStatus(clubId: number, userId: number): Promise<string> {
   const club = await this.clubRepository.findOne({ where: { id: clubId } });
@@ -910,16 +850,7 @@ async getUserClubMembershipStatus(clubId: number, userId: number): Promise<strin
 
   return "Non membre";
 }
-    const fullPath = join(process.cwd(), filePath);
 
-    if (existsSync(fullPath)) {
-      try {
-        await unlink(fullPath);
-      } catch (err) {
-        console.error('Erreur suppression fichier:', fullPath, err);
-      }
-    }
-  }
   /**
    * Récupérer le président actuel du club
    */
@@ -1008,6 +939,7 @@ async getUserClubMembershipStatus(clubId: number, userId: number): Promise<strin
     };
   }
 
+
   /**
    * Supprimer le président actuel du club
    */
@@ -1026,16 +958,7 @@ async getUserClubMembershipStatus(clubId: number, userId: number): Promise<strin
     await this.membershipRepository.remove(president);
 
     return { message: 'Président supprimé avec succès' };
-    const activeMembers = await this.membershipRepository.count({
-      where: { club: { id: clubId }, dateFin: IsNull() },
-    });
-
-    return {
-      totalMembers,
-      activeMembers,
-    };
   }
-
   async updateClubSettings(
     clubId: number,
     updateSettingsDto: UpdateClubSettingsDto,

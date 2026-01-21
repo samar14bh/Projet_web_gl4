@@ -1,10 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
-import {roleGuard} from './Core/guards/role.guard';
 import { guestGuard } from './Core/guards/guest.guard';
-import {CheckoutComponent} from './features/checkout/checkout';
-import {PaymentPageComponent} from './features/member/payment-page/payment-page';
 import { roleGuard } from './Core/guards/role.guard';
 
 

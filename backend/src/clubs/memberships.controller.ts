@@ -92,39 +92,9 @@ export class MembershipsController {
     return await this.membershipsService.updateMemberRole(membershipId, role);
   }
 
-  /**
-   * DELETE /memberships/:membershipId
-   * Supprimer un membre d'un club
-   */
-  @Delete(':membershipId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeMember(
-    @Param('membershipId', ParseIntPipe) membershipId: number,
-  ): Promise<void> {
-    await this.membershipsService.removeMember(membershipId);
-  }
 
-  @Get('applications/:applicationId')
-  async getApplicationResponse(
-    @Param('applicationId', ParseIntPipe) applicationId: number,
-  ): Promise<ApplicationResponseDto> {
-    const application =
-      await this.membershipsService.getApplicationResponse(applicationId);
-    if (!application) {
-      throw new NotFoundException(
-        `Application with ID ${applicationId} not found`,
-      );
-    }
-    return application;
-  }
 
-  @Delete('applications/:applicationId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteApplication(
-    @Param('applicationId', ParseIntPipe) applicationId: number,
-  ): Promise<void> {
-    await this.membershipsService.deleteApplication(applicationId);
-  }
+
 
  
  

@@ -49,7 +49,7 @@ export function createPagination<T>(config: PaginationConfig<T>): PaginationCont
 
   const totalItems = computed(() => config.items().length);
 
-  const totalPages = computed(() => 
+  const totalPages = computed(() =>
     Math.max(1, Math.ceil(totalItems() / itemsPerPage))
   );
 
