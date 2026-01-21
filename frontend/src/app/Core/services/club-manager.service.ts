@@ -1,129 +1,206 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ClubStats, Member } from '../interfaces/club-manager.interface';
-import { Club } from '../models/club.model';
+import {
+  ApplicationResponse,
+  Club,
+  ClubSettings,
+  ClubStats,
+  MemberResponse,
+  MemberRole,
+  MembersStats
+} from '../interfaces/club-manager.interface';
+import { DashboardEvent, DashboardMember } from '../interfaces/club-dashboard.interface';
 
-/**
- * Service for club manager operations
- */
-@Injectable({
-    providedIn: 'root',
-})
+
+@Injectable({ providedIn: 'root' })
 export class ClubManagerService {
-    private readonly apiUrl = `${environment.apiUrl}`;
+  private api = `${environment.apiUrl}/club-manager`;
 
-    // Signals
-    clubDetails = signal<any>(null);
-    clubStats = signal<ClubStats | null>(null);
-    pendingMembers = signal<Member[]>([]);
-    activeMembers = signal<Member[]>([]);
-    loading = signal(false);
-    error = signal<string | null>(null);
+  // SIGNAUX
+  clubStats = signal<ClubStats | null>(null);
+  pendingMembers = signal<DashboardMember[]>([]);
+  activeMembers = signal<DashboardMember[]>([]);
+  upcomingEvents = signal<DashboardEvent[]>([]);
+  loading = signal(false);
 
-    constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-    /**
-     * Get clubs managed by a user
-     */
-    getManagedClubs(userId: number): Observable<Club[]> {
-        return this.http.get<Club[]>(`${this.apiUrl}/clubs/managed/${userId}`);
-    }
+  // ========================
+  // DASHBOARD
+  // ========================
+  loadDashboard(clubId: number) {
+    this.loading.set(true);
+    forkJoin({
+      stats: this.http.get<ClubStats>(`${this.api}/${clubId}/dashboard/stats`),
+      pending: this.http.get<DashboardMember[]>(`${this.api}/${clubId}/dashboard/pending-members`),
+      members: this.http.get<DashboardMember[]>(`${this.api}/${clubId}/dashboard/recent-members`),
+      events: this.http.get<DashboardEvent[]>(`${this.api}/${clubId}/dashboard/upcoming-events`),
+    }).subscribe({
+      next: res => {
+        this.clubStats.set(res.stats);
+        this.pendingMembers.set(res.pending);
+        this.activeMembers.set(res.members);
+        this.upcomingEvents.set(res.events);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
 
-    /**
-     * Get club detailed statistics for dashboard
-     */
-    getClubDetailedStats(clubId: number): Observable<any> {
-        this.loading.set(true);
-        return this.http.get<any>(`${this.apiUrl}/clubs/${clubId}/stats`).pipe(
-            tap({
-                next: (stats) => {
-                    this.clubStats.set(stats);
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    this.error.set(err.message || 'Failed to load club stats');
-                    this.loading.set(false);
-                },
-            })
-        );
-    }
+  // ========================
+  // CLUB DETAILS & STATS
+  // ========================
+  getClubDetails(clubId: number): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/clubs/${clubId}`);
+  }
 
-    /**
-     * Get club details including statistics
-     */
-    getClubDetails(clubId: number): Observable<any> {
-        this.loading.set(true);
-        return this.http.get<any>(`${this.apiUrl}/clubs/${clubId}`).pipe(
-            tap({
-                next: (club) => {
-                    this.clubDetails.set(club);
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    this.error.set(err.message || 'Failed to load club details');
-                    this.loading.set(false);
-                },
-            })
-        );
-    }
+  getClubDetailedStats(clubId: number): Observable<ClubStats> {
+    return this.http.get<ClubStats>(`${this.api}/${clubId}/dashboard/stats`);
+  }
 
-    /**
-     * Get members with filtering - using club-specific endpoint
-     */
-    getMembers(clubId: number, status?: string, page?: number, limit?: number): Observable<any> {
-        let params = new HttpParams();
-        if (status) {
-            params = params.set('status', status);
-        }
-        if (page) {
-            params = params.set('page', page.toString());
-        }
-        if (limit) {
-            params = params.set('limit', limit.toString());
-        }
+  updateClubSettings(clubId: number, settings: ClubSettings): Observable<any> {
+    return this.http.patch(
+      `${this.api}/${clubId}/settings`,
+      settings
+    );
+  }
 
-        return this.http.get<any>(`${this.apiUrl}/clubs/${clubId}/members`, { params }).pipe(
-            tap({
-                next: (response) => {
-                    if (status === 'PENDING') {
-                        this.pendingMembers.set(response.data || []);
-                    } else if (status === 'APPROVED' || status === 'CONFIRMED') {
-                        this.activeMembers.set(response.data || []);
-                    }
-                },
-                error: (err) => {
-                    this.error.set(err.message || 'Failed to load members');
-                }
-            })
-        );
-    }
+  // ========================
+  // APPLICATIONS MANAGEMENT
+  // ========================
+  updateMemberStatus(
+    applicationId: number,
+    status: 'APPROVED' | 'REJECTED'
+  ): Observable<any> {
+    return this.http.patch(`${this.api}/applications/${applicationId}/status`, {
+      status,
+    });
+  }
 
-    /**
-     * Update membership status (Approve/Reject)
-     */
-    updateMemberStatus(membershipId: number, status: 'APPROVED' | 'REJECTED'): Observable<any> {
-        return this.http.patch(
-            `${this.apiUrl}/memberships/${membershipId}/status`,
-            { status }
-        );
-    }
+  // ========================
+  // CLUB UPDATE
+  // ========================
+  updateClub(clubId: number, payload: any): Observable<any> {
+    return this.http.patch(`${this.api}/${clubId}`, payload);
+  }
 
-    /**
-     * Update club information
-     */
-    updateClub(clubId: number, data: any): Observable<any> {
-        return this.http.patch(`${this.apiUrl}/clubs/${clubId}`, data).pipe(
-            tap({
-                next: (updatedClub) => {
-                    this.clubDetails.set(updatedClub);
-                }
-            })
-        );
-    }
+  // ========================
+  // MEMBERS MANAGEMENT
+  // ========================
 
-    clearError() {
-        this.error.set(null);
-    }
+  // ✅ OBTENIR TOUS LES MEMBRES
+  getMembers(
+    clubId: number,
+    page?: number,
+    limit?: number,
+    role?: MemberRole,
+    search?: string
+  ): Observable<MemberResponse> {
+    let params = new HttpParams();
+    if (page) params = params.set('page', page.toString());
+    if (limit) params = params.set('limit', limit.toString());
+    if (role) params = params.set('role', role);
+    if (search) params = params.set('search', search);
+
+    return this.http.get<MemberResponse>(`${this.api}/${clubId}/members`, {
+      params,
+    });
+  }
+
+  // ✅ OBTENIR LES MEMBRES DU BUREAU - NOUVELLE MÉTHODE
+  getBureauMembers(
+    clubId: number,
+    page?: number,
+    limit?: number,
+    search?: string
+  ): Observable<MemberResponse> {
+    let params = new HttpParams();
+    if (page) params = params.set('page', page.toString());
+    if (limit) params = params.set('limit', limit.toString());
+    if (search) params = params.set('search', search);
+
+    return this.http.get<MemberResponse>(
+      `${this.api}/${clubId}/members/bureau`,
+      { params }
+    );
+  }
+
+  // ✅ OBTENIR LES STATISTIQUES DES MEMBRES
+  getMembersStats(clubId: number): Observable<MembersStats> {
+    return this.http.get<MembersStats>(`${this.api}/${clubId}/members/stats`);
+  }
+
+  // ✅ ASSIGNER UN RÔLE À UN MEMBRE
+  assignRole(membershipId: number, role?: MemberRole): Observable<any> {
+    return this.http.patch(`${this.api}/members/${membershipId}/role`, {
+      role,
+    });
+  }
+
+  // ✅ RETIRER UN MEMBRE
+  removeMember(membershipId: number): Observable<any> {
+    return this.http.delete(`${this.api}/members/${membershipId}`);
+  }
+
+  // ========================
+  // APPLICATIONS MANAGEMENT
+  // ========================
+
+  // ✅ OBTENIR LES DEMANDES D'ADHÉSION
+  getApplications(
+    clubId: number,
+    page?: number,
+    limit?: number,
+    status?: string
+  ): Observable<ApplicationResponse> {
+    let params = new HttpParams();
+    if (page) params = params.set('page', page.toString());
+    if (limit) params = params.set('limit', limit.toString());
+    if (status) params = params.set('status', status);
+
+    return this.http.get<ApplicationResponse>(
+      `${this.api}/${clubId}/applications`,
+      { params }
+    );
+  }
+
+  // ✅ METTRE À JOUR LE STATUT D'UNE APPLICATION
+  updateApplicationStatus(
+    applicationId: number,
+    status: 'APPROVED' | 'REJECTED'
+  ): Observable<any> {
+    return this.http.patch(`${this.api}/applications/${applicationId}/status`, {
+      status,
+    });
+  }
+
+  // ========================
+  // EVENTS
+  // ========================
+  getUpcomingEvents(clubId: number): Observable<DashboardEvent[]> {
+    return this.http.get<DashboardEvent[]>(
+      `${this.api}/${clubId}/dashboard/upcoming-events`
+    );
+  }
+
+  getTotalEventsByClub(clubId: number): Observable<number> {
+    return this.http.get<number>(`${this.api}/${clubId}/dashboard/total-events`);
+  }
+
+  // ========================
+  // UTILITIES
+  // ========================
+  getLoading() {
+    return this.loading();
+  }
+
+  clubStatsValue() {
+    return this.clubStats();
+  }
+
+  pendingMembersValue() {
+    return this.pendingMembers();
+  }
 }

@@ -149,7 +149,8 @@
     <div class="modal-overlay" *ngIf="showContactModal()" (click)="showContactModal.set(false)">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <app-contact [clubName]="membershipResource.value()?.club?.name || 'le club'"
-                (close)="showContactModal.set(false)" (submitted)="onSendMessage($event)"></app-contact>
+                [recipientEmail]="membershipResource.value()?.club?.contactEmail || ''"
+                (close)="showContactModal.set(false)"></app-contact>
         </div>
     </div>
 

@@ -1,0 +1,102 @@
+<div class="documents-container" [class.loading]="isLoading()">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <button class="btn-back" [routerLink]="['/club-responsability', clubId()]">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <div class="header-text">
+                <h1>Coffre-fort du Club</h1>
+                <p>Gérez et consultez les documents de <strong>{{ club()?.name }}</strong></p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <label class="btn-upload">
+                <i class="bi bi-cloud-arrow-up" *ngIf="!isUploading()"></i>
+                <span class="loader-small" *ngIf="isUploading()"></span>
+                {{ isUploading() ? 'Téléversement...' : 'Ajouter un fichier' }}
+                <input type="file" (change)="onFileSelected($event)" hidden [disabled]="isUploading()">
+            </label>
+        </div>
+    </header>
+
+    <!-- Tabs & Filters -->
+    <div class="content-toolbar">
+        <div class="tabs">
+            <button [class.active]="activeTab() === 'all'" (click)="setTab('all')">
+                <i class="bi bi-collection"></i> Tous
+            </button>
+            <button [class.active]="activeTab() === 'image'" (click)="setTab('image')">
+                <i class="bi bi-images"></i> Images
+            </button>
+            <button [class.active]="activeTab() === 'pdf'" (click)="setTab('pdf')">
+                <i class="bi bi-file-pdf"></i> Documents
+            </button>
+        </div>
+
+        <div class="stats">
+            <span>{{ totalDocuments() }} fichiers</span>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="documents-grid" *ngIf="documents().length > 0; else emptyState">
+        @for (doc of documents(); track doc.id) {
+        <div class="doc-card" [attr.data-type]="doc.type.split('/')[0]">
+            <div class="card-media">
+                <div class="icon-wrapper">
+                    <i class="bi" [ngClass]="getFileIcon(doc.type)"></i>
+                </div>
+            </div>
+
+            <div class="card-info">
+                <h3 [title]="doc.name">{{ doc.name }}</h3>
+                <div class="meta">
+                    <span class="size">{{ formatSize(doc.size) }}</span>
+                    <span class="dot"></span>
+                    <span class="date">{{ doc.createdAt | date:'shortDate' }}</span>
+                </div>
+                <div class="owner" *ngIf="doc.user">
+                    <i class="bi bi-person"></i> {{ doc.user.firstName }}
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <button class="action-btn download" (click)="download(doc)" title="Télécharger">
+                    <i class="bi bi-download"></i>
+                </button>
+                <button class="action-btn delete" (click)="delete(doc)" title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrapper" *ngIf="totalPages() > 1">
+        <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()"
+            (pageChange)="currentPage.set($event)">
+        </app-pagination>
+    </div>
+
+    <!-- Empty State -->
+    <ng-template #emptyState>
+        <div class="empty-state" *ngIf="!isLoading()">
+            <div class="empty-visual">
+                <i class="bi bi-folder-x"></i>
+            </div>
+            <h2>Aucun fichier trouvé</h2>
+            <p>Commencez par ajouter des documents à votre club.</p>
+            <label class="btn-primary-outline">
+                Surligner et uploader
+                <input type="file" (change)="onFileSelected($event)" hidden>
+            </label>
+        </div>
+    </ng-template>
+
+    <div class="loading-overlay" *ngIf="isLoading()">
+        <app-loader> </app-loader>
+    </div>
+</div>
