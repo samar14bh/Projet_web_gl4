@@ -9,12 +9,13 @@ import { Membership } from '../memberships/entities/membership.entity';
 import { Application } from '../memberships/entities/application.entity';
 import { User } from '../users/entities/user.entity';
 import { Club } from './entities/club.entity';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateApplicationDto } from '../memberships/dto/create-application.dto';
 import { CreateMembershipDto } from '../memberships/dto/create-membership.dto';
 import { Status } from '../common/enums/status.enum';
 import { MemberRole } from '../common/enums/member-role.enum';
-import {ApplicationResponseDto} from "../memberships/dto/application-response.dto";
+import { ApplicationResponseDto } from "../memberships/dto/application-response.dto";
+import { MembershipClubDto } from '../memberships/dto/membership-club.dto';
 
 /**
  * Service pour gérer les adhésions (memberships) et les candidatures (applications)
@@ -88,7 +89,7 @@ export class MembershipsService {
             club
         });
 
-        const app=await this.applicationRepository.save(application)
+        const app = await this.applicationRepository.save(application)
         return this.toResponseDto(app)
     }
     /**
@@ -234,7 +235,7 @@ export class MembershipsService {
      * Récupérer toutes les candidatures d'un utilisateur
      */
     async getUserApplications(userId: number): Promise<ApplicationResponseDto[]> {
-        const application= await this.applicationRepository.find({
+        const application = await this.applicationRepository.find({
             where: { user: { id: userId } },
             relations: ['club', 'user'], // Added 'user' to load user data
             order: { createdAt: 'DESC' },
@@ -309,7 +310,7 @@ export class MembershipsService {
         return this.toResponseDto(application);
     }
 
-    async deleteApplication(applicationId:number){
+    async deleteApplication(applicationId: number) {
         const application = await this.applicationRepository.findOne({
             where: { id: applicationId },
         });
@@ -327,6 +328,34 @@ export class MembershipsService {
 
 
     }
+
+
+    async getAllClubSpecialMemberships(userId: number): Promise<MembershipClubDto[]> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new NotFoundException(`Utilisateur avec ID ${userId} introuvable`);
+        }
+
+        const memberships = await this.membershipRepository.find({
+            where: {
+                user: { id: userId },
+                role: Not(MemberRole.MEMBER)
+            },
+            relations: ['club'],
+            order: { createdAt: 'DESC' },
+        });
+        return memberships.map(m => ({
+            id: m.club.id,
+            name: m.club.name,
+            description: m.club.description,
+            logo: m.club.logo,
+            userRole: m.role,
+            membershipId: m.id,
+            dateDebut: m.dateDebut
+        }));
+    }
+
+
     toResponseDto(application: Application): ApplicationResponseDto {
         return {
             id: application.id,
