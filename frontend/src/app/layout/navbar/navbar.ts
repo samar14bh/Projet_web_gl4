@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../Core/services/auth.service';
+import { DefaultImagePipe } from '../../shared/pipes/default-image.pipe';
 
 interface Notification {
   id: number;
@@ -14,13 +17,16 @@ interface Notification {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DefaultImagePipe, RouterModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
 export class NavbarComponent {
-  showNotifications = false;
-  showUserMenu = false;
+  showNotifications = signal(false);
+  showUserMenu = signal(false);
+  private readonly authService = inject(AuthService);
+  user = this.authService.currentUser;
+
 
   notifications: Notification[] = [
     {
@@ -52,18 +58,16 @@ export class NavbarComponent {
     }
   ];
 
-  get unreadCount(): number {
-    return this.notifications.filter(n => !n.read).length;
-  }
+  unreadCount = computed(() => this.notifications.filter(n => !n.read).length);
 
   toggleNotifications(): void {
-    this.showNotifications = !this.showNotifications;
-    this.showUserMenu = false;
+    this.showNotifications.update(s => !s);
+    this.showUserMenu.set(false);
   }
 
   toggleUserMenu(): void {
-    this.showUserMenu = !this.showUserMenu;
-    this.showNotifications = false;
+    this.showUserMenu.update(s => !s);
+    this.showNotifications.set(false);
   }
 
   markAsRead(notification: Notification): void {

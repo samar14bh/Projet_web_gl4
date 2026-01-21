@@ -9,6 +9,7 @@ import { Club } from '../../Core/models/club.model';
 import { DefaultImagePipe } from "../../shared/pipes/default-image.pipe";
 
 import { Router, RouterModule } from '@angular/router';
+import {AuthService} from '../../Core/services/auth.service';
 
 @Component({
   selector: 'app-user-clubs',
@@ -20,7 +21,8 @@ import { Router, RouterModule } from '@angular/router';
 export class UserClubs {
   private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
-  private readonly USER_ID = 1;
+  private readonly authService=inject(AuthService);
+  private readonly USER_ID = Number(this.authService.currentUser()?.id ?? 0);
   readonly pageSize = 3;
   readonly Math = Math;
 

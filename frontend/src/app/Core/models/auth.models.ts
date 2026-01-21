@@ -36,7 +36,7 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
-  requiresOtp?: boolean; 
+  requiresOtp?: boolean;
 }
 
 export interface User {

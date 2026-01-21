@@ -136,6 +136,44 @@
   position: relative;
   overflow: hidden;
 }
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  color: #fff;
+  background: linear-gradient(135deg, #0044d5, #71b6fb);
+
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+  transition: all 0.25s ease;
+}
+
+.login-btn i {
+  font-size: 1.1rem;
+}
+
+.login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.35);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25);
+}
+
+.login-btn:focus-visible {
+  outline: 2px solid #c7d2fe;
+  outline-offset: 3px;
+}
 
 .status-indicator {
   display: flex;
@@ -1084,3 +1122,5 @@
   pointer-events: none;
   z-index: -1;
 }
+
+

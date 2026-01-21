@@ -17,6 +17,7 @@ import { EventStatus, EventType } from '../../Core/models/event.model';
 import { UserEventsCard } from '../../features/events/user-events-card/user-events-card';
 import { PaginationComponent } from '../../shared/components/pagination/pagination';
 import { Error } from '../../shared/components/error/error';
+import {AuthService} from '../../Core/services/auth.service';
 
 type FilterType = 'all' | 'upcoming' | 'past';
 
@@ -37,10 +38,10 @@ interface FilterState {
 })
 export class UserEvents {
   private readonly eventService = inject(EventService);
-  private readonly USER_ID = 1;
+  private readonly authService = inject(AuthService);
+  private readonly USER_ID = Number(this.authService.currentUser()?.id ?? 0);
   readonly pageSize = 3;
 
-  // Optional clubId to switch to "Discovery" mode
   readonly clubId = input<string>();
 
   readonly currentPage = signal(1);

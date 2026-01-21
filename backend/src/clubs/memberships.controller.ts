@@ -16,6 +16,7 @@ import { CreateMembershipDto } from '../memberships/dto/create-membership.dto';
 import { ApplicationResponseDto } from '../memberships/dto/application-response.dto';
 import { Membership } from '../memberships/entities/membership.entity';
 import { MemberRole } from '../common/enums/member-role.enum';
+import {MembershipClubDto} from "../memberships/dto/membership-club.dto";
 
 /**
  * Controller pour gérer les adhésions (memberships) et les candidatures (applications)
@@ -133,5 +134,14 @@ export class MembershipsController {
     ): Promise<void> {
         await this.membershipsService.deleteApplication(applicationId);
     }
+
+
+    @Get('special-memberships/users/:userId')
+    async getClubSpecialMemberships(
+        @Param('userId', ParseIntPipe) userId: number,
+    ): Promise<MembershipClubDto[]> {
+        return await this.membershipsService.getAllClubSpecialMemberships(userId);
+    }
+
 
 }
