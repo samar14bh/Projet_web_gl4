@@ -3,6 +3,9 @@ import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 import {roleGuard} from './Core/guards/role.guard';
 import { guestGuard } from './Core/guards/guest.guard';
+import {CheckoutComponent} from './features/checkout/checkout';
+import {PaymentPageComponent} from './features/member/payment-page/payment-page';
+import { roleGuard } from './Core/guards/role.guard';
 
 
 /**
@@ -132,58 +135,85 @@ export const routes: Routes = [
         title: 'Inscription réussie'
       },
 
-       {
-      path: 'notifications',
-      loadComponent: () => import('./Pages/notifications/notifications')
-        .then(m => m.NotificationComponent),
-      title: 'Notifications',
-         canActivate: [roleGuard],
+      {
+        path: 'notifications',
+        loadComponent: () => import('./Pages/notifications/notifications')
+          .then(m => m.NotificationComponent),
+        title: 'Notifications',
+        canActivate: [roleGuard],
         data: { role: 'USER' }
-    },
-       {
+      },
+      {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
         title: 'Inscription réussie'
       },
       {
-        path: 'payment',  // ← PAGE 11: Payment Page
-        loadComponent: () => import('./features/member/payment-page/payment-page').then(m => m.PaymentPageComponent),
-
-        title: 'Paiement'
+        path: 'payment',
+        loadComponent: () => import('./features/member/payment-page/payment-page')
+          .then(m => m.PaymentPageComponent),
+        data: { title: 'Paiement Sécurisé' }
       },
       {
-        path: 'payment/success',  // Payment Success Page
-        loadComponent: () => import('./features/member/payment-success/payment-success').then(m => m.PaymentSuccessComponent),
-        title: 'Paiement confirmé'
+        path: 'checkout',
+        loadComponent: () => import('./features/checkout/checkout')
+          .then(m => m.CheckoutComponent),
+        data: { title: 'Finaliser votre achat' }
       },
+      {
+        path: 'payment/success',
+        loadComponent: () => import('./features/member/payment-success/payment-success')
+          .then(m => m.PaymentSuccessComponent),
+        data: { title: 'Paiement réussi' }
+      },
+
       {
         path: 'my-payments',  // ← PAGE 10
         loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
         title: 'Mes paiements'
       },
+      // Dashboard du club avec clubId
       {
-        path: 'club-manager/dashboard',  // ← PAGE 12
-        loadComponent: () => import('./features/club-manager/dashboard/dashboard').then(m => m.ClubManagerDashboardComponent),
-        title: 'Dashboard Responsable'
+        path: 'club-manager/:clubId/dashboard',
+        loadComponent: () => import('./features/club-manager/dashboard/dashboard')
+          .then(m => m.ClubManagerDashboardComponent),
+        title: 'Tableau de bord du club'
       },
+
+      // Gestion du club avec clubId
       {
-        path: 'club-manager/manage-club',  // ← PAGE 13
-        loadComponent: () => import('./features/club-manager/manage-club/manage-club').then(m => m.ManageClubComponent),
-        title: 'Gérer mon club'
+        path: 'club-manager/:clubId/manage-club',
+        loadComponent: () => import('./features/club-manager/manage-club/manage-club')
+          .then(m => m.ManageClubComponent),
+        title: 'Gérer le club'
       },
+
+      // Gestion des membres avec clubId
       {
-        path: 'club-manager/manage-members',  // ← PAGE 14
-        loadComponent: () => import('./features/club-manager/manage-members/manage-members').then(m => m.ManageMembersComponent),
+        path: 'club-manager/:clubId/manage-members',
+        loadComponent: () => import('./features/club-manager/manage-members/manage-members')
+          .then(m => m.ManageMembersComponent),
         title: 'Gérer les membres'
+      },
+      {
+        path: 'club-responsability/:membershipId',
+        loadComponent: () => import('./Pages/club-responsability/club-responsability').then(m => m.ClubResponsability),
+        title: 'Responsabilités Club'
+      },
+      {
+        path: 'club-responsability/:clubId/documents',
+        loadComponent: () => import('./Pages/club-documents/club-documents').then(m => m.ClubDocuments),
+        title: 'Documents du Club'
       }
 
 
-,
-    {path: '**',
-      component: PageNotFound,
+      ,
+      {
+        path: '**',
+        component: PageNotFound,
         title: 'Page non trouvée'
-    }
+      }
 
     ]
   }

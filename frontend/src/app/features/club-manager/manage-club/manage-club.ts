@@ -1,208 +1,300 @@
-import { Component, signal, OnInit, effect, inject, computed } from '@angular/core';
+import { Component, signal, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
 import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
 import { TabItem } from '../../../shared/interfaces/components.interface';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
-import { EventService } from '../../../Core/services/event.service';
-import { EventStatus } from '../../../Core/models/event.model';
 import { ClubContextService } from '../../../Core/services/club-context.service';
-import { ClubSelectorComponent } from '../components/club-selector/club-selector';
+import {Club} from '../../../Core/interfaces/club-manager.interface';
 
-/**
- * PAGE 13: Manage Club (Enhanced)
- * Comprehensive club management with info, members, and events preview
- */
+
 @Component({
-    selector: 'app-manage-club',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, StatCardComponent, ClubSelectorComponent],
-    templateUrl: './manage-club.html',
-    styleUrl: './manage-club.css',
+  selector: 'app-manage-club',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, StatCardComponent],
+  templateUrl: './manage-club.html',
+  styleUrl: './manage-club.css',
 })
-export class ManageClubComponent {
-    private clubContext = inject(ClubContextService);
+export class ManageClubComponent implements OnInit {
+  // SERVICES
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private clubContext = inject(ClubContextService);
+  private clubManagerService = inject(ClubManagerService);
 
-    // Signals
-    activeTab = signal<string>('info');
-    currentClubId = computed(() => this.clubContext.currentClubId());
+  // SIGNAUX - ÉTAT DE LA PAGE
+  activeTab = signal<string>('info');
+  clubId = signal<number | null>(null);
+  saving = signal(false);
 
-    saving = signal(false);
-    editMode = signal(false);
+  // SIGNAUX - NOTIFICATION
+  notification = signal<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({
+    type: null,
+    message: '',
+  });
+  notificationTimeout: any;
 
-    // Club data signals
-    clubName = signal('');
-    clubDescription = signal('');
-    clubEmail = signal('');
-    clubLogo = signal('');
-    isPublic = signal(false);
-    membershipFee = signal(0);
-    approvalRequired = signal(true);
+  // SIGNAUX - DONNÉES DU CLUB
+  clubName = signal('');
+  clubDescription = signal('');
+  clubEmail = signal('');
+  clubLogo = signal('');
+  clubCoverImage = signal('');
+  categoryId = signal<number | null>(null);
+  categoryName = signal('');
+  categoryIcon = signal('');
+  isPublic = signal(false);
+  membershipFee = signal<number>(0);
+  approvalRequired = signal(true);
+  isActive = signal(true);
+  creationDate = signal<string>('');
 
-    // Preview data
-    recentMembers = signal<any[]>([]);
-    upcomingEvents = signal<any[]>([]);
+  // SIGNAUX - STATISTIQUES
+  totalMembers = signal(0);
+  totalEvents = signal(0);
+  pendingRequests = signal(0);
+  totalRevenue = signal(0);
+  monthlyRevenue = signal(0);
 
-    // Tab configuration
-    tabs = signal<TabItem[]>([
-        { id: 'info', label: 'Informations', icon: 'info-circle' },
-        { id: 'members', label: 'Membres', icon: 'people' },
-        { id: 'events', label: 'Événements', icon: 'calendar-event' },
-        { id: 'settings', label: 'Paramètres', icon: 'gear' },
-    ]);
+  // SIGNAUX - DONNÉES PRÉVISUALISÉES
+  upcomingEvents = signal<any[]>([]);
 
-    constructor(
-        private clubManagerService: ClubManagerService,
-        private eventService: EventService
-    ) {
-        effect(() => {
-            if (this.currentClubId()) {
-                this.loadClubData();
-            }
-        });
+  // CONFIGURATION DES ONGLETS
+  tabs = signal<TabItem[]>([
+    { id: 'info', label: 'Informations', icon: 'info-circle' },
+    { id: 'events', label: 'Événements', icon: 'calendar-event' },
+    { id: 'settings', label: 'Paramètres', icon: 'gear' },
+  ]);
+
+  // CATEGORY COLOR MAPPING
+  categoryColorMap: Record<string, string> = {
+    'Sports': '#EF4444',
+    'Culture': '#F59E0B',
+    'Éducation': '#3B82F6',
+    'Social': '#10B981',
+    'Loisir': '#8B5CF6',
+    'Professionnel': '#06B6D4',
+  };
+
+  constructor() {
+    effect(() => {
+      const id = this.clubId();
+      if (id) {
+        this.loadClubData();
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      const id = params['clubId'];
+      if (id) {
+        this.clubId.set(+id);
+        this.clubContext.setCurrentClub(+id);
+      } else {
+        this.router.navigate(['/club-manager/select']);
+      }
+    });
+  }
+
+  // GESTION DES NOTIFICATIONS
+  showNotification(type: 'success' | 'error', message: string) {
+    this.notification.set({ type, message });
+
+    // Clear any existing timeout
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
     }
 
-    // ngOnInit() removed as effect handles initial load
+    // Auto-hide after 4 seconds
+    this.notificationTimeout = setTimeout(() => {
+      this.notification.set({ type: null, message: '' });
+    }, 4000);
+  }
 
-    loadClubData() {
-        const clubId = this.currentClubId();
-        if (!clubId) return;
-
-        // Load Club Details
-        this.clubManagerService.getClubDetails(clubId).subscribe({
-            next: (club) => {
-                if (club.name) this.clubName.set(club.name);
-                if (club.description) this.clubDescription.set(club.description);
-                if (club.contactEmail) this.clubEmail.set(club.contactEmail);
-                if (club.isPublic !== undefined) this.isPublic.set(club.isPublic);
-                if (club.membershipFeeAmount) this.membershipFee.set(club.membershipFeeAmount);
-                if (club.approvalRequired !== undefined) this.approvalRequired.set(club.approvalRequired);
-            }
-        });
-
-        // Load Club Members (limit 5 for preview)
-        this.clubManagerService.getMembers(clubId, 'APPROVED', 1, 5).subscribe({
-            next: (response) => {
-                const members = response.data || [];
-                this.recentMembers.set(members.map((m: any) => ({
-                    id: m.id,
-                    name: `${m.user.name} ${m.user.lastName}`,
-                    role: m.role || 'member',
-                    joinDate: m.joinDate || m.createdAt
-                })));
-            }
-        });
-
-        // Load Upcoming Events (limit 3)
-        this.eventService.getEvents({ clubId, status: EventStatus.UPCOMING, limit: 3 }).subscribe({
-            next: (response) => {
-                this.upcomingEvents.set(response.data.map((e: any) => ({
-                    id: e.id,
-                    title: e.title,
-                    date: e.startDate,
-                    participants: e.capacity // Placeholder until we have registrations count
-                })));
-            }
-        });
+  closeNotification() {
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
     }
+    this.notification.set({ type: null, message: '' });
+  }
 
-    onTabChange(tabId: string) {
-        this.activeTab.set(tabId);
+  // CHARGEMENT DES DONNÉES
+  loadClubData() {
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    // Charger les détails du club
+    this.clubManagerService.getClubDetails(clubId).subscribe({
+      next: (club: Club) => {
+        if (club.logo) this.clubLogo.set(club.logo);
+        if (club.coverImage) this.clubCoverImage.set(club.coverImage);
+        if (club.name) this.clubName.set(club.name);
+        if (club.description) this.clubDescription.set(club.description);
+        if (club.contactEmail) this.clubEmail.set(club.contactEmail);
+
+        // Récupérer les données de la catégorie
+        if (club.category) {
+          this.categoryId.set(club.category.id);
+          this.categoryName.set(club.category.name);
+          this.categoryIcon.set(club.category.icon);
+        }
+
+        if (club.isPublic !== undefined) this.isPublic.set(club.isPublic);
+        if (club.membershipFeeAmount)
+          this.membershipFee.set(club.membershipFeeAmount);
+        if (club.isActive !== undefined) this.isActive.set(club.isActive);
+        if (club.creationDate) this.creationDate.set(club.creationDate);
+        this.approvalRequired.set(club.approvalRequired ?? true);
+      },
+      error: (err) => {
+        console.error('Erreur chargement détails club:', err);
+      },
+    });
+
+    // Charger les statistiques détaillées
+    this.clubManagerService.getClubDetailedStats(clubId).subscribe({
+      next: (stats) => {
+        this.totalMembers.set(stats.totalMembers || 0);
+        this.totalEvents.set(stats.totalEvents || 0);
+        this.pendingRequests.set(stats.pendingRequests || 0);
+        this.totalRevenue.set(stats.totalRevenue || 0);
+        this.monthlyRevenue.set(stats.monthlyRevenue || 0);
+      },
+      error: (err) => {
+        console.error('Erreur chargement statistiques:', err);
+      },
+    });
+
+    // Charger les événements à venir
+    this.clubManagerService.getUpcomingEvents(clubId).subscribe({
+      next: (events: any[]) => {
+        const mapped = (events || []).map((e: any) => ({
+          id: e.id,
+          title: e.name || e.title,
+          date: e.startDate,
+          participants: e.capacity || 0,
+        }));
+        this.upcomingEvents.set(mapped);
+      },
+      error: (err) => {
+        console.error('Erreur chargement événements:', err);
+      },
+    });
+  }
+
+  // GESTION DES ONGLETS
+  onTabChange(tabId: string) {
+    this.activeTab.set(tabId);
+  }
+
+  // ACTIONS DE NAVIGATION
+  goBack() {
+    this.router.navigate(['/club-manager', this.clubId(), 'dashboard']);
+  }
+
+  // ACTIONS DE SAUVEGARDE
+  saveClubInfo() {
+    this.saving.set(true);
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    this.clubManagerService
+      .updateClub(clubId, {
+        name: this.clubName(),
+        description: this.clubDescription(),
+        contactEmail: this.clubEmail(),
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.showNotification('success', 'Informations mises à jour avec succès');
+        },
+        error: (err) => {
+          this.saving.set(false);
+          console.error('Erreur sauvegarde info:', err);
+          this.showNotification('error', 'Erreur lors de la mise à jour des informations');
+        },
+      });
+  }
+
+  saveSettings() {
+    this.saving.set(true);
+    const clubId = this.clubId();
+    if (!clubId) return;
+
+    this.clubManagerService
+      .updateClubSettings(clubId, {
+        isPublic: this.isPublic(),
+        membershipFeeAmount: Number(this.membershipFee()),
+        approvalRequired: this.approvalRequired(),
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.showNotification('success', 'Paramètres mis à jour avec succès');
+        },
+        error: (err) => {
+          this.saving.set(false);
+          console.error('Erreur sauvegarde paramètres:', err);
+          this.showNotification('error', 'Erreur lors de la mise à jour des paramètres');
+        },
+      });
+  }
+
+  // NAVIGATION
+  navigateToDashboard() {
+    const clubId = this.clubId();
+    if (clubId) {
+      this.router.navigate([`/club-manager/${clubId}/dashboard`]);
     }
+  }
 
-    toggleEditMode() {
-        this.editMode.set(!this.editMode());
+  navigateToEvents() {
+    const clubId = this.clubId();
+    if (clubId) {
+      this.router.navigate([`/events`], { queryParams: { clubId } });
     }
+  }
 
-    saveClubInfo() {
-        this.saving.set(true);
-        const clubId = this.currentClubId();
-        if (!clubId) return;
+  // GET CATEGORY INFO
+  getCategoryInfo() {
+    const color = this.categoryColorMap[this.categoryName()] || '#6B7280';
+    const icon = this.categoryIcon() || 'bi-question-circle';
+    return {
+      name: this.categoryName(),
+      color: color,
+      icon: `bi ${icon}`,
+    };
+  }
 
-        this.clubManagerService.updateClub(clubId, {
-            name: this.clubName(),
-            description: this.clubDescription(),
-            contactEmail: this.clubEmail(),
-        }).subscribe({
-            next: () => {
-                this.saving.set(false);
-                this.editMode.set(false);
-                alert('Informations mises à jour avec succès');
-            },
-            error: () => {
-                this.saving.set(false);
-                alert('Erreur lors de la mise à jour');
-            },
-        });
+  // FORMATAGE
+  formatDate(dateString: string | null | undefined): string {
+    try {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString as string;
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch (error) {
+      return dateString || '-';
     }
+  }
 
-    savePricing() {
-        this.saving.set(true);
-        const clubId = this.currentClubId();
-        if (!clubId) return;
-
-        this.clubManagerService.updateClub(clubId, {
-            isPublic: this.isPublic(),
-            membershipFeeAmount: this.membershipFee(),
-        }).subscribe({
-            next: () => {
-                this.saving.set(false);
-                alert('Tarification mise à jour avec succès');
-            },
-            error: () => {
-                this.saving.set(false);
-                alert('Erreur lors de la mise à jour');
-            },
-        });
-    }
-
-    saveSettings() {
-        this.saving.set(true);
-        const clubId = this.currentClubId();
-        if (!clubId) return;
-
-        this.clubManagerService.updateClub(clubId, {
-            approvalRequired: this.approvalRequired(),
-        }).subscribe({
-            next: () => {
-                this.saving.set(false);
-                alert('Paramètres mis à jour avec succès');
-            },
-            error: () => {
-                this.saving.set(false);
-                alert('Erreur lors de la mise à jour');
-            },
-        });
-    }
-
-    formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-    }
-
-    getRoleBadge(role: string): string {
-        const badges: Record<string, string> = {
-            president: 'badge-primary',
-            treasurer: 'badge-success',
-            secretary: 'badge-secondary',
-            member: 'badge-default',
-        };
-        return badges[role] || 'badge-default';
-    }
-
-    getRoleLabel(role: string): string {
-        const labels: Record<string, string> = {
-            president: 'Président',
-            treasurer: 'Trésorier',
-            secretary: 'Secrétaire',
-            member: 'Membre',
-        };
-        return labels[role] || role;
-    }
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('fr-TN', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
 }

@@ -1,7 +1,10 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
+import { ClubService } from '../../Core/services/club.service';
+import { MembershipClubDto } from '../../Core/dtos/membership-club.dto';
+import { ClubResponsabilityService } from '../../Core/services/club-responsability.service';
 
 interface MenuItem {
   icon: string;
@@ -9,7 +12,7 @@ interface MenuItem {
   route: string;
   badge?: string;
   isLogout?: boolean;
-  showWhenAuthenticated?: boolean; // Nouvelle propriété
+  showWhenAuthenticated?: boolean;
 }
 
 @Component({
@@ -21,11 +24,12 @@ interface MenuItem {
 })
 export class SidebarComponent {
   private authService = inject(AuthService);
+  private clubService = inject(ClubService);
   private router = inject(Router);
+  private clubResponsabilityService = inject(ClubResponsabilityService);
 
-  // Nouvelle propriété pour vérifier si l'utilisateur est connecté
-  isLoggedIn = computed(() => this.authService.isAuthenticated());
-
+  isLoggedIn = signal(true);
+  specialClubs = this.clubService.getClubsWithSpecialMembershipsResource(() => this.authService.currentUser()?.id ?? 0);
   onMenuItemClick(item: MenuItem): void {
     if (item.isLogout) {
       this.onLogout();
@@ -33,7 +37,7 @@ export class SidebarComponent {
   }
 
   onLogout(): void {
-    
+
     if (this.authService.logout) {
       this.authService.logout().subscribe({
         next: (response) => {
@@ -49,8 +53,15 @@ export class SidebarComponent {
         }
       });
     } else {
-  
+
       this.router.navigate(['/login']);
     }
   }
+
+  selectClub(club: MembershipClubDto): void {
+    this.clubResponsabilityService.setClub(club);
+    this.router.navigate(['/club-responsability', club.membershipId]);
+  }
+
+
 }

@@ -437,6 +437,15 @@
 .action-btn.delete:hover {
   background: rgba(239, 68, 68, 0.2);
 }
+.action-btn.admin {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
+
+.action-btn.admin:hover {
+  background: #a855f7;
+  color: white;
+}
 
 /* ========== PAGINATION ========== */
 
@@ -833,4 +842,5 @@
   .pagination-pages {
     display: none;
   }
+
 }

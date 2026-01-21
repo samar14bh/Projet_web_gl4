@@ -4,18 +4,17 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { MoreThan, Repository, SelectQueryBuilder } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FilterEventDto } from './dto/filter-event.dto';
 import { EventStatus, RegistrationStatus } from '../common/enums';
-import { Registration } from '../events/entities/registration.entity';
-import { PaginatedResult } from "../common/pagination/pagination.dto";
-import { paginate } from "../common/pagination/paginate";
-import { UserEventDto } from "./dto/user-event.dto";
-import { EventMapper } from "./mapper/event.mapper";
-
+import { Registration } from './entities/registration.entity';
+import { PaginatedResult } from '../common/pagination/pagination.dto';
+import { UserEventDto } from './dto/user-event.dto';
+import { EventMapper } from './mapper/event.mapper';
+import { DashboardEventDto } from '../club-manager/dto/dashboard-event.dto';
 
 /**
  * Service pour la gestion des événements
@@ -27,8 +26,7 @@ export class EventsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
-  ) {
-  }
+  ) {}
 
   /**
    * Créer un nouvel événement
@@ -331,7 +329,7 @@ export class EventsService {
   async findUserEvents(
     userId: number,
     filter: FilterEventDto,
-    registeredOnly: boolean = false
+    registeredOnly: boolean = false,
   ): Promise<PaginatedResult<UserEventDto>> {
     const query = this.eventRepository
       .createQueryBuilder('event')
@@ -368,23 +366,33 @@ export class EventsService {
       .getManyAndCount();
 
     return {
-      data: events.map(event => EventMapper.toUserEventDto(event, userId)),
+      data: events.map((event) => EventMapper.toUserEventDto(event, userId)),
       total,
       page,
       limit,
     };
   }
-  async getEventDetails(eventId: number, userId: number): Promise<UserEventDto> {
+  async getEventDetails(
+    eventId: number,
+    userId: number,
+  ): Promise<UserEventDto> {
     const event = await this.eventRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.club', 'club')
-      .leftJoinAndSelect('event.registrations', 'registrations', 'registrations.user.id = :userId', { userId })
+      .leftJoinAndSelect(
+        'event.registrations',
+        'registrations',
+        'registrations.user.id = :userId',
+        { userId },
+      )
       .leftJoinAndSelect('registrations.user', 'user')
       .where('event.id = :eventId', { eventId })
       .getOne();
 
     if (event) {
-      console.log(`Event Details Loaded: ${event.title}, Regs: ${event.registrations?.length}`);
+      console.log(
+        `Event Details Loaded: ${event.title}, Regs: ${event.registrations?.length}`,
+      );
     }
 
     if (!event) {
@@ -393,9 +401,6 @@ export class EventsService {
 
     return EventMapper.toUserEventDto(event, userId);
   }
-
-
-
 
   private applyFilters(
     query: SelectQueryBuilder<Event>,
@@ -451,12 +456,43 @@ export class EventsService {
       (filter.order?.toUpperCase() as 'ASC' | 'DESC') || 'ASC';
 
     if (filter.sortBy === 'registrations') {
-      query
-        .groupBy('event.id')
-        .addGroupBy('club.id')
-        .orderBy(orderBy, order);
+      query.groupBy('event.id').addGroupBy('club.id').orderBy(orderBy, order);
     } else {
       query.orderBy(orderBy, order);
     }
+  }
+  async getUpcomingEventsForDashboard(
+    clubId: number,
+  ): Promise<DashboardEventDto[]> {
+    const events = await this.eventRepository.find({
+      where: {
+        club: { id: clubId },
+        startDate: MoreThan(new Date()),
+      },
+      order: { startDate: 'ASC' },
+      take: 5,
+    });
+
+    return events.map((e) => ({
+      id: e.id,
+      name: e.title,
+      startDate: e.startDate,
+    }));
+  }
+
+  async countUpcomingByClub(clubId: number): Promise<number> {
+    return this.eventRepository.count({
+      where: {
+        club: { id: clubId },
+        startDate: MoreThan(new Date()),
+      },
+    });
+  }
+  async countEventsByClub(clubId: number): Promise<number> {
+    return this.eventRepository.count({
+      where: {
+        club: { id: clubId },
+      },
+    });
   }
 }

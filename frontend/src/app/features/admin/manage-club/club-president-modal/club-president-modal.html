@@ -1,0 +1,103 @@
+<div class="president-modal">
+  <h2 class="modal-title">Administrateur du club {{ clubName() }}</h2>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (errorMessage()) {
+    <div class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading()) {
+    <div class="modal-content">
+      <!-- Président actuel -->
+      <div class="section">
+        <h3 class="section-title">Président actuel</h3>
+
+        @if (president()) {
+          <div class="president-card">
+            <div class="president-info">
+              @if (president()!.userImage) {
+                <img
+                  [src]="president()!.userImage"
+                  [alt]="president()!.userName"
+                  class="president-avatar"
+                />
+              } @else {
+                <div class="president-avatar-placeholder">
+                  {{ president()!.userName.charAt(0) }}
+                </div>
+              }
+              <div class="president-details">
+                <p class="president-name">{{ president()!.userName }}</p>
+                <p class="president-email">{{ president()!.userEmail }}</p>
+                <p class="president-date">
+                  Depuis le {{ president()!.dateDebut | date:'dd/MM/yyyy' }}
+                </p>
+              </div>
+            </div>
+            <app-button
+              label="Supprimer"
+              variant="danger"
+              (clicked)="removePresident()"
+              [loading]="isSubmitting()"
+              [disabled]="isSubmitting()"
+            />
+          </div>
+        } @else {
+          <div class="no-president">
+            <p>Aucun président assigné pour ce club</p>
+          </div>
+        }
+      </div>
+
+      <!-- Assigner un nouveau président -->
+      <div class="section">
+        <h3 class="section-title">Assigner un nouveau président</h3>
+
+        <div class="assign-form">
+          <select
+            [(ngModel)]="selectedUserId"
+            class="user-select"
+            [disabled]="isSubmitting()"
+          >
+            <option [ngValue]="null">Sélectionnez un utilisateur</option>
+            @for (user of allUsers(); track user.id) {
+              <option [ngValue]="user.id">
+                {{ user.name }} {{ user.lastName }} ({{ user.email }})
+              </option>
+            }
+          </select>
+
+          <app-button
+            label="Assigner"
+            variant="primary"
+            (clicked)="assignPresident()"
+            [loading]="isSubmitting()"
+            [disabled]="isSubmitting() || !selectedUserId()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <app-button
+        label="Fermer"
+        variant="ghost"
+        (clicked)="close()"
+        [disabled]="isSubmitting()"
+      />
+    </div>
+  }
+</div>

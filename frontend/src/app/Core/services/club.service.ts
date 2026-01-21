@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, httpResource } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Club,
@@ -11,6 +11,7 @@ import {
   UpdateClubDto,
 } from '../models/club.model';
 import { environment } from '../../../environments/environment';
+import { MembershipClubDto } from '../dtos/membership-club.dto';
 
 /**
  * Service pour gérer les clubs (Admin)
@@ -119,6 +120,25 @@ export class ClubService {
   createClub(dto: CreateClubDto): Observable<Club> {
     return this.http.post<Club>(this.apiUrl, dto);
   }
+  /**
+   * Créer un club avec upload de logo (FormData)
+   */
+  createClubWithLogo(formData: FormData): Observable<Club> {
+    return this.http.post<Club>(this.apiUrl, formData);
+  }
+  /**
+   * Mettre à jour un club avec upload de fichiers
+   */
+  updateClubWithLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/update-with-files`, formData);
+  }
+
+  /**
+   * Upload du logo d'un club
+   */
+  uploadLogo(clubId: number, formData: FormData): Observable<Club> {
+    return this.http.patch<Club>(`${this.apiUrl}/${clubId}/logo`, formData);
+  }
 
   /**
    * Mettre à jour un club
@@ -170,6 +190,51 @@ getUserClubMembershipStatus(clubId: number, userId: number): Observable<string> 
     responseType: 'text' as 'json'
   });
 }
+  /**
+   * Récupérer le président d'un club
+   */
+  getClubPresident(clubId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Assigner un nouveau président
+   */
+  assignPresident(clubId: number, userId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${clubId}/president`, { userId });
+  }
+
+  /**
+   * Supprimer le président actuel
+   */
+  removePresident(clubId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${clubId}/president`);
+  }
+
+  /**
+   * Récupérer tous les utilisateurs (pour la liste déroulante)
+   */
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/users`);
+  }
+
+
+  getClubsWithSpecialMemberships(userId: number | string): Observable<MembershipClubDto[]> {
+    return this.http.get<MembershipClubDto[]>(`${environment.apiUrl}/memberships/special-memberships/users/${userId}`);
+  }
+
+  /**
+   * Récupérer les clubs avec adhésion spéciale via httpResource (Angular 20)
+   */
+  getClubsWithSpecialMembershipsResource(userId: () => string | number | undefined) {
+    return httpResource<MembershipClubDto[]>(() => {
+      const id = userId();
+      if (!id) return undefined;
+      return `${environment.apiUrl}/memberships/special-memberships/users/${id}`;
+    });
+  }
+
+
 
 
 }

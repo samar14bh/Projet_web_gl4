@@ -72,6 +72,7 @@ export interface ClubsStats {
  */
 export interface CreateClubDto {
   name: string;
+  slug: string;
   description: string;
   logo?: string;
   coverImage?: string;
@@ -79,6 +80,7 @@ export interface CreateClubDto {
   isPublic: boolean;
   membershipFeeAmount: number;
   categoryId: number;
+  creationDate: string;
 }
 
 export interface UpdateClubDto extends Partial<CreateClubDto> {

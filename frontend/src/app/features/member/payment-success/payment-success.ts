@@ -1,86 +1,178 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
+import {CommonModule} from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PaymentService } from '../../../Core/services/payment.service';
 
 /**
- * Payment Success Page
- * Confirmation page after successful payment
+ * Page de Confirmation de Paiement
+ * Affiche la confirmation après un paiement réussi
+ *
+ * Route: /payment/success
+ * Query Params: paymentId, type (membership|event)
  */
 @Component({
-    selector: 'app-payment-success',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    templateUrl: './payment-success.html',
-    styleUrl: './payment-success.css',
+  selector: 'app-payment-success',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './payment-success.html',
+  styleUrl: './payment-success.css',
 })
 export class PaymentSuccessComponent implements OnInit {
-    paymentId = signal<number | null>(null);
-    paymentType = signal<'membership' | 'event'>('membership');
-    paymentDetails = signal<any>(null);
-    loading = signal(true);
-    currentDate = new Date(); // Pour utilisation dans le template
+  // ============================================
+  // SERVICES
+  // ============================================
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private paymentService = inject(PaymentService);
 
-    message = computed(() => {
-        if (this.paymentType() === 'membership') {
-            return {
-                title: 'Paiement de cotisation confirmé !',
-                description: 'Votre adhésion au club est maintenant active',
-                icon: 'bi-check-circle-fill',
-            };
-        } else {
-            return {
-                title: 'Inscription confirmée !',
-                description: 'Vous êtes maintenant inscrit à cet événement',
-                icon: 'bi-calendar-check-fill',
-            };
-        }
+  // ============================================
+  // SIGNAUX - DONNÉES DU PAIEMENT
+  // ============================================
+  /** ID du paiement complété */
+  paymentId = signal<number | null>(null);
+
+  /** Type de paiement: adhésion ou événement */
+  paymentType = signal<'membership' | 'event'>('membership');
+
+  /** Détails complets du paiement */
+  paymentDetails = signal<any>(null);
+
+  /** En attente du chargement des données */
+  loading = signal(true);
+
+  /** Date actuelle pour affichage */
+  currentDate = new Date();
+
+  // ============================================
+  // SIGNAUX CALCULÉS - MESSAGE
+  // ============================================
+  /** Message et icône selon le type de paiement */
+  message = computed(() => {
+    if (this.paymentType() === 'membership') {
+      return {
+        title: 'Paiement de cotisation confirmé !',
+        description: 'Votre adhésion au club est maintenant active',
+        icon: 'bi bi-check-circle-fill',
+      };
+    } else {
+      return {
+        title: 'Inscription confirmée !',
+        description: 'Vous êtes maintenant inscrit à cet événement',
+        icon: 'bi bi-calendar-check-fill',
+      };
+    }
+  });
+
+  // ============================================
+  // CYCLE DE VIE
+  // ============================================
+  ngOnInit() {
+    // Récupérer les paramètres de la page
+    this.route.queryParams.subscribe(params => {
+      if (params['paymentId']) {
+        this.paymentId.set(+params['paymentId']);
+        this.loadPaymentDetails(+params['paymentId']);
+      }
+      if (params['type']) {
+        this.paymentType.set(params['type']);
+      }
+      this.loading.set(false);
     });
+  }
 
-    constructor(
-        private route: ActivatedRoute,
-        private router: Router,
-        private paymentService: PaymentService
-    ) { }
+  // ============================================
+  // CHARGEMENT DES DONNÉES
+  // ============================================
 
-    ngOnInit() {
-        this.route.queryParams.subscribe(params => {
-            if (params['paymentId']) {
-                this.paymentId.set(+params['paymentId']);
-            }
-            if (params['type']) {
-                this.paymentType.set(params['type']);
-            }
-            this.loading.set(false);
+  /**
+   * Charger les détails du paiement
+   * Note: Si getPaymentDetails n'existe pas, on récupère les stats
+   */
+  loadPaymentDetails(paymentId: number) {
+    // Essayer de charger les détails complets du paiement
+    try {
+      // Vérifier si la méthode existe
+      if ('getPaymentDetails' in this.paymentService) {
+        (this.paymentService as any).getPaymentDetails(paymentId).subscribe({
+          next: (details: any) => {
+            this.paymentDetails.set(details);
+          },
+          error: (err: any) => {
+            console.error('Erreur lors du chargement des détails du paiement:', err);
+            // Ne pas bloquer sur l'erreur
+          }
         });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des détails:', error);
+    }
+  }
+
+  // ============================================
+  // ACTIONS UTILISATEUR
+  // ============================================
+
+  /**
+   * Télécharger le reçu du paiement au format PDF
+   */
+  downloadReceipt() {
+    const paymentId = this.paymentId();
+    if (!paymentId) {
+      alert('ID de paiement manquant');
+      return;
     }
 
-    downloadReceipt() {
-        const paymentId = this.paymentId();
-        if (!paymentId) return;
+    this.paymentService.downloadReceipt(paymentId).subscribe({
+      next: (blob: Blob) => {
+        // Créer un lien de téléchargement
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `recu-paiement-${paymentId}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err: any) => {
+        console.error('Erreur téléchargement reçu:', err);
+        alert('Erreur lors du téléchargement du reçu. Veuillez réessayer.');
+      }
+    });
+  }
 
-        this.paymentService.downloadReceipt(paymentId).subscribe({
-            next: (blob) => {
-                // Create download link
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `recu-${paymentId}.pdf`;
-                link.click();
-                window.URL.revokeObjectURL(url);
-            },
-            error: (err) => {
-                console.error('Error downloading receipt:', err);
-                alert('Erreur lors du téléchargement du reçu');
-            }
-        });
-    }
+  /**
+   * Naviguer vers l'historique des paiements
+   */
+  goToPayments() {
+    this.router.navigate(['/my-payments']);
+  }
 
-    goToPayments() {
-        this.router.navigate(['/member/my-payments']);
+  /**
+   * Naviguer vers le tableau de bord du club (si adhésion)
+   * ou vers l'événement (si inscription)
+   */
+  goToClubDashboard() {
+    if (this.paymentType() === 'membership' && this.paymentDetails()?.membership?.club?.id) {
+      // Rediriger vers le dashboard du club
+      this.router.navigate([`/club-manager/${this.paymentDetails().membership.club.id}/dashboard`]);
+    } else {
+      // Rediriger vers l'accueil
+      this.router.navigate(['/']);
     }
+  }
 
-    goToHome() {
-        this.router.navigate(['/']);
-    }
-}
+  /**
+   * Naviguer vers la page d'accueil
+   */
+  goToHome() {
+    this.router.navigate(['/']);
+  }
+
+  formatDate(dateString: Date): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }}

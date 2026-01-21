@@ -3,5 +3,6 @@
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api', // URL de votre backend NestJS
+  apiUrl: 'http://localhost:3000/api',
+  uploadsUrl: 'http://localhost:3000',
 };
