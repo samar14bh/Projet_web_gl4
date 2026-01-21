@@ -672,6 +672,57 @@ export class ClubsService {
     return 'NOT_MEMBER';
   }
 
+async getRecommendations(
+  userId: number,
+  limit: number = 3
+): Promise<any[]> {
+
+  if (!userId || isNaN(userId)) {
+    return [];
+  }
+  const memberships = await this.membershipRepository.find({
+    where: { user: { id: userId } },
+    relations: ['club', 'club.category'],
+  });
+
+  const joinedClubIds = memberships
+    .map(m => m.club?.id)
+    .filter((id): id is number => typeof id === 'number');
+
+  const preferredCategoryIds = [
+    ...new Set(
+      memberships
+        .map(m => m.club?.category?.id)
+        .filter((id): id is number => typeof id === 'number')
+    ),
+  ];
+  let query = this.clubRepository
+    .createQueryBuilder('club')
+    .leftJoin('club.category', 'category')
+    .leftJoin('club.memberships', 'membership')
+    .leftJoin('club.events', 'event') 
+    .select([
+      'club.id AS id',
+      'club.name AS name',
+      'club.description AS description',
+      'club.logo AS logo',
+      'club.cover_image AS coverImage', 
+      'club.creation_date AS creationDate',
+      'club.membership_fee_amount AS membershipFeeAmount',  
+      'club.isActive AS isActive',
+      'category.id AS categoryId', 
+      'category.name AS categoryName',
+      'COUNT(DISTINCT membership.id) AS members',
+      'COUNT(DISTINCT event.id) AS events',  
+    ])
+    .where('club.isActive = :isActive', { isActive: true })
+    .groupBy('club.id')
+    .addGroupBy('category.id')
+    .addGroupBy('category.name');
+
+  if (joinedClubIds.length > 0) {
+    query.andWhere('club.id NOT IN (:...joinedIds)', {
+      joinedIds: joinedClubIds,
   async getRecommendations(userId: number, limit: number = 3): Promise<any[]> {
     if (!userId || isNaN(userId)) {
       return [];
@@ -687,6 +738,9 @@ export class ClubsService {
       .map((m) => m.club?.id)
       .filter((id): id is number => typeof id === 'number');
 
+  let results = await query.limit(limit).getRawMany();
+  if (results.length === 0) {
+    results = await this.clubRepository
     const preferredCategoryIds = [
       ...new Set(
         memberships
@@ -700,10 +754,48 @@ export class ClubsService {
       .createQueryBuilder('club')
       .leftJoin('club.category', 'category')
       .leftJoin('club.memberships', 'membership')
+      .leftJoin('club.events', 'event')
       .select([
         'club.id AS id',
         'club.name AS name',
         'club.description AS description',
+        'club.logo AS logo',
+        'club.cover_image AS coverImage',
+        'club.creation_date AS creationDate',
+        'club.membership_fee_amount AS membershipFeeAmount',
+        'club.isActive AS isActive',
+        'category.id AS categoryId',
+        'category.name AS categoryName',
+        'COUNT(DISTINCT membership.id) AS members',
+        'COUNT(DISTINCT event.id) AS events',
+      ])
+      .where('club.isActive = true')
+      .andWhere(joinedClubIds.length > 0 
+        ? 'club.id NOT IN (:...joinedIds)' 
+        : '1=1', 
+        { joinedIds: joinedClubIds }
+      )
+      .groupBy('club.id')
+      .addGroupBy('category.id')
+      .addGroupBy('category.name')
+      .orderBy('members', 'DESC')  
+      .limit(limit)
+      .getRawMany();
+  }
+  return results.map(club => ({
+    id: Number(club.id),
+    name: club.name,
+    description: club.description,
+    logo: club.logo,
+    coverImage: club.coverImage,
+    creationDate: club.creationDate,
+    membershipFeeAmount: Number(club.membershipFeeAmount) || 0,
+    isActive: club.isActive,
+    categoryId: Number(club.categoryId),
+    categoryName: club.categoryName,
+    members: Number(club.members) || 0,
+    events: Number(club.events) || 0,
+  }));
         'club.logo AS logo', // 👈 Ajouté
         'club.creation_date AS creationDate', // 👈 Ajouté
         'club.isActive AS isActive',
@@ -763,6 +855,61 @@ export class ClubsService {
   private async deleteFile(filePath?: string) {
     if (!filePath) return;
 
+async getUserClubMembershipStatus(clubId: number, userId: number): Promise<string> {
+  const club = await this.clubRepository.findOne({ where: { id: clubId } });
+  if (!club) {
+    throw new NotFoundException(`Club avec l'ID ${clubId} introuvable`);
+  }
+
+  const membership = await this.membershipRepository
+    .createQueryBuilder('membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .andWhere('(membership.date_fin IS NULL OR membership.date_fin >= :now)', { 
+      now: new Date() 
+    })
+    .getOne();
+
+  if (membership) {
+    return `Membre ${membership.role.toLowerCase()}`;
+  }
+
+  const expiredMembership = await this.membershipRepository
+    .createQueryBuilder('membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .andWhere('membership.date_fin < :now', { now: new Date() })
+    .getOne();
+
+  if (expiredMembership) {
+    return "Ancien membre";
+  }
+
+  const application = await this.applicationRepository
+    .createQueryBuilder('application')
+    .innerJoin('application.membership', 'membership')
+    .where('membership.club_id = :clubId', { clubId })
+    .andWhere('membership.user_id = :userId', { userId })
+    .orderBy('application.created_at', 'DESC')
+    .getOne();
+
+  if (application) {
+    switch (application.status) {
+      case Status.PENDING:
+        return "Candidature en attente";
+      case Status.APPROVED:
+        return "Candidature approuvée";
+      case Status.REJECTED:
+        return "Candidature rejetée";
+      case Status.CONFIRMED:
+        return "Candidature confirmée";
+      default:
+        return "Candidature en cours";
+    }
+  }
+
+  return "Non membre";
+}
     const fullPath = join(process.cwd(), filePath);
 
     if (existsSync(fullPath)) {

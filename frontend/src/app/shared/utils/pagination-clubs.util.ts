@@ -1,37 +1,70 @@
-import { Signal, computed, signal } from '@angular/core';
+import { Signal, computed, signal, WritableSignal } from '@angular/core';
 
 export interface PaginationConfig<T> {
   items: Signal<T[]>;
   itemsPerPage?: number;
+  initialPage?: number;
 }
 
-export interface PaginationControls {
+export interface PaginationControls<T> {
   currentPage: Signal<number>;
   totalPages: Signal<number>;
-  paginatedItems: Signal<any[]>;
+  paginatedItems: Signal<T[]>;
+  totalItems: Signal<number>;
   goToPage: (page: number) => void;
   nextPage: () => void;
   prevPage: () => void;
   getPageNumbers: () => number[];
+  reset: () => void;
 }
 
-export function createPaginationClubs<T>(config: PaginationConfig<T>): PaginationControls {
-  const itemsPerPage = config.itemsPerPage || 9;
-  const currentPage = signal(1);
+export function getPaginationSequence(current: number, total: number): number[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const sequence: number[] = [];
+  const neighbors = 1;
+
+  for (let i = 1; i <= total; i++) {
+    const isFirst = i === 1;
+    const isLast = i === total;
+    const isNearCurrent = i >= current - neighbors && i <= current + neighbors;
+
+    if (isFirst || isLast || isNearCurrent) {
+      if (sequence.length > 0 && i - sequence[sequence.length - 1] > 1) {
+        sequence.push(-1);
+      }
+      sequence.push(i);
+    }
+  }
+
+  return sequence;
+}
+
+export function createPagination<T>(config: PaginationConfig<T>): PaginationControls<T> {
+  const itemsPerPage = config.itemsPerPage ?? 9;
+  const initialPage = config.initialPage ?? 1;
+  const currentPage: WritableSignal<number> = signal(initialPage);
+
+  const totalItems = computed(() => config.items().length);
 
   const totalPages = computed(() => 
-    Math.ceil(config.items().length / itemsPerPage)
+    Math.max(1, Math.ceil(totalItems() / itemsPerPage))
   );
 
   const paginatedItems = computed(() => {
-    const start = (currentPage() - 1) * itemsPerPage;
+    const page = currentPage();
+    const start = (page - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return config.items().slice(start, end);
   });
 
   const goToPage = (page: number): void => {
-    if (page >= 1 && page <= totalPages()) {
+    const total = totalPages();
+    if (page >= 1 && page <= total && page !== -1) {
       currentPage.set(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -48,21 +81,22 @@ export function createPaginationClubs<T>(config: PaginationConfig<T>): Paginatio
   };
 
   const getPageNumbers = (): number[] => {
-    const total = totalPages();
-    const current = currentPage();
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    return [1, -1, current, -1, total];
+    return getPaginationSequence(currentPage(), totalPages());
+  };
+
+  const reset = (): void => {
+    currentPage.set(initialPage);
   };
 
   return {
     currentPage: currentPage.asReadonly(),
     totalPages,
     paginatedItems,
+    totalItems,
     goToPage,
     nextPage,
     prevPage,
-    getPageNumbers
+    getPageNumbers,
+    reset
   };
 }

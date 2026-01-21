@@ -71,28 +71,46 @@
         <div class="filter-group-container">
           <span class="filter-label">Type :</span>
           <div class="price-filter-group">
-            <button class="filter-btn" [class.active]="priceFilter() === 'all'" (click)="priceFilter.set('all')">Tous</button>
-            <button class="filter-btn" [class.active]="priceFilter() === 'free'" (click)="priceFilter.set('free')">Gratuits</button>
-            <button class="filter-btn" [class.active]="priceFilter() === 'paid'" (click)="priceFilter.set('paid')">Payants</button>
+            <app-button 
+              label="Tous" 
+              [variant]="priceFilter() === 'all' ? 'primary' : 'ghost'" 
+              (clicked)="priceFilter.set('all')" />
+            <app-button 
+              label="Gratuits" 
+              [variant]="priceFilter() === 'free' ? 'primary' : 'ghost'" 
+              (clicked)="priceFilter.set('free')" />
+            <app-button 
+              label="Payants" 
+              [variant]="priceFilter() === 'paid' ? 'primary' : 'ghost'" 
+              (clicked)="priceFilter.set('paid')" />
           </div>
         </div>
 
         <div class="sort-options">
           <span class="sort-label">Trier par :</span>
           <div class="sort-buttons">
-            <button class="sort-btn" [class.active]="sortBy() === 'date'" (click)="changeSort('date')">
-              Date @if (sortBy() === 'date') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
-            </button>
-            <button class="sort-btn" [class.active]="sortBy() === 'title'" (click)="changeSort('title')">
-              Titre @if (sortBy() === 'title') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
-            </button>
-            <button class="sort-btn" [class.active]="sortBy() === 'price'" (click)="changeSort('price')">
-              Prix @if (sortBy() === 'price') { <i class="fas fa-arrow-{{ sortOrder() === 'asc' ? 'up' : 'down' }}"></i> }
-            </button>
+            <app-button 
+              label="Date" 
+              [variant]="sortBy() === 'date' ? 'secondary' : 'ghost'"
+              [icon]="sortBy() === 'date' ? (sortOrder() === 'asc' ? 'arrow-up' : 'arrow-down') : ''"
+              (clicked)="changeSort('date')" />
+            <app-button 
+              label="Titre" 
+              [variant]="sortBy() === 'title' ? 'secondary' : 'ghost'"
+              [icon]="sortBy() === 'title' ? (sortOrder() === 'asc' ? 'arrow-up' : 'arrow-down') : ''"
+              (clicked)="changeSort('title')" />
+            <app-button 
+              label="Prix" 
+              [variant]="sortBy() === 'price' ? 'secondary' : 'ghost'"
+              [icon]="sortBy() === 'price' ? (sortOrder() === 'asc' ? 'arrow-up' : 'arrow-down') : ''"
+              (clicked)="changeSort('price')" />
           </div>
         </div>
 
-        <button class="reset-btn" (click)="resetFilters()">Réinitialiser les filtres</button>
+        <app-button 
+          label="Réinitialiser" 
+          variant="primary" 
+          (clicked)="resetFilters()" />
       </div>
     </div>
 
@@ -106,15 +124,32 @@
 
         @if (pagination.totalPages() > 1) {
           <div class="pagination">
-            <button class="pagination-btn" [disabled]="pagination.currentPage() === 1" (click)="pagination.prevPage()">Précédent</button>
+            <app-button 
+              label="Précédent" 
+              variant="ghost" 
+              icon="chevron-left"
+              [disabled]="pagination.currentPage() === 1" 
+              (clicked)="pagination.prevPage()" />
+            
             <div class="page-numbers">
               @for (page of pagination.getPageNumbers(); track $index) {
-                <button class="page-number" [class.active]="page === pagination.currentPage()" (click)="page !== -1 && pagination.goToPage(page)">
-                  {{ page === -1 ? '...' : page }}
-                </button>
+                @if (page === -1) {
+                  <span class="pagination-ellipsis">...</span>
+                } @else {
+                  <app-button 
+                    [label]="page.toString()" 
+                    [variant]="page === pagination.currentPage() ? 'primary' : 'ghost'" 
+                    (clicked)="pagination.goToPage(page)" />
+                }
               }
             </div>
-            <button class="pagination-btn" [disabled]="pagination.currentPage() === pagination.totalPages()" (click)="pagination.nextPage()">Suivant</button>
+
+            <app-button 
+              label="Suivant" 
+              variant="ghost" 
+              icon="chevron-right"
+              [disabled]="pagination.currentPage() === pagination.totalPages()" 
+              (clicked)="pagination.nextPage()" />
           </div>
         }
       } @else {
@@ -126,27 +161,30 @@
   </section>
 
   <section class="suggestions-section">
-    <div class="section-header">
-      <h2>Clubs qui pourraient vous intéresser</h2>
-      <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
-    </div>
+  <div class="section-header">
+    <h2>Clubs qui pourraient vous intéresser</h2>
+    <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
+  </div>
 
-    @if (recommendedClubs().length > 0) {
-      <div class="clubs-recommendations-grid">
-        @for (club of recommendedClubs(); track club.id) {
-          <app-club-component 
-            [club]="club"
-            [isAuthenticated]="true"
-            [showJoinButton]="true"
-            (viewDetails)="navigateToClub(club.id)"
-            (join)="navigateToClub(club.id)">
-          </app-club-component>
-        }
-      </div>
-    } @else {
-      <div class="empty-recommendations">
-        <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
-      </div>
-    }
-  </section>
+  @if (recommendedClubs().length > 0) {
+    <div class="clubs-recommendations-grid">
+      @for (club of recommendedClubs(); track club.id) {
+        @let meta = getClubMeta(club.id);
+        <app-club-component 
+          [club]="club"
+          [isAuthenticated]="true"
+          [showJoinButton]="true"
+          [joinButtonLabel]="meta.text"
+          [joinButtonVariant]="meta.variant"
+          [joinButtonDisabled]="meta.disabled"
+          [userClubStatus]="meta.status"
+          [redirectAfterAction]="true" />
+      }
+    </div>
+  } @else {
+    <div class="empty-recommendations">
+      <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+    </div>
+  }
+</section>
 </div>

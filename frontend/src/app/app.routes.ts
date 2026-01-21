@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 import {roleGuard} from './Core/guards/role.guard';
+import { guestGuard } from './Core/guards/guest.guard';
 import {CheckoutComponent} from './features/checkout/checkout';
 import {PaymentPageComponent} from './features/member/payment-page/payment-page';
 import { roleGuard } from './Core/guards/role.guard';
@@ -18,7 +19,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'home',
         pathMatch: 'full'
       },
       {
@@ -50,6 +51,9 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
+        title: 'Tableau de bord',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
         path: 'events',
@@ -108,12 +112,16 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login')
-          .then(m => m.LoginComponent)
+          .then(m => m.LoginComponent),
+        title: 'Connexion',
+        canActivate: [guestGuard]
       },
       {
         path: 'register',
         loadComponent: () => import('./features/auth/register/register')
-          .then(m => m.RegisterComponent)
+          .then(m => m.RegisterComponent),
+          title: 'Inscription',
+          canActivate: [guestGuard]
       },
       {
         path: 'verify-email',

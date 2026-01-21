@@ -41,8 +41,7 @@ async getRecommendations(
   @Req() req: any,
   @Query('limit', new DefaultValuePipe(3), ParseIntPipe) limit: number,
 ) {
-  // Ensure the userId exists in the request object
-  console.log('👤 User from request:', req.user);
+  console.log('User from request:', req.user);
   const rawUserId = req.user?.userId;
   
   if (rawUserId === undefined || rawUserId === null) {
@@ -232,7 +231,13 @@ async getRecommendations(
   async findManagedClubs(@Param('userId', ParseIntPipe) userId: number) {
     return this.clubsService.findManagedClubs(userId);
   }
-
+@Get('status/:clubId/user/:userId')
+  async getUserClubMembershipStatus (
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubMembershipStatus (clubId, userId);
+  }
   /**
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs

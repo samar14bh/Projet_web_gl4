@@ -49,15 +49,7 @@
     </app-button>
 
     @if (showJoinButton()) {
-      @if (!isAuthenticated()) {
-        <app-button
-          label="Se connecter"
-          variant="secondary"
-          class="action-btn join"
-          (clicked)="loginRequired.emit()"
-          title="Se connecter pour rejoindre">
-        </app-button>
-      } @else {
+     
     
         <app-button
           [label]="joinButtonLabel()"
@@ -67,7 +59,7 @@
           (clicked)="onJoin()"
           [title]="joinButtonLabel()">
         </app-button>
-      }
+      
     }
   </div>
 </div>

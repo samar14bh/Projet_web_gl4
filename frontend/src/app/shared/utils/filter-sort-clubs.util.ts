@@ -1,28 +1,34 @@
-import { Signal, computed, signal, WritableSignal } from '@angular/core';
+import {  signal, WritableSignal } from '@angular/core';
 
-export interface SortConfigClubs<T extends string> {
+export interface SortConfig<T extends string> {
   sortBy: WritableSignal<T>;
   sortOrder: WritableSignal<'asc' | 'desc'>;
 }
 
-export interface FilterConfigClubs {
+export interface FilterConfig {
   searchQuery: WritableSignal<string>;
   priceFilter?: WritableSignal<'all' | 'free' | 'paid'>;
   categoryFilter?: WritableSignal<number | 'all'>;
 }
 
-export function createSortControlsClubs<T extends string>(initialField: T): SortConfigClubs<T> {
+export interface FilterSortState<T extends string> {
+  sort: SortConfig<T>;
+  filters: FilterConfig;
+  reset: () => void;
+}
+
+export function createSortControls<T extends string>(initialField: T): SortConfig<T> {
   return {
     sortBy: signal(initialField),
     sortOrder: signal<'asc' | 'desc'>('asc')
   };
 }
 
-export function createFilterControlsClubs(options?: { 
+export function createFilterControls(options?: { 
   hasPrice?: boolean; 
-  hasCategory?: boolean 
-}): FilterConfigClubs {
-  const config: FilterConfigClubs = {
+  hasCategory?: boolean;
+}): FilterConfig {
+  const config: FilterConfig = {
     searchQuery: signal('')
   };
 
@@ -37,8 +43,26 @@ export function createFilterControlsClubs(options?: {
   return config;
 }
 
-export function handleSortChangeClubs<T extends string>(
-  config: SortConfigClubs<T>,
+export function createFilterSortState<T extends string>(
+  initialSortField: T,
+  filterOptions?: { hasPrice?: boolean; hasCategory?: boolean }
+): FilterSortState<T> {
+  const sort = createSortControls(initialSortField);
+  const filters = createFilterControls(filterOptions);
+
+  const reset = () => {
+    filters.searchQuery.set('');
+    if (filters.priceFilter) filters.priceFilter.set('all');
+    if (filters.categoryFilter) filters.categoryFilter.set('all');
+    sort.sortBy.set(initialSortField);
+    sort.sortOrder.set('asc');
+  };
+
+  return { sort, filters, reset };
+}
+
+export function handleSortChange<T extends string>(
+  config: SortConfig<T>,
   field: T,
   onPageReset?: () => void
 ): void {
@@ -51,7 +75,7 @@ export function handleSortChangeClubs<T extends string>(
   onPageReset?.();
 }
 
-export function handleSearchClubs(
+export function handleSearch(
   searchSignal: WritableSignal<string>,
   event: Event | string,
   onPageReset?: () => void
@@ -63,7 +87,7 @@ export function handleSearchClubs(
   onPageReset?.();
 }
 
-export function sortItemsClubs<T>(
+export function sortItems<T>(
   items: T[],
   sortBy: string,
   sortOrder: 'asc' | 'desc',
@@ -75,5 +99,32 @@ export function sortItemsClubs<T>(
   return [...items].sort((a, b) => {
     const comparison = comparator(a, b);
     return sortOrder === 'asc' ? comparison : -comparison;
+  });
+}
+export function filterBySearch<T>(
+  items: T[],
+  searchQuery: string,
+  searchFields: ((item: T) => string)[]
+): T[] {
+  if (!searchQuery) return items;
+  
+  const query = searchQuery.toLowerCase();
+  return items.filter(item => 
+    searchFields.some(getField => 
+      getField(item).toLowerCase().includes(query)
+    )
+  );
+}
+
+export function filterByPrice<T>(
+  items: T[],
+  priceMode: 'all' | 'free' | 'paid',
+  getPriceField: (item: T) => number
+): T[] {
+  if (priceMode === 'all') return items;
+  
+  return items.filter(item => {
+    const price = getPriceField(item);
+    return priceMode === 'free' ? price === 0 : price > 0;
   });
 }

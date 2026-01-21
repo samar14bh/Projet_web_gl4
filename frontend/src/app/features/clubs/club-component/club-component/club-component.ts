@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, inject } from '@angular/core';
 import { Club } from '../../../../Core/models/club.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../../Core/services/auth.service';
 
 @Component({
   selector: 'app-club-component',
@@ -10,6 +12,9 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubComponent {
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  
   club = input.required<Club>();
   
   showJoinButton = input<boolean>(true);
@@ -17,19 +22,43 @@ export class ClubComponent {
   joinButtonVariant = input<'primary' | 'secondary' | 'danger' | 'ghost'>('primary');
   joinButtonDisabled = input<boolean>(false);
   isAuthenticated = input<boolean>(false);
+  redirectAfterAction = input<boolean>(true);
+  userClubStatus = input<string>('Non membre');
+  
   viewDetails = output<Club>();
   join = output<Club>();
-  loginRequired = output<void>();
 
   onViewDetails() {
     this.viewDetails.emit(this.club());
+    
+    if (this.redirectAfterAction()) {
+      this.router.navigate(['/my-clubs', this.club().id]);
+    }
   }
 
   onJoin() {
-    if (!this.isAuthenticated()) {
-      this.loginRequired.emit();
+    if (!this.isAuthenticated() && this.redirectAfterAction()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.join.emit(this.club());
+    
+    if (this.redirectAfterAction()) {
+      this.handleJoinAction();
+    }
+  }
+
+  private handleJoinAction(): void {
+    const clubId = this.club().id;
+    const status = this.userClubStatus().toLowerCase();
+  
+    if (status.includes('non membre') || status.includes('rejetée')) {
+      this.router.navigate(['/join-club', clubId]);
+    } else if (status.includes('ancien membre')) {
+      this.router.navigate(['/clubs', clubId, 'renew']);
     } else {
-      this.join.emit(this.club());
+      this.router.navigate(['/my-clubs', clubId]);
     }
   }
 

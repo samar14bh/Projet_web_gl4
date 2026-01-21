@@ -37,7 +37,6 @@ export class DashboardService {
 
   async getMemberDashboard(userId: number): Promise<DashboardResponseDto> {
   try {
-    // On retire la vérification du membershipRepository.findOne qui bloquait tout
     const [stats, upcomingEvents] = await Promise.all([
       this.getMemberStats(userId),
       this.getUpcomingEvents(userId),
@@ -63,8 +62,6 @@ export class DashboardService {
         user: { id: userId },
       },
     });
-
-    // 2. Événements à venir
     const upcomingEventsCount = await this.registrationRepository
       .createQueryBuilder('registration')
       .innerJoin('registration.event', 'event')
@@ -74,8 +71,6 @@ export class DashboardService {
         status: RegistrationStatus.REGISTERED,
       })
       .getCount();
-
-    // 3. Taux de participation
     const totalPastEvents = await this.registrationRepository
       .createQueryBuilder('registration')
       .innerJoin('registration.event', 'event')
@@ -162,21 +157,18 @@ private async getUpcomingEvents(userId: number): Promise<UpcomingEventDto[]> {
     .innerJoinAndSelect('registration.event', 'event')
     .leftJoinAndSelect('event.club', 'club')
     .where('registration.user.id = :userId', { userId })
+    .andWhere('event.startDate >= :now', { now: new Date() })
     .getMany();
 
   return Promise.all(
     registrations.map(async (registration) => {
       const event = registration.event;
-
-      // 1. On cherche si un paiement "APPROVED" ou "CONFIRMED" existe pour cet event et cet user
       const payments = await this.paymentRepository.find({
         where: {
           user: { id: userId },
           event: { id: event.id },
         },
       });
-
-      // 2. Logique pour déterminer le texte du statut
       let paymentStatus = 'En attente';
       const fees = Number(event.subscriptionFees);
 
@@ -199,9 +191,9 @@ private async getUpcomingEvents(userId: number): Promise<UpcomingEventDto[]> {
         address: event.address || 'Lieu non spécifié',
         clubName: event.club?.name || 'Club Indépendant',
         clubLogo: event.club?.logo,
-        subscriptionFees: fees, // On envoie le prix
+        subscriptionFees: fees, 
         registrationStatus: registration.status,
-        paymentStatus: paymentStatus, // On envoie "Payé", "En attente" ou "Gratuit"
+        paymentStatus: paymentStatus, 
         formattedDate: `${eventDate.getDate()} ${eventDate.toLocaleString('fr-FR', { month: 'short' })}`,
         formattedTime: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         isFree: fees === 0,

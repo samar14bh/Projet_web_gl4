@@ -185,6 +185,11 @@ export class ClubService {
       responseType: 'text' as 'json'
     });
   }
+getUserClubMembershipStatus(clubId: number, userId: number): Observable<string> {
+  return this.http.get<string>(`${this.apiUrl}/status/${clubId}/user/${userId}`, {
+    responseType: 'text' as 'json'
+  });
+}
   /**
    * Récupérer le président d'un club
    */

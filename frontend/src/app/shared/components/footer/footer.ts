@@ -10,12 +10,13 @@ import { LazyLoading } from '../../directives/lazy-loading';
   imports: [CommonModule, LazyLoading],
   templateUrl: './footer.html',
   styleUrls: ['./footer.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FooterComponent {
   private router = inject(Router);
   
   onVisible(): void {
-    console.log('ClubHub footer is now visible');
+    console.log('ClubHub footer est visible');
   
   }
 

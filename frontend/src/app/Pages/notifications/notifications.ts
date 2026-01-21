@@ -5,11 +5,12 @@ import { AuthService } from '../../Core/services/auth.service';
 import { NotificationService } from '../../Core/services/notification.service';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { ButtonComponent } from '../../shared/components/button/button';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   templateUrl: './notifications.html',
   styleUrls: ['./notifications.css']
 })
