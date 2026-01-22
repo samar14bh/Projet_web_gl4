@@ -117,10 +117,11 @@
     @if (!isLoading()) {
       @if (filteredEvents().length > 0) {
         <div class="events-grid three-columns">
-          @for (event of pagination.paginatedItems(); track event.id) {
-            <app-event-card [event]="event" />
-          }
-        </div>
+  @for (event of pagination.paginatedItems(); track event.id) {
+    <app-event-card 
+      [event]="event" 
+      [userId]="currentUser()?.id" /> }
+</div>
 
         @if (pagination.totalPages() > 1) {
           <div class="pagination">

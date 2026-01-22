@@ -700,7 +700,7 @@ async getRecommendations(
     .createQueryBuilder('club')
     .leftJoin('club.category', 'category')
     .leftJoin('club.memberships', 'membership')
-    .leftJoin('club.events', 'event')
+    .leftJoin('club.events', 'event')  
     .select([
       'club.id AS id',
       'club.name AS name',
@@ -708,9 +708,9 @@ async getRecommendations(
       'club.logo AS logo',
       'club.cover_image AS coverImage',
       'club.creation_date AS creationDate',
-      'club.membership_fee_amount AS membershipFeeAmount',
+      'club.membership_fee_amount AS membershipFeeAmount',  
       'club.isActive AS isActive',
-      'category.id AS categoryId',
+      'category.id AS categoryId',  
       'category.name AS categoryName',
       'COUNT(DISTINCT membership.id) AS members',
       'COUNT(DISTINCT event.id) AS events',
@@ -720,51 +720,67 @@ async getRecommendations(
     .addGroupBy('category.id')
     .addGroupBy('category.name');
 
-
-
-    if (joinedClubIds.length > 0) {
-      query.andWhere('club.id NOT IN (:...joinedIds)', {
-        joinedIds: joinedClubIds,
-      });
-    }
-
-    if (preferredCategoryIds.length > 0) {
-      query.andWhere('category.id IN (:...catIds)', {
-        catIds: preferredCategoryIds,
-      });
-    }
-
-    let results = await query.limit(limit).getRawMany();
-
-    // 3️⃣ Fallback — clubs actifs non rejoints
-    if (results.length === 0) {
-      results = await this.clubRepository
-        .createQueryBuilder('club')
-        .leftJoin('club.category', 'category')
-        .leftJoin('club.memberships', 'membership')
-        .select([
-          'club.id AS id',
-          'club.name AS name',
-          'club.description AS description',
-          'club.logo AS logo',
-          'club.creation_date AS creationDate',
-          'category.name AS categoryName',
-          'COUNT(membership.id) AS members',
-          'club.cover_image AS coverImage',
-        ])
-        .where('club.isActive = true')
-        .groupBy('club.id')
-        .addGroupBy('category.name')
-        .limit(limit)
-        .getRawMany();
-    }
-
-    return results;
+  if (joinedClubIds.length > 0) {
+    query.andWhere('club.id NOT IN (:...joinedIds)', {
+      joinedIds: joinedClubIds,
+    });
   }
 
+  if (preferredCategoryIds.length > 0) {
+    query.andWhere('category.id IN (:...catIds)', {
+      catIds: preferredCategoryIds,
+    });
+  }
 
-
-
+  let results = await query.limit(limit).getRawMany();
+  if (results.length === 0) {
+    results = await this.clubRepository
+      .createQueryBuilder('club')
+      .leftJoin('club.category', 'category')
+      .leftJoin('club.memberships', 'membership')
+      .leftJoin('club.events', 'event')
+      .select([
+        'club.id AS id',
+        'club.name AS name',
+        'club.description AS description',
+        'club.logo AS logo',
+        'club.cover_image AS coverImage',
+        'club.creation_date AS creationDate',
+        'club.membership_fee_amount AS membershipFeeAmount',
+        'club.isActive AS isActive',
+        'category.id AS categoryId',
+        'category.name AS categoryName',
+        'COUNT(DISTINCT membership.id) AS members',
+        'COUNT(DISTINCT event.id) AS events',
+      ])
+      .where('club.isActive = true')
+      .andWhere(joinedClubIds.length > 0 
+        ? 'club.id NOT IN (:...joinedIds)' 
+        : '1=1', 
+        { joinedIds: joinedClubIds }
+      )
+      .groupBy('club.id')
+      .addGroupBy('category.id')
+      .addGroupBy('category.name')
+      .orderBy('members', 'DESC')  
+      .limit(limit)
+      .getRawMany();
+  }
+  return results.map(club => ({
+    id: Number(club.id),
+    name: club.name,
+    description: club.description,
+    logo: club.logo,
+    coverImage: club.coverImage,
+    creationDate: club.creationDate,
+    membershipFeeAmount: Number(club.membershipFeeAmount) || 0,
+    isActive: club.isActive,
+    categoryId: Number(club.categoryId),
+    categoryName: club.categoryName,
+    members: Number(club.members) || 0,
+    events: Number(club.events) || 0,
+  }));
+}
 
   async getClubStats2(clubId: number) {
     const totalMembers = await this.membershipRepository.count({

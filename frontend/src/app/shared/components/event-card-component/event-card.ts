@@ -14,7 +14,7 @@ import { UpcomingEvent } from '../../../Core/models/dashboard.model';
 export class EventCardComponent {
   event = input.required<UpcomingEvent>();
   viewDetails = output<number>();
-  
+  userId = input.required<number | string | undefined>(); 
   statusClass = computed(() => {
     const status = this.event().paymentStatus?.toLowerCase() || '';
     if (status === 'payé') return 'status-paid';
