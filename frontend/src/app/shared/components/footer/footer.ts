@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router,} from '@angular/router';
 import { LazyLoading } from '../../directives/lazy-loading';
@@ -10,7 +10,6 @@ import { LazyLoading } from '../../directives/lazy-loading';
   imports: [CommonModule, LazyLoading],
   templateUrl: './footer.html',
   styleUrls: ['./footer.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FooterComponent {
   private router = inject(Router);

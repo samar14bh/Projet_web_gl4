@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output, inject } from '@angu
 import { Club } from '../../../../Core/models/club.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../../Core/services/auth.service';
+
 
 @Component({
   selector: 'app-club-component',
@@ -13,7 +13,6 @@ import { AuthService } from '../../../../Core/services/auth.service';
 })
 export class ClubComponent {
   private router = inject(Router);
-  private authService = inject(AuthService);
   
   club = input.required<Club>();
   
@@ -53,7 +52,7 @@ export class ClubComponent {
     const clubId = this.club().id;
     const status = this.userClubStatus().toLowerCase();
   
-    if (status.includes('non membre') || status.includes('rejetée')) {
+    if (status.includes('non membre') || status.includes('rejetÃ©e')) {
       this.router.navigate(['/join-club', clubId]);
     } else if (status.includes('ancien membre')) {
       this.router.navigate(['/clubs', clubId, 'renew']);

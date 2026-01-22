@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
+import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UpcomingEvent } from '../../../Core/models/dashboard.model';
@@ -13,28 +13,37 @@ import { UpcomingEvent } from '../../../Core/models/dashboard.model';
 })
 export class EventCardComponent {
   event = input.required<UpcomingEvent>();
-  viewDetails = output<number>();
-  userId = input.required<number | string | undefined>(); 
+  userId = input.required<number | null>(); 
   statusClass = computed(() => {
     const status = this.event().paymentStatus?.toLowerCase() || '';
-    if (status === 'payé') return 'status-paid';
-    if (status === 'gratuit') return 'status-free';
-    return 'status-pending';
+    switch (status) {
+      case 'payé': return 'status-paid';
+      case 'gratuit': return 'status-free';
+      default: return 'status-pending';
+    }
   });
 
   statusIcon = computed(() => {
     const status = this.event().paymentStatus?.toLowerCase() || '';
-    if (status === 'payé') return 'fa-check-circle';
-    if (status === 'gratuit') return 'fa-tag';
-    return 'fa-clock';
+    switch (status) {
+      case 'payé': return 'fa-check-circle';
+      case 'gratuit': return 'fa-tag';
+      default: return 'fa-clock';
+    }
   });
 
   formattedPrice = computed(() => {
     if (this.event().isFree) return 'Gratuit';
+    
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'TND',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
     }).format(this.event().subscriptionFees);
   });
+  
+  detailsRoute = computed(() => 
+    ['/user-event-details', this.userId(), this.event().id]
+  );
 }

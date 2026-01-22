@@ -14,7 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         transport: {
           host: config.get<string>('MAIL_HOST'),
           port: config.get<number>('MAIL_PORT'),
-          secure: false, // TLS via STARTTLS
+          secure: false, 
           auth: {
             user: config.get<string>('MAIL_USER'),
             pass: config.get<string>('MAIL_PASSWORD'),
