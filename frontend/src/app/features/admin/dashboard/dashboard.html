@@ -59,25 +59,25 @@
     </button>
   </div>
 
-  <!-- Alertes importantes -->
-  @if (alerts().length > 0) {
-    <div class="alerts-section">
-      @for (alert of alerts(); track alert.id) {
-        <div class="alert" [class]="getAlertClass(alert.type)">
-          <div class="alert-content">
-            <div class="alert-header">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              <strong>{{ alert.title }}</strong>
-            </div>
-            <p>{{ alert.description }}</p>
-          </div>
-          <a [href]="alert.link" class="alert-action">
-            {{ alert.action }} <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
-      }
-    </div>
-  }
+<!--  &lt;!&ndash; Alertes importantes &ndash;&gt;-->
+<!--  @if (alerts().length > 0) {-->
+<!--    <div class="alerts-section">-->
+<!--      @for (alert of alerts(); track alert.id) {-->
+<!--        <div class="alert" [class]="getAlertClass(alert.type)">-->
+<!--          <div class="alert-content">-->
+<!--            <div class="alert-header">-->
+<!--              <i class="bi bi-exclamation-triangle-fill"></i>-->
+<!--              <strong>{{ alert.title }}</strong>-->
+<!--            </div>-->
+<!--            <p>{{ alert.description }}</p>-->
+<!--          </div>-->
+<!--          <a [href]="alert.link" class="alert-action">-->
+<!--            {{ alert.action }} <i class="bi bi-arrow-right"></i>-->
+<!--          </a>-->
+<!--        </div>-->
+<!--      }-->
+<!--    </div>-->
+<!--  }-->
 
   <!-- Statistiques principales -->
   @if (statsResource.isLoading()) {

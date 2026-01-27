@@ -7,7 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { Event } from '../events/entities/event.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { Membership } from '../memberships/entities/membership.entity'; // ← Vérifie ce chemin
-
+import { ExportService } from './export.service';
 /**
  * Module pour le dashboard administrateur
  */
@@ -22,7 +22,7 @@ import { Membership } from '../memberships/entities/membership.entity'; // ← V
     ]),
   ],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, ExportService],
   exports: [AdminService],
 })
 export class AdminModule {}

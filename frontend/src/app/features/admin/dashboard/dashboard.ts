@@ -193,7 +193,9 @@ export class AdminDashboardComponent {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `rapport-admin-${period}.${format}`;
+        // Utiliser l'extension correcte : .pdf ou .xlsx
+        const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+        link.download = `rapport-admin-${period}.${extension}`;
         link.click();
         window.URL.revokeObjectURL(url);
       }

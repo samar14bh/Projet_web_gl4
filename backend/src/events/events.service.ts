@@ -15,6 +15,7 @@ import { PaginatedResult } from '../common/pagination/pagination.dto';
 import { UserEventDto } from './dto/user-event.dto';
 import { EventMapper } from './mapper/event.mapper';
 import { DashboardEventDto } from '../club-manager/dto/dashboard-event.dto';
+import { Transaction } from '../transactions/entities/transaction.entity';
 
 /**
  * Service pour la gestion des événements
@@ -26,6 +27,8 @@ export class EventsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
   /**
@@ -256,6 +259,7 @@ export class EventsService {
    */
   async remove(id: number): Promise<void> {
     const event = await this.findOne(id);
+    await this.transactionRepository.delete({ event: { id } });
     await this.eventRepository.remove(event);
   }
 

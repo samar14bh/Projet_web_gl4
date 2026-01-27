@@ -26,7 +26,7 @@ interface Event {
 @Component({
   selector: 'app-club-manager-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, StatCardComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

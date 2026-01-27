@@ -6,7 +6,7 @@ import { unlink } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { MemberRole } from '../common/enums/member-role.enum';
-
+import { Document as ClubDocument } from '../documents/entities/document.entity';
 import {
   CreateClubDto,
   UpdateClubDto,
@@ -45,6 +45,8 @@ export class ClubsService {
     private readonly applicationRepository: Repository<Application>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ClubDocument)
+    private readonly documentRepository: Repository<ClubDocument>,
 
   ) { }
 
@@ -263,6 +265,13 @@ export class ClubsService {
     if (!club) {
       throw new NotFoundException(`Club avec l'ID ${id} introuvable`);
     }
+
+    // 🗑️ Supprimer toutes les dépendances AVANT de supprimer le club
+    await this.transactionRepository.delete({ club: { id } });
+    await this.applicationRepository.delete({ club: { id } });
+    await this.membershipRepository.delete({ club: { id } });
+    await this.eventRepository.delete({ club: { id } });
+    await this.documentRepository.delete({ club: { id } });
 
     // 🧹 Supprimer les fichiers
     await this.deleteFile(club.logo);

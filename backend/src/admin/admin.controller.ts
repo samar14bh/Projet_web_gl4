@@ -1,9 +1,13 @@
 import {
   Controller,
   Get,
+  InternalServerErrorException,
   Query,
+  Res,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { ExportService } from './export.service';
+import express from 'express';
 
 /**
  * Controller pour le dashboard administrateur
@@ -11,7 +15,84 @@ import { AdminService } from './admin.service';
  */
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly exportService: ExportService,
+  ) {}
+
+  /**
+   * GET /api/admin/export/pdf
+   * Exporter un rapport en PDF
+   */
+  @Get('export/pdf')
+  async exportReportPDF(
+    @Query('period') period: 'week' | 'month' | 'quarter' | 'year' = 'month',
+    @Res() res: express.Response,
+  ) {
+    try {
+      // Récupérer les statistiques
+      const stats = await this.adminService.getGlobalStats(period);
+
+      // Générer le PDF
+      const pdfBuffer = await this.exportService.generatePDF(stats, period);
+
+      // Envoyer la réponse
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=rapport-admin-${period}-${Date.now()}.pdf`,
+      );
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      res.status(500).json({
+        message: 'Erreur lors de la génération du PDF',
+        error: error.message,
+      });
+    }
+  }
+  /**
+   * GET /api/admin/export/excel
+   * Exporter un rapport en Excel
+   */
+  @Get('export/excel')
+  async exportReportExcel(
+    @Query('period') period: 'week' | 'month' | 'quarter' | 'year' = 'month',
+    @Res() res: express.Response,
+  ) {
+    try {
+      // Récupérer les statistiques et les top clubs
+      const stats = await this.adminService.getGlobalStats(period);
+      const topClubs = await this.adminService.getTopClubs(period, 10);
+
+      // Générer l'Excel
+      const excelBuffer = await this.exportService.generateExcel(
+        stats,
+        topClubs,
+        period,
+      );
+
+      // Envoyer la réponse avec les bons headers
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="rapport-admin-${period}-${Date.now()}.xlsx"`,
+      );
+      res.setHeader('Content-Length', excelBuffer.length);
+
+      // Envoyer le buffer directement
+      return res.end(excelBuffer, 'binary');
+    } catch (error) {
+      console.error('Erreur export Excel:', error);
+      return res.status(500).json({
+        message: 'Erreur lors de la génération du fichier Excel',
+        error: error.message,
+      });
+    }
+  }
 
   /**
    * GET /api/admin/stats

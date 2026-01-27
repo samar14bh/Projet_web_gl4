@@ -13,7 +13,7 @@ import {Club} from '../../../Core/interfaces/club-manager.interface';
 @Component({
   selector: 'app-manage-club',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent, StatCardComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TabNavigationComponent],
   templateUrl: './manage-club.html',
   styleUrl: './manage-club.css',
 })
