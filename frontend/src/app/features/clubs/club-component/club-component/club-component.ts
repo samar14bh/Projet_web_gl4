@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output, inject } from '@angu
 import { Club } from '../../../../Core/models/club.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { Router } from '@angular/router';
-import { CLUB_STATUS, CLUB_CONFIG, CLUB_ROUTES } from '../../../../shared/constants/club.constants';
+import { CLUB_STATUS, CLUB_CONFIG, CLUB_ROUTES, ButtonVariant } from '../../../../shared/constants/club.constants';
 
 @Component({
   selector: 'app-club-component',
@@ -18,7 +18,7 @@ export class ClubComponent {
   club = input.required<Club>();
   showJoinButton = input<boolean>(true);
   joinButtonLabel = input<string>('Rejoindre');
-  joinButtonVariant = input<'primary' | 'secondary' | 'danger' | 'ghost'>('primary');
+  joinButtonVariant = input<ButtonVariant>(CLUB_CONFIG.DEFAULT_VARIANT);
   joinButtonDisabled = input<boolean>(false);
   isAuthenticated = input<boolean>(false);
   redirectAfterAction = input<boolean>(true);
@@ -49,8 +49,6 @@ export class ClubComponent {
   private handleJoinAction(): void {
     const clubId = this.club().id;
     const status = this.userClubStatus().toLowerCase();
-  
-    // Logique de redirection basée sur les constantes
     if (status.includes(CLUB_STATUS.NON_MEMBER) || status.includes(CLUB_STATUS.REJECTED)) {
       this.router.navigate([CLUB_ROUTES.JOIN, clubId]);
     } else if (status.includes(CLUB_STATUS.OLD_MEMBER)) {
