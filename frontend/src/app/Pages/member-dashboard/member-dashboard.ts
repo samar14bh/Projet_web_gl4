@@ -1,4 +1,4 @@
-import { Component, computed, inject, effect } from '@angular/core';
+import { Component, computed, inject, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -13,11 +13,12 @@ import { createResource } from '../../shared/utils/resource-loader.util';
 import { createFilterSortState, handleSearch, handleSortChange, sortItems, filterBySearch, filterByPrice } from '../../shared/utils/filter-sort-clubs.util';
 import { createPagination } from '../../shared/utils/pagination-clubs.util';
 import { createClubStatusManager } from '../../shared/utils/club-status.util';
+import { LazyLoading } from '../../shared/directives/lazy-loading';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent, ButtonComponent,LazyLoading],
   templateUrl: './member-dashboard.html',
   styleUrls: ['./member-dashboard.css']
 })
@@ -30,7 +31,7 @@ export class MemberDashboardComponent {
   readonly dashboardRes = createResource({
     loader: () => this.dashboardService.getMemberDashboard()
   });
-
+  readonly recommendationsVisible = signal(false);
   readonly currentUser = this.authService.currentUser;
   readonly isLoading = this.dashboardRes.isLoading;
   readonly error = this.dashboardRes.error;
@@ -119,4 +120,5 @@ export class MemberDashboardComponent {
   getClubMeta(clubId: number) {
     return this.statusManager.getMeta(clubId);
   }
+  
 }

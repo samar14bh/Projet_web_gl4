@@ -2,7 +2,7 @@
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Explorer les clubs</h1>
-      <p class="page-subtitle">DÃ©couvrez tous les clubs actifs de l'universitÃ©</p>
+      <p class="page-subtitle">Découvrez tous les clubs actifs de l'université</p>
     </div>
   </div>
 
@@ -28,7 +28,7 @@
         <div class="stat-icon warning"><i class="bi bi-calendar-event"></i></div>
         <div class="stat-info">
           <span class="stat-value">{{ formatNumber(stats().totalEvents) }}</span>
-          <span class="stat-label">Ã‰vÃ©nements</span>
+          <span class="stat-label">Événements</span>
         </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
         [value]="selectedCategory()" 
         (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)"
       >
-        <option value="all">Toutes les catÃ©gories</option>
+        <option value="all">Toutes les catégories</option>
         @for (category of categoriesRes.data(); track category.id) {
           <option [value]="category.id">{{ category.name }}</option>
         }
@@ -63,12 +63,12 @@
       >
         <option value="name">Trier par nom</option>
         <option value="members">Trier par membres</option>
-        <option value="events">Trier par Ã©vÃ©nements</option>
-        <option value="createdAt">Trier par date de crÃ©ation</option>
+        <option value="events">Trier par événements</option>
+        <option value="createdAt">Trier par date de création</option>
       </select>
     </div>
     <app-button 
-      label="RÃ©initialiser les filtres" 
+      label="Réinitialiser les filtres" 
       icon="arrow-counterclockwise"
       (clicked)="resetFilters()"
     />

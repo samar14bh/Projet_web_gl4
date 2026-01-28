@@ -120,13 +120,13 @@
   @for (event of pagination.paginatedItems(); track event.id) {
     <app-event-card 
       [event]="event" 
-      [userId]="currentUser()?.id" /> }
+      [userId]="currentUser()?.id ?? ''" /> }
 </div>
 
         @if (pagination.totalPages() > 1) {
           <div class="pagination">
             <app-button 
-              label="PrÃ©cÃ©dent" 
+              label="Précédent" 
               variant="ghost" 
               icon="chevron-left"
               [disabled]="pagination.currentPage() === 1" 
@@ -161,30 +161,41 @@
     }
   </section>
 
-  <section class="suggestions-section">
+ <section class="suggestions-section lazy-load-container"
+         appLazyLoading
+         rootMargin="100px" 
+         (visible)="recommendationsVisible.set(true)">
+  
   <div class="section-header">
     <h2>Clubs qui pourraient vous intéresser</h2>
     <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
   </div>
 
-  @if (recommendedClubs().length > 0) {
-    <div class="clubs-recommendations-grid">
-      @for (club of recommendedClubs(); track club.id) {
-        @let meta = getClubMeta(club.id);
-        <app-club-component 
-          [club]="club"
-          [isAuthenticated]="true"
-          [showJoinButton]="true"
-          [joinButtonLabel]="meta.text"
-          [joinButtonVariant]="meta.variant"
-          [joinButtonDisabled]="meta.disabled"
-          [userClubStatus]="meta.status"
-          [redirectAfterAction]="true" />
-      }
-    </div>
+  @if (recommendationsVisible()) {
+    @if (recommendedClubs().length > 0) {
+      <div class="clubs-recommendations-grid fade-in-up">
+        @for (club of recommendedClubs(); track club.id) {
+          @let meta = getClubMeta(club.id);
+          <app-club-component 
+            [club]="club"
+            [isAuthenticated]="true"
+            [showJoinButton]="true"
+            [joinButtonLabel]="meta.text"
+            [joinButtonVariant]="meta.variant"
+            [joinButtonDisabled]="meta.disabled"
+            [userClubStatus]="meta.status"
+            [redirectAfterAction]="true" />
+        }
+      </div>
+    } @else {
+      <div class="empty-recommendations fade-in-up">
+        <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+      </div>
+    }
   } @else {
-    <div class="empty-recommendations">
-      <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+    <div class="lazy-placeholder">
+      <div class="spinner"></div>
+      <p>Recherche de clubs pour vous...</p>
     </div>
   }
 </section>
