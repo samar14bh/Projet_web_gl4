@@ -1,0 +1,58 @@
+<div class="edit-container">
+  <div class="edit-card">
+    <header class="edit-header">
+      <h1>Modifier mon profil</h1>
+    </header>
+
+    <form (ngSubmit)="onSubmit()" #profileForm="ngForm" class="edit-form">
+      
+      <div class="image-upload-section">
+        <div class="avatar-preview">
+          @if (imagePreview()) {
+            <img [src]="imagePreview()" class="preview-img">
+          } @else if (user()?.image) {
+            <img [src]="user()?.image" class="preview-img">
+          } @else {
+            <div class="placeholder-avatar">{{ user()?.name?.[0] }}</div>
+          }
+        </div>
+        <label for="imageInput" class="btn-secondary">Changer la photo</label>
+        <input id="imageInput" type="file" (change)="onFileSelected($event)" hidden accept="image/*">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" [(ngModel)]="formData.name" name="name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" [(ngModel)]="formData.lastName" name="lastName" required>
+        </div>
+
+        <div class="form-group">
+          <label>Filière</label>
+          <select [(ngModel)]="formData.major" name="major" required>
+            @for (m of majors; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Date de naissance</label>
+          <input type="date" [(ngModel)]="formData.dateOfBirth" name="dateOfBirth" required>
+        </div>
+      </div>
+
+
+      <div class="action-buttons">
+        <button type="button" class="btn-cancel" (click)="cancel()">Annuler</button>
+        <button type="submit" class="btn-save" [disabled]="!profileForm.form.valid || isSubmitting()">
+          {{ isSubmitting() ? 'Enregistrement...' : 'Sauvegarder les modifications' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

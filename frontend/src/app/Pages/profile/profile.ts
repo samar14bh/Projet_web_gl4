@@ -81,13 +81,11 @@ export class ProfileComponent {
 
   editProfile(): void {
     this.isEditing.set(true);
-    // Naviguez vers la page d'édition si vous en avez une
-    // this.router.navigate(['/profile/edit']);
+    this.router.navigate(['/settings']);
   }
 
   getImageUrl(imagePath?: string): string {
     if (!imagePath) return '';
-    // Ajustez selon votre configuration backend
     return imagePath.startsWith('http') 
       ? imagePath 
       : `/api/uploads/${imagePath}`;

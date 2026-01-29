@@ -210,9 +210,14 @@ export const routes: Routes = [
      canActivate: [roleGuard],
         data: { role: 'USER' },
          title: 'Profile'
-  }
-
-      ,
+  },
+   {
+    path: 'settings',
+     loadComponent: () => import('./Pages/profile-settings/profile-settings').then(m => m.ProfileSettings),
+     canActivate: [roleGuard],
+        data: { role: 'USER' },
+         title: 'Paramètres'
+  },
       {
         path: '**',
         component: PageNotFound,
