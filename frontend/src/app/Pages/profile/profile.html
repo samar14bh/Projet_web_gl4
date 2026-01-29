@@ -2,15 +2,16 @@
   <header class="profile-header-section">
     <div class="profile-top-bar">
       <div>
-        <h1 class="profile-name">{{ user()?.name }} {{ user()?.lastName }}</h1>
+        <h1 class="profile-name">{{ getUserFullName() }}</h1>
       </div>
-        @if (user()?.image) {
-            <img [src]="getImageUrl(user()?.image)"  class="user-avatar-dashboard">
-          } @else {
-            <div class="user-initials-dashboard">
-              {{ getUserFullName() | slice:0:1 }}
-            </div>
-          }
+      
+      @if (displayImageUrl()) {
+        <img [src]="displayImageUrl()" class="user-avatar-dashboard">
+      } @else {
+        <div class="user-initials-dashboard">
+          {{ userInitials() }}
+        </div>
+      }
     
       <button class="btn-edit" (click)="editProfile()">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -26,12 +27,12 @@
     
     <div class="details-grid">
       <div class="detail-item">
-        <div class="detail-label">Email </div>
+        <div class="detail-label">Email</div>
         <div class="detail-value">{{ user()?.email }}</div>
       </div>
 
       <div class="detail-item">
-        <div class="detail-label">Âge </div>
+        <div class="detail-label">Âge</div>
         <div class="detail-value">{{ userAge() }} ans</div>
       </div>
 

@@ -1,72 +1,103 @@
-import { Component, inject, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../Core/services/auth.service';
 import { UserService } from '../../Core/services/user.service';
+import { StorageService } from '../../Core/services/storage.service';
 import { StudyMajor } from '../../Core/models/auth.models';
+import { AuthValidators } from '../../shared/validators/auth.validators';
+
+const FORM_CACHE_KEY = 'profile_form_draft';
 
 @Component({
   selector: 'app-profile-settings',
-  imports: [CommonModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './profile-settings.html',
   styleUrl: './profile-settings.css',
 })
-export class ProfileSettings {
+export class ProfileSettings implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
+  private readonly storageService = inject(StorageService);
   private readonly router = inject(Router);
+
+  profileForm!: FormGroup;
   user = this.authService.currentUser;
   imagePreview = signal<string | null>(null);
-  selectedFile: File | null = null;
   isSubmitting = signal(false);
   majors = Object.values(StudyMajor);
-  formData = {
-    name: this.user()?.name || '',
-    lastName: this.user()?.lastName || '',
-    major: this.user()?.major || '',
-    dateOfBirth: this.user()?.dateOfBirth ? new Date(this.user()!.dateOfBirth).toISOString().split('T')[0] : '',
-  };
+  
+  private selectedFile: File | null = null;
+  private formSubscription?: Subscription;
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = () => this.imagePreview.set(reader.result as string);
-      reader.readAsDataURL(file);
+  ngOnInit(): void {
+    this.initForm();
+    this.restoreDraft();
+    this.trackChanges();
+  }
+
+  ngOnDestroy(): void {
+    this.formSubscription?.unsubscribe();
+  }
+
+  private initForm(): void {
+    const u = this.user();
+    this.profileForm = this.fb.nonNullable.group({
+      name: [u?.name || '', [Validators.required]],
+      lastName: [u?.lastName || '', [Validators.required]],
+      major: [u?.major || '', [Validators.required]],
+      dateOfBirth: [this.formatDate(u?.dateOfBirth), [Validators.required, AuthValidators.minimumAge(18)]]
+    });
+  }
+
+  private trackChanges(): void {
+    this.formSubscription = this.profileForm.valueChanges.subscribe(value => {
+      if (this.profileForm.valid) {
+        this.storageService.setItem(FORM_CACHE_KEY, value);
+      }
+    });
+  }
+
+  private restoreDraft(): void {
+    const draft = this.storageService.getItem<any>(FORM_CACHE_KEY);
+    if (draft) {
+      this.profileForm.patchValue(draft);
     }
   }
 
-  async onSubmit(): Promise<void> {
-    const userId = this.user()?.id;
-    if (!userId) return;
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.[0]) {
+      this.selectedFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => this.imagePreview.set(reader.result as string);
+      reader.readAsDataURL(this.selectedFile);
+    }
+  }
 
-    const numericId = Number(userId);
-    if (isNaN(numericId)) return;
+  onSubmit(): void {
+    const userId = this.user()?.id;
+    if (!userId || this.profileForm.invalid) return;
 
     this.isSubmitting.set(true);
-    this.userService.updateProfile(numericId, this.formData, this.selectedFile || undefined)
+    this.userService.updateProfile(Number(userId), this.profileForm.value, this.selectedFile ?? undefined)
       .subscribe({
-        next: (updatedUser) => {
-
-          console.log('Données reçues:', updatedUser);
-          console.log('État actuel du signal:', this.authService.currentUser());
-          
-          this.isSubmitting.set(false);
-          setTimeout(() => {
-            this.router.navigate(['/profile']);
-          }, 100);
+        next: () => {
+          this.storageService.removeItem(FORM_CACHE_KEY);
+          this.router.navigate(['/profile']);
         },
-        error: (err) => {
+        error: () => {
           this.isSubmitting.set(false);
-          console.error('Erreur mise à jour:', err);
-          console.error('Détails:', err.error);
         }
       });
   }
 
-  cancel(): void {
-    this.router.navigate(['/profile']);
+  private formatDate(date?: string | Date): string {
+    if (!date) return '';
+    return new Date(date).toISOString().split('T')[0];
   }
 }

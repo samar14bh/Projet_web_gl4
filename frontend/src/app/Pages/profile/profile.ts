@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
@@ -12,20 +12,22 @@ import { StudyMajor } from '../../Core/models/auth.models';
   styleUrl: './profile.css'
 })
 export class ProfileComponent {
-   readonly authService = inject(AuthService);
-   readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
+ 
   user = this.authService.currentUser;
-  isEditing = signal(false);
- getUserFullName(): string {
-    return this.authService.userFullName();
-  }
+
+  getUserFullName = computed(() => {
+    const u = this.user();
+    return u ? `${u.name} ${u.lastName}` : '';
+  });
 
   userAge = computed(() => {
-    const user = this.user();
-    if (!user?.dateOfBirth) return null;
+    const dob = this.user()?.dateOfBirth;
+    if (!dob) return null;
     
-    const birthDate = new Date(user.dateOfBirth);
+    const birthDate = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -37,23 +39,20 @@ export class ProfileComponent {
     return age;
   });
 
-  formattedBirthDate = computed(() => {
-    const user = this.user();
-    if (!user?.dateOfBirth) return '';
-    
-    const date = new Date(user.dateOfBirth);
-    return date.toLocaleDateString('fr-FR', { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
-    });
-  });
-
+ 
+displayImageUrl = computed(() => {
+  const imagePath = this.user()?.image;
+  if (!imagePath) return null;
+  
+  return imagePath.startsWith('http') 
+    ? imagePath 
+    : `/api/uploads/${imagePath}`;
+});
   majorFullName = computed(() => {
-    const user = this.user();
-    if (!user?.major) return '';
+    const major = this.user()?.major;
+    if (!major) return 'Non renseignée';
     
-    const majorNames: Record<StudyMajor, string> = {
+    const majorNames: Record<string, string> = {
       [StudyMajor.GL]: 'Génie Logiciel',
       [StudyMajor.RT]: 'Réseaux et Télécommunications',
       [StudyMajor.IMI]: 'Informatique et Multimédia',
@@ -62,32 +61,18 @@ export class ProfileComponent {
       [StudyMajor.CH]: 'Chimie'
     };
     
-    return majorNames[user.major] || user.major;
+    return majorNames[major] || major;
   });
 
-  userInitials = this.authService.userInitials;
-  isEmailVerified = this.authService.isEmailVerified;
-
-  async logout(): Promise<void> {
-    this.authService.logout().subscribe({
-      next: () => {
-        console.log('Déconnexion réussie');
-      },
-      error: (error) => {
-        console.error('Erreur lors de la déconnexion:', error);
-      }
-    });
-  }
+ 
+  userInitials = computed(() => {
+    const name = this.user()?.name;
+    return name ? name.charAt(0).toUpperCase() : '?';
+  });
 
   editProfile(): void {
-    this.isEditing.set(true);
     this.router.navigate(['/settings']);
   }
 
-  getImageUrl(imagePath?: string): string {
-    if (!imagePath) return '';
-    return imagePath.startsWith('http') 
-      ? imagePath 
-      : `/api/uploads/${imagePath}`;
-  }
+  
 }

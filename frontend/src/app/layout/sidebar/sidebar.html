@@ -124,7 +124,7 @@
     </ul>
   </div>
 
-  @if (isAdmin()) {
+  @if (isAdmin() && isLoggedIn()) {
   <div class="nav-section">
     <div class="nav-section-title">Administration</div>
     <ul class="nav-list">
@@ -153,7 +153,7 @@
   <div class="nav-section">
     <div class="nav-section-title">Paramètres</div>
     <ul class="nav-list">
-      @if (!isAdmin()) {
+      @if (!isAdmin() && isLoggedIn()) {
       <li class="nav-item">
         <a routerLink="/settings" routerLinkActive="active" class="nav-link">
           <i class="bi bi-gear"></i>
