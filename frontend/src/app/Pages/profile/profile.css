@@ -1,0 +1,503 @@
+.profile-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 50%, #ffffff 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Effets de fond géométrique */
+.profile-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.8) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header - Glassmorphism avancé */
+.profile-header-section {
+  width: 100%;
+  padding: 4rem 6% 3rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+.profile-header-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(59, 130, 246, 0.3), 
+    rgba(139, 92, 246, 0.3), 
+    transparent
+  );
+}
+
+/* Grid layout moderne pour l'en-tête */
+.profile-top-bar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Avatar avec effet de halo */
+.avatar-container {
+  position: relative;
+  grid-column: 3;
+  justify-self: end;
+}
+
+.user-avatar-dashboard {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    -5px -5px 15px rgba(255, 255, 255, 0.7), 
+    5px 5px 15px rgba(0, 0, 0, 0.1),
+    0 0 0 8px rgba(59, 130, 246, 0.1),
+    0 0 30px rgba(59, 130, 246, 0.3);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.user-avatar-dashboard:hover {
+  transform: scale(1.08) rotate(5deg);
+  box-shadow: 
+    -5px -5px 15px rgba(255, 255, 255, 0.7), 
+    5px 5px 15px rgba(0, 0, 0, 0.1),
+    0 0 0 12px rgba(59, 130, 246, 0.2),
+    0 0 50px rgba(59, 130, 246, 0.4);
+}
+
+.user-initials-dashboard {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 800;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    -5px -5px 15px rgba(255, 255, 255, 0.7), 
+    5px 5px 15px rgba(0, 0, 0, 0.1),
+    0 0 0 8px rgba(59, 130, 246, 0.1);
+  transition: all 0.4s ease;
+}
+
+.user-initials-dashboard:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #1d4ed8, #a78bfa);
+}
+
+/* Nom avec effet de dégradé animé */
+.profile-name-container {
+  grid-column: 1;
+}
+
+.profile-name {
+  font-size: 4rem;
+  font-weight: 900;
+  margin: 0 0 1rem 0;
+  letter-spacing: -1.5px;
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    #2563eb 0%,
+    #8b5cf6 25%,
+    #2563eb 50%,
+    #8b5cf6 75%,
+    #2563eb 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Badge de rôle amélioré */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  color: #1d4ed8;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.role-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: 0.5s;
+}
+
+.role-badge:hover::before {
+  left: 100%;
+}
+
+/* Bouton néomorphique */
+.btn-edit {
+  grid-column: 2;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  color: #1d4ed8;
+  padding: 16px 32px;
+  border-radius: 16px;
+  border: none;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.7), 
+              5px 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-edit::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(145deg, #3b82f6, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.btn-edit span {
+  position: relative;
+  z-index: 2;
+}
+
+.btn-edit svg {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.btn-edit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: white;
+}
+
+.btn-edit:hover::after {
+  opacity: 1;
+}
+
+.btn-edit:hover svg {
+  transform: rotate(15deg);
+  stroke: white;
+}
+
+/* Section de contenu */
+.profile-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 6%;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  padding-left: 24px;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #2563eb, #8b5cf6);
+  border-radius: 3px;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Grille avec effet morphique */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 2.5rem;
+  perspective: 1000px;
+}
+
+.detail-item {
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.7), 
+              5px 5px 15px rgba(0, 0, 0, 0.1);
+  transform-style: preserve-3d;
+}
+
+.detail-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.detail-item:hover {
+  transform: translateY(-10px) rotateX(5deg);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 30px rgba(59, 130, 246, 0.3);
+  border-color: transparent;
+}
+
+.detail-item:hover::before {
+  opacity: 1;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  padding-left: 12px;
+}
+
+.detail-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.detail-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.3;
+  position: relative;
+  padding-left: 8px;
+}
+
+/* Effet de surbrillance sur les valeurs */
+.detail-value::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom, #3b82f6, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.detail-item:hover .detail-value::after {
+  opacity: 1;
+}
+
+/* Animation d'entrée séquentielle */
+.detail-item {
+  animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detail-item:nth-child(1) { animation-delay: 0.1s; }
+.detail-item:nth-child(2) { animation-delay: 0.2s; }
+.detail-item:nth-child(3) { animation-delay: 0.3s; }
+
+/* Responsive Design Premium */
+@media (max-width: 1200px) {
+  .profile-name {
+    font-size: 3.5rem;
+  }
+  
+  .user-avatar-dashboard,
+  .user-initials-dashboard {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .profile-top-bar {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .avatar-container {
+    grid-column: 1;
+    justify-self: start;
+  }
+  
+  .btn-edit {
+    grid-column: 1;
+    justify-self: start;
+  }
+  
+  .profile-name {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-header-section {
+    padding: 3rem 5% 2rem;
+  }
+  
+  .profile-name {
+    font-size: 2.5rem;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .detail-item {
+    padding: 2rem;
+  }
+  
+  .user-avatar-dashboard,
+  .user-initials-dashboard {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-name {
+    font-size: 2rem;
+  }
+  
+  .section-title {
+    font-size: 1.75rem;
+  }
+  
+  .detail-value {
+    font-size: 1.5rem;
+  }
+  
+  .btn-edit {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Effets de particules subtiles (optionnel) */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #3b82f6 0%, transparent 70%);
+  opacity: 0.1;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #2563eb, #a78bfa);
+}
