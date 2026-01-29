@@ -28,7 +28,8 @@ export class SidebarComponent {
   private router = inject(Router);
   private clubResponsabilityService = inject(ClubResponsabilityService);
 
-  isLoggedIn = signal(true);
+  isLoggedIn = computed(() => !!this.authService.currentUser());
+  isAdmin = computed(() => this.authService.isAdmin());
   specialClubs = this.clubService.getClubsWithSpecialMembershipsResource(() => this.authService.currentUser()?.id ?? 0);
   onMenuItemClick(item: MenuItem): void {
     if (item.isLogout) {
