@@ -1,4 +1,4 @@
-<!-- Header -->
+
 <div class="sidebar-header">
   <div class="logo">
     <i class="bi bi-people-fill"></i>
@@ -6,9 +6,7 @@
   </div>
 </div>
 
-<!-- Navigation -->
 <nav class="sidebar-nav">
-  <!-- Section Général -->
   <div class="nav-section">
     <div class="nav-section-title">Général</div>
     <ul class="nav-list">
@@ -20,14 +18,13 @@
       </li>
       <li class="nav-item">
         <a routerLink="/clubs" routerLinkActive="active" class="nav-link">
-           <i class="bi bi-search"></i> 
+          <i class="bi bi-search"></i>
           <span class="nav-label">Explorez les clubs</span>
         </a>
       </li>
     </ul>
   </div>
 
-  <!-- Section Mon Espace -->
   <div class="nav-section">
     <div class="nav-section-title">Mon Espace</div>
     <ul class="nav-list">
@@ -48,10 +45,10 @@
           <i class="bi bi-file-earmark-text"></i>
           <span class="nav-label">Mes candidatures</span>
         </a>
+      </li>
     </ul>
   </div>
 
-  @if (isLoggedIn()) {
   <div class="nav-section">
     <div class="nav-section-title">Bureau</div>
     <ul class="nav-list">
@@ -90,12 +87,7 @@
       }
     </ul>
   </div>
-  }
 
-
-
-
-  <!-- Section Gestion du Club -->
   <div class="nav-section">
     <div class="nav-section-title">Gestion du Club</div>
     <ul class="nav-list">
@@ -132,32 +124,7 @@
     </ul>
   </div>
 
-  <!-- Section Responsable Club -->
-  <div class="nav-section">
-    <div class="nav-section-title">Responsable Club</div>
-    <ul class="nav-list">
-      <li class="nav-item">
-        <a routerLink="/club-manager/dashboard" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-speedometer"></i>
-          <span class="nav-label">Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/club-manager/manage-club" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-building-gear"></i>
-          <span class="nav-label">Gérer mon club</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/club-manager/manage-members" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-person-check"></i>
-          <span class="nav-label">Gérer les membres</span>
-        </a>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Section Administration -->
+  @if (isAdmin()) {
   <div class="nav-section">
     <div class="nav-section-title">Administration</div>
     <ul class="nav-list">
@@ -181,11 +148,12 @@
       </li>
     </ul>
   </div>
+  }
 
-  <!-- Section Paramètres -->
   <div class="nav-section">
     <div class="nav-section-title">Paramètres</div>
     <ul class="nav-list">
+      @if (!isAdmin()) {
       <li class="nav-item">
         <a routerLink="/settings" routerLinkActive="active" class="nav-link">
           <i class="bi bi-gear"></i>
@@ -198,7 +166,6 @@
           <span class="nav-label">Profil</span>
         </a>
       </li>
-      @if (isLoggedIn()) {
       <li class="nav-item">
         <a routerLink="/notifications" routerLinkActive="active" class="nav-link">
           <i class="bi bi-bell"></i>
