@@ -117,42 +117,18 @@
     @if (!isLoading()) {
       @if (filteredEvents().length > 0) {
         <div class="events-grid three-columns">
-  @for (event of pagination.paginatedItems(); track event.id) {
-    <app-event-card 
-      [event]="event" 
-      [userId]="currentUser()?.id ?? ''" /> }
-</div>
+          @for (event of pagination.paginatedItems(); track event.id) {
+            <app-event-card 
+              [event]="event" 
+              [userId]="currentUser()?.id ?? ''" /> 
+          }
+        </div>
 
-        @if (pagination.totalPages() > 1) {
-          <div class="pagination">
-            <app-button 
-              label="Précédent" 
-              variant="ghost" 
-              icon="chevron-left"
-              [disabled]="pagination.currentPage() === 1" 
-              (clicked)="pagination.prevPage()" />
-            
-            <div class="page-numbers">
-              @for (page of pagination.getPageNumbers(); track $index) {
-                @if (page === -1) {
-                  <span class="pagination-ellipsis">...</span>
-                } @else {
-                  <app-button 
-                    [label]="page.toString()" 
-                    [variant]="page === pagination.currentPage() ? 'primary' : 'ghost'" 
-                    (clicked)="pagination.goToPage(page)" />
-                }
-              }
-            </div>
+        <app-pagination 
+          [currentPage]="pagination.currentPage()" 
+          [totalPages]="pagination.totalPages()" 
+          (pageChange)="pagination.goToPage($event)" />
 
-            <app-button 
-              label="Suivant" 
-              variant="ghost" 
-              icon="chevron-right"
-              [disabled]="pagination.currentPage() === pagination.totalPages()" 
-              (clicked)="pagination.nextPage()" />
-          </div>
-        }
       } @else {
         <div class="no-events">
           <p>Aucun événement ne correspond à vos critères.</p>
@@ -161,42 +137,42 @@
     }
   </section>
 
- <section class="suggestions-section lazy-load-container"
-         appLazyLoading
-         rootMargin="100px" 
-         (visible)="recommendationsVisible.set(true)">
-  
-  <div class="section-header">
-    <h2>Clubs qui pourraient vous intéresser</h2>
-    <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
-  </div>
+  <section class="suggestions-section lazy-load-container"
+          appLazyLoading
+          rootMargin="100px" 
+          (visible)="recommendationsVisible.set(true)">
+    
+    <div class="section-header">
+      <h2>Clubs qui pourraient vous intéresser</h2>
+      <p class="section-subtitle">Basé sur vos centres d'intérêt et catégories préférées</p>
+    </div>
 
-  @if (recommendationsVisible()) {
-    @if (recommendedClubs().length > 0) {
-      <div class="clubs-recommendations-grid fade-in-up">
-        @for (club of recommendedClubs(); track club.id) {
-          @let meta = getClubMeta(club.id);
-          <app-club-component 
-            [club]="club"
-            [isAuthenticated]="true"
-            [showJoinButton]="true"
-            [joinButtonLabel]="meta.text"
-            [joinButtonVariant]="meta.variant"
-            [joinButtonDisabled]="meta.disabled"
-            [userClubStatus]="meta.status"
-            [redirectAfterAction]="true" />
-        }
-      </div>
+    @if (recommendationsVisible()) {
+      @if (recommendedClubs().length > 0) {
+        <div class="clubs-recommendations-grid fade-in-up">
+          @for (club of recommendedClubs(); track club.id) {
+            @let meta = getClubMeta(club.id);
+            <app-club-component 
+              [club]="club"
+              [isAuthenticated]="true"
+              [showJoinButton]="true"
+              [joinButtonLabel]="meta.text"
+              [joinButtonVariant]="meta.variant"
+              [joinButtonDisabled]="meta.disabled"
+              [userClubStatus]="meta.status"
+              [redirectAfterAction]="true" />
+          }
+        </div>
+      } @else {
+        <div class="empty-recommendations fade-in-up">
+          <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+        </div>
+      }
     } @else {
-      <div class="empty-recommendations fade-in-up">
-        <p>Explorez plus de clubs pour recevoir des recommandations personnalisées !</p>
+      <div class="lazy-placeholder">
+        <div class="spinner"></div>
+        <p>Recherche de clubs pour vous...</p>
       </div>
     }
-  } @else {
-    <div class="lazy-placeholder">
-      <div class="spinner"></div>
-      <p>Recherche de clubs pour vous...</p>
-    </div>
-  }
-</section>
+  </section>
 </div>
