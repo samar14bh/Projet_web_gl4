@@ -73,17 +73,16 @@
           </a>
 
           <div class="menu-divider"></div>
-
-          <a href="#" class="menu-item text-danger">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </a>
+          <button type="button" class="menu-item text-danger" (click)="onLogout()">
+          <i class="bi bi-box-arrow-right"></i>
+           <span>Sign Out</span>
+          </button>
         </div>
       </div>
     </div>
     } @else {
     <div class="header-actions">
-      <button class="login-btn" routerLink="/login">
+      <button class="login-btn" routerLink="/login" >
         <i class="bi bi-box-arrow-in-right"></i>
         <span>Se connecter</span>
       </button>
