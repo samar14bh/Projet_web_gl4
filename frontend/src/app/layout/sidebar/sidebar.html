@@ -150,9 +150,9 @@
 
 
   <div class="nav-section">
-    <div class="nav-section-title">Paramètres</div>
     <ul class="nav-list">
       @if (!isAdmin() && isLoggedIn()) {
+        <div class="nav-section-title">Paramètres</div>
       <li class="nav-item">
         <a routerLink="/settings" routerLinkActive="active" class="nav-link">
           <i class="bi bi-gear"></i>
