@@ -48,9 +48,10 @@
     <div class="dropdown-wrapper">
       <button class="user-profile" (click)="toggleUserMenu()">
         <img [src]="user()?.image | defaultImage:'user'" alt="User" class="user-avatar">
-        <div class="user-info">
-          <span class="user-name">{{ user()?.name || 'Guest' }}</span>
-        </div>
+         <div class="user-info">
+           <span *ngIf="admin()" class="admin-label">Admin</span>
+           <span *ngIf="!admin()">{{ user()?.name || 'Guest' }}</span>
+          </div>
         <i class="bi bi-chevron-down"></i>
       </button>
 

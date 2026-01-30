@@ -26,7 +26,7 @@ export class NavbarComponent {
   showUserMenu = signal(false);
   private readonly authService = inject(AuthService);
   user = this.authService.currentUser;
-
+  admin= computed(() => this.authService.isAdmin());
 
   notifications: Notification[] = [
     {
