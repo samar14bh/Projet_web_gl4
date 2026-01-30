@@ -2,59 +2,169 @@
   <div class="edit-card">
     <header class="edit-header">
       <h1>Modifier mon profil</h1>
-    </header>
+    </header> <!-- Fermeture manquante de la balise <header> -->
 
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="edit-form">
-      
       <div class="image-upload-section">
         <div class="avatar-preview">
           @if (imagePreview()) {
-            <img [src]="imagePreview()" class="preview-img">
-          } @else if (user()?.image) {
-            <img [src]="user()?.image" class="preview-img">
+            <img [src]="imagePreview()" class="preview-img" alt="Aperçu de la nouvelle photo">
+          } @else if (currentImageUrl()) {
+            <img [src]="currentImageUrl()" class="preview-img" alt="Photo de profil actuelle">
           } @else {
-            <div class="placeholder-avatar">{{ user()?.name?.[0] }}</div>
+            <div class="placeholder-avatar" [attr.aria-label]="'Initiales: ' + user()?.name?.[0]">
+              {{ user()?.name?.[0] }}
+            </div>
           }
         </div>
-        <label for="imageInput" class="btn-secondary">Changer la photo</label>
-        <input id="imageInput" type="file" (change)="onFileSelected($event)" hidden accept="image/*">
+        
+        <div class="image-actions">
+          <label for="imageInput" class="btn-secondary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            Changer la photo
+          </label>
+          <input 
+            id="imageInput" 
+            type="file" 
+            (change)="onFileSelected($event)" 
+            hidden 
+            accept="image/jpeg,image/png,image/webp"
+            [disabled]="isSubmitting()">
+          
+          @if (selectedFile()) {
+            <span class="file-name">{{ selectedFile()?.name }}</span>
+          }
+        </div>
       </div>
-
+      
       <div class="form-grid">
         <div class="form-group">
-          <label>Prénom</label>
-          <input type="text" formControlName="name">
+          <label for="nameInput">
+            Prénom <span class="required">*</span>
+          </label>
+          <input 
+            id="nameInput"
+            type="text" 
+            formControlName="name"
+            placeholder="Votre prénom"
+            [class.error]="profileForm.get('name')?.invalid && profileForm.get('name')?.touched">
+          
+          @if (profileForm.get('name')?.invalid && profileForm.get('name')?.touched) {
+            <div class="error-text">
+              @if (profileForm.get('name')?.errors?.['required']) {
+                <span>Le prénom est requis</span>
+              }
+              @if (profileForm.get('name')?.errors?.['minlength']) {
+                <span>Le prénom doit contenir au moins 2 caractères</span>
+              }
+            </div>
+          }
         </div>
 
         <div class="form-group">
-          <label>Nom</label>
-          <input type="text" formControlName="lastName">
+          <label for="lastNameInput">
+            Nom <span class="required">*</span>
+          </label>
+          <input 
+            id="lastNameInput"
+            type="text" 
+            formControlName="lastName"
+            placeholder="Votre nom"
+            [class.error]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched">
+          
+          @if (profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched) {
+            <div class="error-text">
+              @if (profileForm.get('lastName')?.errors?.['required']) {
+                <span>Le nom est requis</span>
+              }
+              @if (profileForm.get('lastName')?.errors?.['minlength']) {
+                <span>Le nom doit contenir au moins 2 caractères</span>
+              }
+            </div>
+          }
         </div>
 
         <div class="form-group">
-          <label>Filière</label>
-          <select formControlName="major">
+          <label for="majorSelect">
+            Filière <span class="required">*</span>
+          </label>
+          <select 
+            id="majorSelect"
+            formControlName="major"
+            [class.error]="profileForm.get('major')?.invalid && profileForm.get('major')?.touched">
+            <option value="">-- Sélectionnez une filière --</option>
             @for (m of majors; track m) {
               <option [value]="m">{{ m }}</option>
             }
           </select>
+          
+          @if (profileForm.get('major')?.invalid && profileForm.get('major')?.touched) {
+            <div class="error-text">
+              Veuillez sélectionner une filière
+            </div>
+          }
         </div>
 
         <div class="form-group">
-          <label>Date de naissance</label>
-          <input type="date" formControlName="dateOfBirth">
+          <label for="dateInput">
+            Date de naissance <span class="required">*</span>
+          </label>
+          <input 
+            id="dateInput"
+            type="date" 
+            formControlName="dateOfBirth"
+            [class.error]="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched">
           
           @if (profileForm.get('dateOfBirth')?.touched && profileForm.get('dateOfBirth')?.errors?.['minimumAge']) {
-            <div class="error-text" style="color: red; font-size: 0.8rem; margin-top: 5px;">
+            <div class="error-text">
               Vous devez avoir au moins {{ profileForm.get('dateOfBirth')?.errors?.['minimumAge'].requiredAge }} ans.
             </div>
           }
         </div>
-      </div>
 
+        <div class="form-group form-group-full">
+          <label for="passwordInput">
+            Nouveau mot de passe
+            <span class="optional">(laisser vide pour conserver l'actuel)</span>
+          </label>
+          <input 
+            id="passwordInput"
+            type="password" 
+            formControlName="password" 
+            placeholder="••••••••"
+            autocomplete="new-password"
+            [class.error]="profileForm.get('password')?.invalid && profileForm.get('password')?.touched">
+          
+          @if (profileForm.get('password')?.invalid && profileForm.get('password')?.touched) {
+            <div class="error-text">
+              Le mot de passe doit contenir au moins 8 caractères
+            </div>
+          }
+        </div>
+      </div>
+      
       <div class="action-buttons">
-        <button type="submit" class="btn-save" [disabled]="profileForm.invalid || isSubmitting()">
-          {{ isSubmitting() ? 'Enregistrement...' : 'Sauvegarder les modifications' }}
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="cancelEdit()"
+          [disabled]="isSubmitting()">
+          Annuler
+        </button>
+        
+        <button 
+          type="submit" 
+          class="btn-save" 
+          [disabled]="profileForm.invalid || isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner"></span>
+            Enregistrement...
+          } @else {
+            Sauvegarder les modifications
+          }
         </button>
       </div>
     </form>
