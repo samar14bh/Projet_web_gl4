@@ -56,16 +56,16 @@
 
 
             <!-- Finances -->
-            @if (canManageFinances()) {
-            <div class="action-card" routerLink="/finances" style="--accent-color: #059669">
-                <div class="card-icon"><i class="bi bi-cash-coin"></i></div>
-                <div class="card-body">
-                    <h3>Finances</h3>
-                    <p>Gérer la trésorerie et les budgets</p>
-                </div>
-                <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
+          @if (canManageFinances()) {
+            <div class="action-card" [routerLink]="['/finances', membership()?.id]" style="--accent-color: #059669">
+              <div class="card-icon"><i class="bi bi-cash-coin"></i></div>
+              <div class="card-body">
+                <h3>Finances</h3>
+                <p>Gérer la trésorerie et les budgets</p>
+              </div>
+              <div class="card-arrow"><i class="bi bi-chevron-right"></i></div>
             </div>
-            }
+          }
 
 
             <!-- Membres -->

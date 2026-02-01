@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   ChangeDetectionStrategy,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -38,13 +39,18 @@ import { ToastService } from '../../../Core/services/toast.service';
   ],
   templateUrl: './finances.html',
   styleUrl: './finances.css',
-  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancesComponent {
   // ========== SERVICES ==========
   private readonly financeService = inject(FinanceService);
   private readonly exportService = inject(ExportService);
   private readonly toastService = inject(ToastService);
+
+  // ✅ Récupérer le clubId depuis l'URL (paramètre de route)
+  clubId = input<number, string | number>(0, {
+    transform: (val: string | number) => Number(val),
+  });
 
   // ========== SIGNALS D'ÉTAT ==========
   readonly selectedPeriod = signal<'month' | 'quarter' | 'year' | 'all'>('month');
@@ -56,17 +62,20 @@ export class FinancesComponent {
   readonly isExpenseModalOpen = signal(false);
   readonly isDetailsModalOpen = signal(false);
   readonly selectedTransaction = signal<Transaction | null>(null);
-  readonly clubId = signal<number>(1); // TODO: récupérer depuis l'authentification
 
   // ========== COMPUTED FILTERS ==========
   readonly filters = computed<TransactionFilters>(() => ({
     period: this.selectedPeriod(),
-    type: this.selectedTransactionType() !== 'all' ? this.selectedTransactionType() : undefined,
-    category: this.selectedCategory() !== 'all' ? this.selectedCategory() : undefined,
+    type:
+      this.selectedTransactionType() !== 'all'
+        ? this.selectedTransactionType()
+        : undefined,
+    category:
+      this.selectedCategory() !== 'all' ? this.selectedCategory() : undefined,
     search: this.searchQuery() || undefined,
     page: this.currentPage(),
     limit: this.pageSize(),
-    clubId: this.clubId(),
+    clubId: this.clubId(), // ✅ Filtrer par club
   }));
 
   // ========== RESOURCES (rxResource) ==========
@@ -104,9 +113,15 @@ export class FinancesComponent {
   });
 
   // ========== COMPUTED SIGNALS DÉRIVÉS ==========
-  readonly transactions = computed(() => this.transactionsResource.value()?.data ?? []);
-  readonly totalTransactions = computed(() => this.transactionsResource.value()?.total ?? 0);
-  readonly totalPages = computed(() => this.transactionsResource.value()?.totalPages ?? 0);
+  readonly transactions = computed(
+    () => this.transactionsResource.value()?.data ?? [],
+  );
+  readonly totalTransactions = computed(
+    () => this.transactionsResource.value()?.total ?? 0,
+  );
+  readonly totalPages = computed(
+    () => this.transactionsResource.value()?.totalPages ?? 0,
+  );
   readonly isLoading = computed(() => this.transactionsResource.isLoading());
   readonly hasError = computed(() => !!this.transactionsResource.error());
 
@@ -132,16 +147,12 @@ export class FinancesComponent {
   readonly TransactionCategory = TransactionCategory;
 
   // ========== TRACKBY FUNCTIONS ==========
-  // ✅ TrackBy pour optimiser le rendu des listes
   readonly trackByTransactionId = (_index: number, transaction: Transaction) =>
     transaction.id;
   readonly trackByMonth = (_index: number, data: any) => data.month;
 
   // ========== MÉTHODES UTILITAIRES (PURES) ==========
 
-  /**
-   * Formater une date
-   */
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -150,16 +161,10 @@ export class FinancesComponent {
     });
   }
 
-  /**
-   * Obtenir la classe CSS selon le type de transaction
-   */
   getTransactionTypeClass(type: string): string {
     return type === TransactionType.REVENUE ? 'type-revenue' : 'type-expense';
   }
 
-  /**
-   * Obtenir l'icône selon la catégorie
-   */
   getCategoryIcon(category: string): string {
     const icons: Record<string, string> = {
       [TransactionCategory.MEMBERSHIP]: 'bi-person-badge',
@@ -170,9 +175,6 @@ export class FinancesComponent {
     return icons[category] || 'bi-cash';
   }
 
-  /**
-   * Obtenir le libellé de la catégorie
-   */
   getCategoryLabel(category: string): string {
     const labels: Record<string, string> = {
       [TransactionCategory.MEMBERSHIP]: 'Cotisation',
@@ -185,98 +187,62 @@ export class FinancesComponent {
 
   // ========== ACTIONS ==========
 
-  /**
-   * Changer la période
-   */
   changePeriod(period: 'month' | 'quarter' | 'year' | 'all'): void {
     this.selectedPeriod.set(period);
     this.currentPage.set(1);
   }
 
-  /**
-   * Changer le type de transaction
-   */
   changeTransactionType(type: TransactionType | 'all'): void {
     this.selectedTransactionType.set(type);
     this.currentPage.set(1);
   }
 
-  /**
-   * Changer la catégorie
-   */
   changeCategory(category: TransactionCategory | 'all'): void {
     this.selectedCategory.set(category);
     this.currentPage.set(1);
   }
 
-  /**
-   * Rechercher
-   */
   onSearch(query: string): void {
     this.searchQuery.set(query);
     this.currentPage.set(1);
   }
 
-  /**
-   * Changer de page
-   */
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
     }
   }
 
-  /**
-   * Recharger les données manuellement
-   */
   reloadData(): void {
     this.transactionsResource.reload();
     this.statsResource.reload();
     this.chartResource.reload();
   }
 
-  /**
-   * Ouvrir le modal d'ajout de transaction
-   */
   openExpenseModal(): void {
     this.isExpenseModalOpen.set(true);
   }
 
-  /**
-   * Fermer le modal d'ajout de transaction
-   */
   closeExpenseModal(): void {
     this.isExpenseModalOpen.set(false);
   }
 
-  /**
-   * Succès de l'ajout de transaction
-   */
   onTransactionSuccess(): void {
     this.closeExpenseModal();
     this.reloadData();
     this.toastService.success('Transaction ajoutée avec succès !');
   }
 
-  /**
-   * Ouvrir le modal de détails
-   */
   openDetailsModal(transaction: Transaction): void {
     this.selectedTransaction.set(transaction);
     this.isDetailsModalOpen.set(true);
   }
 
-  /**
-   * Fermer le modal de détails
-   */
   closeDetailsModal(): void {
     this.selectedTransaction.set(null);
     this.isDetailsModalOpen.set(false);
   }
 
-  /**
-   * Exporter les données en PDF ou Excel
-   */
   exportData(format: 'pdf' | 'excel'): void {
     const period = this.selectedPeriod();
     const stats = this.financialStats();
@@ -315,7 +281,7 @@ export class FinancesComponent {
         this.toastService.success('Export Excel généré avec succès !');
       }
     } catch (error) {
-      console.error('Erreur lors de l\'export:', error);
+      console.error("Erreur lors de l'export:", error);
       this.toastService.error('Erreur lors de l\'export des données');
     }
   }

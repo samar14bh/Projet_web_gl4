@@ -1,449 +1,504 @@
-<div class="manage-clubs-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Gestion des clubs</h1>
-      <p class="page-subtitle">Gérez tous les clubs de l'université</p>
-    </div>
-    <div class="header-actions">
-      <app-button
-        label="Créer un club"
-        variant="primary"
-        icon="plus-lg"
-        (clicked)="openCreateModal()"
-      />
-    </div>
-  </div>
-
-  <!-- Statistiques rapides -->
-  @if (statsResource.isLoading()) {
-    <div class="stats-loading">
-      <div class="spinner"></div>
-    </div>
-  } @else {
-    <div class="quick-stats">
-      <div class="quick-stat">
-        <div class="stat-icon primary">
-          <i class="bi bi-building"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ formatNumber(stats().total) }}</span>
-          <span class="stat-label">Total clubs</span>
-        </div>
+<!-- ✅ Container global avec scroll pour toute la page -->
+<div class="manage-clubs-page-wrapper">
+  <div class="manage-clubs-container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Gestion des clubs</h1>
       </div>
-      <div class="quick-stat">
-        <div class="stat-icon success">
-          <i class="bi bi-check-circle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ formatNumber(stats().active) }}</span>
-          <span class="stat-label">Actifs</span>
-        </div>
-      </div>
-      <div class="quick-stat">
-        <div class="stat-icon warning">
-          <i class="bi bi-x-circle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ formatNumber(stats().inactive) }}</span>
-          <span class="stat-label">Inactifs</span>
-        </div>
-      </div>
-      <div class="quick-stat">
-        <div class="stat-icon info">
-          <i class="bi bi-people"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ formatNumber(stats().totalMembers) }}</span>
-          <span class="stat-label">Membres totaux</span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Filtres et recherche -->
-  <div class="filters-section">
-    <div class="filters-left">
-      <!-- Onglets de statut -->
-      <div class="status-tabs">
-        <button
-          class="status-tab"
-          [class.active]="selectedStatus() === 'all'"
-          (click)="changeStatus('all')"
-        >
-          Tous ({{ formatNumber(stats().total) }})
-        </button>
-        <button
-          class="status-tab"
-          [class.active]="selectedStatus() === 'active'"
-          (click)="changeStatus('active')"
-        >
-          <i class="bi bi-check-circle"></i>
-          Actifs ({{ formatNumber(stats().active) }})
-        </button>
-        <button
-          class="status-tab"
-          [class.active]="selectedStatus() === 'inactive'"
-          (click)="changeStatus('inactive')"
-        >
-          <i class="bi bi-x-circle"></i>
-          Inactifs ({{ formatNumber(stats().inactive) }})
-        </button>
-      </div>
-    </div>
-
-    <div class="filters-right">
-      <!-- Recherche -->
-      <div class="search-box">
-        <i class="bi bi-search"></i>
-        <input
-          type="text"
-          placeholder="Rechercher un club..."
-          [value]="searchQuery()"
-          (input)="onSearch($any($event.target).value)"
-          class="search-input"
+      <div class="header-actions">
+        <app-button
+          label="Créer un club"
+          variant="primary"
+          icon="plus-lg"
+          (clicked)="openCreateModal()"
         />
       </div>
+    </div>
 
-      <!-- Filtre par catégorie -->
-      <select
-        class="filter-select"
-        [value]="selectedCategory()"
-        (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)"
-      >
-        <option value="all">Toutes les catégories</option>
-        @for (category of categories(); track category.id) {
-          <option [value]="category.id">{{ category.name }}</option>
-        }
-      </select>
-
-      <!-- Tri -->
-      <select
-        class="filter-select"
-        [value]="sortBy()"
-        (change)="changeSortBy($any($event.target).value)"
-      >
-        <option value="name">Trier par nom</option>
-        <option value="members">Trier par membres</option>
-        <option value="events">Trier par événements</option>
-        <option value="createdAt">Trier par date</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Liste des clubs -->
-  @if (isLoading()) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Chargement des clubs...</p>
-    </div>
-  } @else if (hasError()) {
-    <div class="error-state">
-      <i class="bi bi-exclamation-triangle"></i>
-      <h3>Erreur de chargement</h3>
-      <p>Impossible de charger les clubs</p>
-      <app-button
-        label="Réessayer"
-        variant="secondary"
-        (clicked)="refreshData()"
-      />
-    </div>
-  } @else if (clubs().length === 0) {
-    <div class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>Aucun club trouvé</h3>
-      <p>Aucun club ne correspond à vos critères de recherche</p>
-      <app-button
-        label="Réinitialiser les filtres"
-        variant="secondary"
-        (clicked)="changeStatus('all'); changeCategory('all'); onSearch('')"
-      />
-    </div>
-  } @else {
-    <div class="clubs-grid">
-      @for (club of clubs(); track club.id) {
-        <div class="club-card">
-          <!-- Image de couverture -->
-          <div class="club-cover">
-            <img [src]="getImageUrl(club.coverImage)" [alt]="club.name" />
-            <div class="club-status-badge" [class]="getStatusClass(club.isActive)">
-              {{ getStatusLabel(club.isActive) }}
-            </div>
+    <!-- ✅ Statistiques rapides avec defer -->
+    @defer (on viewport) {
+      <div class="quick-stats-section">
+        @if (statsResource.isLoading()) {
+          <div class="stats-loading">
+            <div class="spinner"></div>
           </div>
-
-          <!-- Contenu -->
-          <div class="club-content">
-            <!-- Logo et nom -->
-            <div class="club-header">
-              <img [src]="getImageUrl(club.logo)" [alt]="club.name" class="club-logo" />
-              <div class="club-info">
-                <h3 class="club-name">{{ club.name }}</h3>
-                <span class="club-category">
-                  <i class="bi bi-tag"></i>
-                  {{ club.categoryName }}
-                </span>
+        } @else {
+          <div class="quick-stats">
+            <div class="quick-stat">
+              <div class="stat-icon primary">
+                <i class="bi bi-building"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ formatNumber(stats().total) }}</span>
+                <span class="stat-label">Total clubs</span>
               </div>
             </div>
-
-            <!-- Description -->
-            <p class="club-description">{{ club.description }}</p>
-
-            <!-- Statistiques -->
-            <div class="club-stats">
-              <div class="club-stat">
+            <div class="quick-stat">
+              <div class="stat-icon success">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ formatNumber(stats().active) }}</span>
+                <span class="stat-label">Actifs</span>
+              </div>
+            </div>
+            <div class="quick-stat">
+              <div class="stat-icon warning">
+                <i class="bi bi-x-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ formatNumber(stats().inactive) }}</span>
+                <span class="stat-label">Inactifs</span>
+              </div>
+            </div>
+            <div class="quick-stat">
+              <div class="stat-icon info">
                 <i class="bi bi-people"></i>
-                <span>{{ club.members || 0 }} membres</span>
               </div>
-              <div class="club-stat">
-                <i class="bi bi-calendar-event"></i>
-                <span>{{ club.events || 0 }} événements</span>
-              </div>
-              <div class="club-stat">
-                <i class="bi bi-cash-coin"></i>
-                <span>{{ formatCurrency(club.revenue || 0) }}</span>
+              <div class="stat-info">
+                <span class="stat-value">{{ formatNumber(stats().totalMembers) }}</span>
+                <span class="stat-label">Membres totaux</span>
               </div>
             </div>
-
-            <!-- Informations additionnelles -->
-            <div class="club-meta">
-              <span class="club-date">
-                <i class="bi bi-calendar"></i>
-                Créé le {{ formatDate(club.creationDate) }}
-              </span>
-              <span class="club-fee">
-                <i class="bi bi-currency-dollar"></i>
-                {{ club.membershipFeeAmount }} TND/an
-              </span>
+          </div>
+        }
+      </div>
+    } @placeholder {
+      <div class="quick-stats-skeleton">
+        @for (_ of [1, 2, 3, 4]; track $index) {
+          <div class="quick-stat-skeleton">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-info">
+              <div class="skeleton-line" style="width: 60px; height: 28px;"></div>
+              <div class="skeleton-line" style="width: 80px; height: 14px;"></div>
             </div>
           </div>
-
-          <!-- Actions -->
-          <div class="club-actions">
-            <button
-              class="action-btn view"
-              (click)="openDetailsModal(club)"
-              title="Voir les détails"
-            >
-              <i class="bi bi-eye"></i>
-            </button>
-            <button
-              class="action-btn edit"
-              (click)="openEditModal(club)"
-              title="Modifier"
-            >
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button
-              class="action-btn admin"
-              (click)="openPresidentModal(club)"
-              title="Gérer l'administrateur"
-            >
-              <i class="bi bi-person-badge"></i>
-            </button>
-            <button
-              class="action-btn toggle"
-              [class.active]="club.isActive"
-              (click)="toggleClubStatus(club)"
-              [title]="club.isActive ? 'Désactiver' : 'Activer'"
-            >
-              <i [class]="club.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'"></i>
-            </button>
-            <button
-              class="action-btn delete"
-              (click)="openDeleteModal(club)"
-              title="Supprimer"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
+        }
+      </div>
+    } @loading (minimum 300ms) {
+      <div class="quick-stats-skeleton shimmer-section">
+        @for (_ of [1, 2, 3, 4]; track $index) {
+          <div class="quick-stat-skeleton">
+            <div class="skeleton-icon shimmer-item"></div>
+            <div class="skeleton-info">
+              <div class="skeleton-line shimmer-item" style="width: 60px; height: 28px;"></div>
+              <div class="skeleton-line shimmer-item" style="width: 80px; height: 14px;"></div>
+            </div>
           </div>
-        </div>
-      }
-    </div>
-
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)"
-        >
-          <i class="bi bi-chevron-left"></i>
-          Précédent
-        </button>
-
-        <div class="pagination-pages">
-          @for (page of [].constructor(totalPages()); track $index) {
-            <button
-              class="pagination-page"
-              [class.active]="currentPage() === $index + 1"
-              (click)="goToPage($index + 1)"
-            >
-              {{ $index + 1 }}
-            </button>
-          }
-        </div>
-
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)"
-        >
-          Suivant
-          <i class="bi bi-chevron-right"></i>
-        </button>
+        }
       </div>
     }
-  }
+
+    <!-- Filtres et recherche -->
+    <div class="filters-section">
+      <div class="filters-left">
+        <!-- Onglets de statut -->
+        <div class="status-tabs">
+          <button
+            class="status-tab"
+            [class.active]="selectedStatus() === 'all'"
+            (click)="changeStatus('all')"
+          >
+            Tous ({{ formatNumber(stats().total) }})
+          </button>
+          <button
+            class="status-tab"
+            [class.active]="selectedStatus() === 'active'"
+            (click)="changeStatus('active')"
+          >
+            <i class="bi bi-check-circle"></i>
+            Actifs ({{ formatNumber(stats().active) }})
+          </button>
+          <button
+            class="status-tab"
+            [class.active]="selectedStatus() === 'inactive'"
+            (click)="changeStatus('inactive')"
+          >
+            <i class="bi bi-x-circle"></i>
+            Inactifs ({{ formatNumber(stats().inactive) }})
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-right">
+        <!-- Recherche -->
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input
+            type="text"
+            placeholder="Rechercher un club..."
+            [value]="searchQuery()"
+            (input)="onSearch($any($event.target).value)"
+            class="search-input"
+          />
+        </div>
+
+        <!-- Filtre par catégorie -->
+        <select
+          class="filter-select"
+          [value]="selectedCategory()"
+          (change)="changeCategory($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)"
+        >
+          <option value="all">Toutes les catégories</option>
+          @for (category of categories(); track trackByCategoryId($index, category)) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+
+        <!-- Tri -->
+        <select
+          class="filter-select"
+          [value]="sortBy()"
+          (change)="changeSortBy($any($event.target).value)"
+        >
+          <option value="name">Trier par nom</option>
+          <option value="members">Trier par membres</option>
+          <option value="events">Trier par événements</option>
+          <option value="createdAt">Trier par date</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ✅ Liste des clubs avec defer -->
+    @defer (on viewport) {
+      <div class="clubs-list-section">
+        @if (isLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement des clubs...</p>
+          </div>
+        } @else if (hasError()) {
+          <div class="error-state">
+            <i class="bi bi-exclamation-triangle"></i>
+            <h3>Erreur de chargement</h3>
+            <p>Impossible de charger les clubs</p>
+            <app-button label="Réessayer" variant="secondary" (clicked)="refreshData()" />
+          </div>
+        } @else if (clubs().length === 0) {
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h3>Aucun club trouvé</h3>
+            <p>Aucun club ne correspond à vos critères de recherche</p>
+            <app-button
+              label="Réinitialiser les filtres"
+              variant="secondary"
+              (clicked)="changeStatus('all'); changeCategory('all'); onSearch('')"
+            />
+          </div>
+        } @else {
+          <div class="clubs-grid">
+            @for (club of clubs(); track trackByClubId($index, club)) {
+              <div class="club-card">
+                <!-- Image de couverture -->
+                <div class="club-cover">
+                  <img [src]="getImageUrl(club.coverImage)" [alt]="club.name" />
+                  <div class="club-status-badge" [class]="getStatusClass(club.isActive)">
+                    {{ getStatusLabel(club.isActive) }}
+                  </div>
+                </div>
+
+                <!-- Contenu -->
+                <div class="club-content">
+                  <!-- Logo et nom -->
+                  <div class="club-header">
+                    <img [src]="getImageUrl(club.logo)" [alt]="club.name" class="club-logo" />
+                    <div class="club-info">
+                      <h3 class="club-name">{{ club.name }}</h3>
+                      <span class="club-category">
+                        <i class="bi bi-tag"></i>
+                        {{ club.categoryName }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Description -->
+                  <p class="club-description">{{ club.description }}</p>
+
+                  <!-- Statistiques -->
+                  <div class="club-stats">
+                    <div class="club-stat">
+                      <i class="bi bi-people"></i>
+                      <span>{{ club.members || 0 }} membres</span>
+                    </div>
+                    <div class="club-stat">
+                      <i class="bi bi-calendar-event"></i>
+                      <span>{{ club.events || 0 }} événements</span>
+                    </div>
+                    <div class="club-stat">
+                      <i class="bi bi-cash-coin"></i>
+                      <span>{{ formatCurrency(club.revenue || 0) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Informations additionnelles -->
+                  <div class="club-meta">
+                    <span class="club-date">
+                      <i class="bi bi-calendar"></i>
+                      Créé le {{ formatDate(club.creationDate) }}
+                    </span>
+                    <span class="club-fee">
+                      <i class="bi bi-currency-dollar"></i>
+                      {{ club.membershipFeeAmount }} TND/an
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="club-actions">
+                  <button
+                    class="action-btn view"
+                    (click)="openDetailsModal(club)"
+                    title="Voir les détails"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="action-btn edit" (click)="openEditModal(club)" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    class="action-btn admin"
+                    (click)="openPresidentModal(club)"
+                    title="Gérer l'administrateur"
+                  >
+                    <i class="bi bi-person-badge"></i>
+                  </button>
+                  <button
+                    class="action-btn toggle"
+                    [class.active]="club.isActive"
+                    (click)="toggleClubStatus(club)"
+                    [title]="club.isActive ? 'Désactiver' : 'Activer'"
+                  >
+                    <i [class]="club.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'"></i>
+                  </button>
+                  <button
+                    class="action-btn delete"
+                    (click)="openDeleteModal(club)"
+                    title="Supprimer"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div class="pagination">
+              <button
+                class="pagination-btn"
+                [disabled]="currentPage() === 1"
+                (click)="goToPage(currentPage() - 1)"
+              >
+                <i class="bi bi-chevron-left"></i>
+                Précédent
+              </button>
+
+              <div class="pagination-pages">
+                @for (page of [].constructor(totalPages()); track $index) {
+                  <button
+                    class="pagination-page"
+                    [class.active]="currentPage() === $index + 1"
+                    (click)="goToPage($index + 1)"
+                  >
+                    {{ $index + 1 }}
+                  </button>
+                }
+              </div>
+
+              <button
+                class="pagination-btn"
+                [disabled]="currentPage() === totalPages()"
+                (click)="goToPage(currentPage() + 1)"
+              >
+                Suivant
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          }
+        }
+      </div>
+    } @placeholder {
+      <div class="clubs-grid-skeleton">
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <div class="club-card-skeleton">
+            <div class="skeleton-cover"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-header">
+                <div class="skeleton-logo"></div>
+                <div class="skeleton-info">
+                  <div class="skeleton-line" style="width: 70%; height: 20px;"></div>
+                  <div class="skeleton-line" style="width: 50%; height: 14px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-line" style="width: 100%; height: 14px;"></div>
+              <div class="skeleton-line" style="width: 100%; height: 14px;"></div>
+              <div class="skeleton-stats"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @loading (minimum 300ms) {
+      <div class="clubs-grid-skeleton shimmer-section">
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <div class="club-card-skeleton">
+            <div class="skeleton-cover shimmer-item"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-header">
+                <div class="skeleton-logo shimmer-item"></div>
+                <div class="skeleton-info">
+                  <div class="skeleton-line shimmer-item" style="width: 70%; height: 20px;"></div>
+                  <div class="skeleton-line shimmer-item" style="width: 50%; height: 14px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-line shimmer-item" style="width: 100%; height: 14px;"></div>
+              <div class="skeleton-line shimmer-item" style="width: 100%; height: 14px;"></div>
+              <div class="skeleton-stats shimmer-item"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>
 
-<!-- Modal de détails -->
-<app-modal
-  [isOpen]="isDetailsModalOpen()"
-  [title]="selectedClub()?.name || 'Détails du club'"
-  size="large"
-  (closed)="closeDetailsModal()"
->
-  @if (selectedClub()) {
-    <div class="club-details">
-      <!-- Image de couverture -->
-      <div class="details-cover">
-        <img [src]="getImageUrl(selectedClub()!.coverImage)" [alt]="selectedClub()!.name" />
-      </div>
-
-      <!-- Informations principales -->
-      <div class="details-header">
-        <img [src]="getImageUrl(selectedClub()!.logo)" [alt]="selectedClub()!.name" class="details-logo" />
-        <div class="details-info">
-          <h2>{{ selectedClub()!.name }}</h2>
-          <span class="details-category">
-            <i class="bi bi-tag"></i>
-            {{ selectedClub()!.categoryName }}
-          </span>
-          <span class="details-status" [class]="getStatusClass(selectedClub()!.isActive)">
-            {{ getStatusLabel(selectedClub()!.isActive) }}
-          </span>
+<!-- Modals restent en dehors du wrapper -->
+@defer (when isDetailsModalOpen()) {
+  <app-modal
+    [isOpen]="isDetailsModalOpen()"
+    [title]="selectedClub()?.name || 'Détails du club'"
+    size="large"
+    (closed)="closeDetailsModal()"
+  >
+    @if (selectedClub()) {
+      <div class="club-details">
+        <!-- Image de couverture -->
+        <div class="details-cover">
+          <img [src]="getImageUrl(selectedClub()!.coverImage)" [alt]="selectedClub()!.name" />
         </div>
-      </div>
 
-      <!-- Description -->
-      <div class="details-section">
-        <h3><i class="bi bi-info-circle"></i> Description</h3>
-        <p>{{ selectedClub()!.description }}</p>
-      </div>
-
-      <!-- Informations de contact -->
-      <div class="details-section">
-        <h3><i class="bi bi-envelope"></i> Contact</h3>
-        <dl>
-          <dt>Email</dt>
-          <dd>{{ selectedClub()!.contactEmail }}</dd>
-          <dt>Visibilité</dt>
-          <dd>{{ selectedClub()!.isPublic ? 'Public' : 'Privé' }}</dd>
-        </dl>
-      </div>
-
-      <!-- Statistiques -->
-      <div class="details-section">
-        <h3><i class="bi bi-graph-up"></i> Statistiques</h3>
-        <div class="details-stats">
-          <div class="details-stat">
-            <i class="bi bi-people"></i>
-            <div>
-              <strong>{{ selectedClub()!.members || 0 }}</strong>
-              <span>Membres</span>
-            </div>
-          </div>
-          <div class="details-stat">
-            <i class="bi bi-calendar-event"></i>
-            <div>
-              <strong>{{ selectedClub()!.events || 0 }}</strong>
-              <span>Événements</span>
-            </div>
-          </div>
-          <div class="details-stat">
-            <i class="bi bi-cash-coin"></i>
-            <div>
-              <strong>{{ formatCurrency(selectedClub()!.revenue || 0) }}</strong>
-              <span>Revenus</span>
-            </div>
-          </div>
-          <div class="details-stat">
-            <i class="bi bi-currency-dollar"></i>
-            <div>
-              <strong>{{ selectedClub()!.membershipFeeAmount }} TND</strong>
-              <span>Cotisation annuelle</span>
-            </div>
+        <!-- Informations principales -->
+        <div class="details-header">
+          <img
+            [src]="getImageUrl(selectedClub()!.logo)"
+            [alt]="selectedClub()!.name"
+            class="details-logo"
+          />
+          <div class="details-info">
+            <h2>{{ selectedClub()!.name }}</h2>
+            <span class="details-category">
+              <i class="bi bi-tag"></i>
+              {{ selectedClub()!.categoryName }}
+            </span>
+            <span class="details-status" [class]="getStatusClass(selectedClub()!.isActive)">
+              {{ getStatusLabel(selectedClub()!.isActive) }}
+            </span>
           </div>
         </div>
-      </div>
 
-      <!-- Dates -->
-      <div class="details-section">
-        <h3><i class="bi bi-calendar"></i> Dates</h3>
-        <dl>
-          <dt>Date de création</dt>
-          <dd>{{ formatDate(selectedClub()!.creationDate) }}</dd>
-        </dl>
+        <!-- Description -->
+        <div class="details-section">
+          <h3><i class="bi bi-info-circle"></i> Description</h3>
+          <p>{{ selectedClub()!.description }}</p>
+        </div>
+
+        <!-- Informations de contact -->
+        <div class="details-section">
+          <h3><i class="bi bi-envelope"></i> Contact</h3>
+          <dl>
+            <dt>Email</dt>
+            <dd>{{ selectedClub()!.contactEmail }}</dd>
+            <dt>Visibilité</dt>
+            <dd>{{ selectedClub()!.isPublic ? 'Public' : 'Privé' }}</dd>
+          </dl>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="details-section">
+          <h3><i class="bi bi-graph-up"></i> Statistiques</h3>
+          <div class="details-stats">
+            <div class="details-stat">
+              <i class="bi bi-people"></i>
+              <div>
+                <strong>{{ selectedClub()!.members || 0 }}</strong>
+                <span>Membres</span>
+              </div>
+            </div>
+            <div class="details-stat">
+              <i class="bi bi-calendar-event"></i>
+              <div>
+                <strong>{{ selectedClub()!.events || 0 }}</strong>
+                <span>Événements</span>
+              </div>
+            </div>
+            <div class="details-stat">
+              <i class="bi bi-cash-coin"></i>
+              <div>
+                <strong>{{ formatCurrency(selectedClub()!.revenue || 0) }}</strong>
+                <span>Revenus</span>
+              </div>
+            </div>
+            <div class="details-stat">
+              <i class="bi bi-currency-dollar"></i>
+              <div>
+                <strong>{{ selectedClub()!.membershipFeeAmount }} TND</strong>
+                <span>Cotisation annuelle</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="details-section">
+          <h3><i class="bi bi-calendar"></i> Dates</h3>
+          <dl>
+            <dt>Date de création</dt>
+            <dd>{{ formatDate(selectedClub()!.creationDate) }}</dd>
+          </dl>
+        </div>
       </div>
+    }
+
+    <div modal-footer>
+      <app-button label="Fermer" variant="ghost" (clicked)="closeDetailsModal()" />
+      <app-button
+        label="Modifier"
+        variant="primary"
+        icon="pencil"
+        (clicked)="openEditModal(selectedClub()!); closeDetailsModal()"
+      />
     </div>
-  }
+  </app-modal>
+}
 
-  <div modal-footer>
-    <app-button
-      label="Fermer"
-      variant="ghost"
-      (clicked)="closeDetailsModal()"
-    />
-    <app-button
-      label="Modifier"
-      variant="primary"
-      icon="pencil"
-      (clicked)="openEditModal(selectedClub()!); closeDetailsModal()"
-    />
-  </div>
-</app-modal>
+@defer (when isDeleteModalOpen()) {
+  <app-modal [isOpen]="isDeleteModalOpen()" title="Supprimer le club" (closed)="closeDeleteModal()">
+    @if (selectedClub()) {
+      <div class="delete-confirmation">
+        <div class="warning-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3>Êtes-vous sûr ?</h3>
+        <p>
+          Voulez-vous vraiment supprimer le club <strong>{{ selectedClub()!.name }}</strong> ? Cette
+          action est irréversible.
+        </p>
+        <div class="warning-message">
+          <i class="bi bi-info-circle"></i>
+          <span>Tous les événements, membres et données associés seront également supprimés.</span>
+        </div>
+      </div>
+    }
 
-<!-- Modal de suppression -->
-<app-modal
-  [isOpen]="isDeleteModalOpen()"
-  title="Supprimer le club"
-  (closed)="closeDeleteModal()"
->
-  @if (selectedClub()) {
-    <div class="delete-confirmation">
-      <div class="warning-icon">
-        <i class="bi bi-exclamation-triangle"></i>
-      </div>
-      <h3>Êtes-vous sûr ?</h3>
-      <p>
-        Voulez-vous vraiment supprimer le club <strong>{{ selectedClub()!.name }}</strong> ?
-        Cette action est irréversible.
-      </p>
-      <div class="warning-message">
-        <i class="bi bi-info-circle"></i>
-        <span>Tous les événements, membres et données associés seront également supprimés.</span>
-      </div>
+    <div modal-footer>
+      <app-button label="Annuler" variant="ghost" (clicked)="closeDeleteModal()" />
+      <app-button label="Supprimer" variant="danger" icon="trash" (clicked)="deleteClub()" />
     </div>
-  }
+  </app-modal>
+}
 
-
-  <div modal-footer>
-    <app-button
-      label="Annuler"
-      variant="ghost"
-      (clicked)="closeDeleteModal()"
-    />
-    <app-button
-      label="Supprimer"
-      variant="danger"
-      icon="trash"
-      (clicked)="deleteClub()"
-    />
-  </div>
-</app-modal>
-<!-- Modal de gestion du président -->
-@if (isPresidentModalOpen() && selectedClub()) {
+@defer (when isPresidentModalOpen() && selectedClub()) {
   <app-modal
     [isOpen]="isPresidentModalOpen()"
     [title]="'Administrateur - ' + selectedClub()!.name"
@@ -458,16 +513,18 @@
     />
   </app-modal>
 }
-<!-- Modal de création/édition de club -->
-<app-modal
-  [isOpen]="isFormModalOpen()"
-  [title]="selectedClub() ? 'Modifier le club' : 'Créer un club'"
-  size="large"
-  (closed)="isFormModalOpen.set(false)"
->
-  <app-club-form
-    [club]="selectedClub()"
-    (onSuccess)="onClubCreated()"
-    (onCancel)="isFormModalOpen.set(false)"
-  />
-</app-modal>
+
+@defer (when isFormModalOpen()) {
+  <app-modal
+    [isOpen]="isFormModalOpen()"
+    [title]="selectedClub() ? 'Modifier le club' : 'Créer un club'"
+    size="large"
+    (closed)="isFormModalOpen.set(false)"
+  >
+    <app-club-form
+      [club]="selectedClub()"
+      (onSuccess)="onClubCreated()"
+      (onCancel)="isFormModalOpen.set(false)"
+    />
+  </app-modal>
+}

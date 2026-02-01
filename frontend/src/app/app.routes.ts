@@ -65,24 +65,32 @@ export const routes: Routes = [
         data: { role: 'USER' }
       },
       {
-        path: 'events',
+        path: 'events/:clubId',
         loadComponent: () => import('./features/club-manager/events-manager/events-manager').then(m => m.EventsManagerComponent),
-        title: 'Gérer les événements'
+        title: 'Gérer les événements',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
-        path: 'finances',  // ← NOUVELLE ROUTE
+        path: 'finances/:clubId',
         loadComponent: () => import('./features/club-manager/finances/finances').then(m => m.FinancesComponent),
-        title: 'Finances du club'
+        title: 'Finances du club',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
-        path: 'admin/dashboard',  // ← NOUVELLE ROUTE
+        path: 'admin/dashboard',
         loadComponent: () => import('./features/admin/dashboard/dashboard').then(m => m.AdminDashboardComponent),
-        title: 'Admin Dashboard'
+        title: 'Admin Dashboard',
+        canActivate: [roleGuard],
+        data: { role: 'ADMIN' }
       },
       {
-        path: 'admin/clubs',  // ← NOUVELLE ROUTE
+        path: 'admin/clubs',
         loadComponent: () => import('./features/admin/manage-club/manage-club').then(m => m.ManageClubsComponent),
-        title: 'Gestion des clubs'
+        title: 'Gestion des clubs',
+        canActivate: [roleGuard],
+        data: { role: 'ADMIN' }
 
       },
       {
