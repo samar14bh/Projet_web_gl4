@@ -23,3 +23,4 @@ export class ApplicationResponseDto {
   createdAt: Date;
   updatedAt: Date;
 }
+

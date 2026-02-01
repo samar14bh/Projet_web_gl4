@@ -11,7 +11,7 @@ import {
   UpdateClubDto,
 } from '../models/club.model';
 import { environment } from '../../../environments/environment';
-import { MembershipClubDto } from '../dtos/membership-club.dto';
+import { MembershipClubDto } from '../dtos/application/membership-club.dto';
 
 /**
  * Service pour gérer les clubs (Admin)
@@ -27,36 +27,7 @@ export class ClubService {
    * Récupérer tous les clubs avec filtres et pagination
    */
   getClubs(filters: ClubFilters): Observable<PaginatedClubs> {
-    let params = new HttpParams();
-
-    if (filters.status && filters.status !== 'all') {
-      params = params.set('status', filters.status);
-    }
-
-    if (filters.categoryId && filters.categoryId !== 'all') {
-      params = params.set('categoryId', filters.categoryId.toString());
-    }
-
-    if (filters.search) {
-      params = params.set('search', filters.search);
-    }
-
-    if (filters.sortBy) {
-      params = params.set('sortBy', filters.sortBy);
-    }
-
-    if (filters.sortOrder) {
-      params = params.set('sortOrder', filters.sortOrder);
-    }
-
-    if (filters.page) {
-      params = params.set('page', filters.page.toString());
-    }
-
-    if (filters.limit) {
-      params = params.set('limit', filters.limit.toString());
-    }
-
+    const params = this.createParams(filters);
     return this.http.get<PaginatedClubs>(this.apiUrl, { params });
   }
 
@@ -64,32 +35,7 @@ export class ClubService {
    * Récupérer les clubs d'un utilisateur (ceux dont il est membre)
    */
   getUserClubs(userId: number, filters: ClubFilters = {}): Observable<PaginatedClubs> {
-    let params = new HttpParams();
-
-    if (filters.categoryId && filters.categoryId !== 'all') {
-      params = params.set('categoryId', filters.categoryId.toString());
-    }
-
-    if (filters.search) {
-      params = params.set('search', filters.search);
-    }
-
-    if (filters.sortBy) {
-      params = params.set('sortBy', filters.sortBy);
-    }
-
-    if (filters.sortOrder) {
-      params = params.set('sortOrder', filters.sortOrder);
-    }
-
-    if (filters.page) {
-      params = params.set('page', filters.page.toString());
-    }
-
-    if (filters.limit) {
-      params = params.set('limit', filters.limit.toString());
-    }
-
+    const params = this.createParams(filters);
     return this.http.get<PaginatedClubs>(`${this.apiUrl}/user-clubs/${userId}`, { params });
   }
 
@@ -185,11 +131,11 @@ export class ClubService {
       responseType: 'text' as 'json'
     });
   }
-getUserClubMembershipStatus(clubId: number, userId: number): Observable<string> {
-  return this.http.get<string>(`${this.apiUrl}/status/${clubId}/user/${userId}`, {
-    responseType: 'text' as 'json'
-  });
-}
+  getUserClubMembershipStatus(clubId: number, userId: number): Observable<string> {
+    return this.http.get<string>(`${this.apiUrl}/status/${clubId}/user/${userId}`, {
+      responseType: 'text' as 'json'
+    });
+  }
   /**
    * Récupérer le président d'un club
    */
@@ -219,22 +165,13 @@ getUserClubMembershipStatus(clubId: number, userId: number): Observable<string> 
   }
 
 
-  getClubsWithSpecialMemberships(userId: number | string): Observable<MembershipClubDto[]> {
-    return this.http.get<MembershipClubDto[]>(`${environment.apiUrl}/memberships/special-memberships/users/${userId}`);
-  }
-
-  /**
-   * Récupérer les clubs avec adhésion spéciale via httpResource (Angular 20)
-   */
-  getClubsWithSpecialMembershipsResource(userId: () => string | number | undefined) {
-    return httpResource<MembershipClubDto[]>(() => {
-      const id = userId();
-      if (!id) return undefined;
-      return `${environment.apiUrl}/memberships/special-memberships/users/${id}`;
+  private createParams(filters: any): HttpParams {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+        params = params.set(key, String(value));
+      }
     });
+    return params;
   }
-
-
-
-
 }

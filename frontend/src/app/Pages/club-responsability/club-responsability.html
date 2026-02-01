@@ -1,24 +1,24 @@
-<div class="responsability-container" *ngIf="club()">
+<div class="responsability-container" *ngIf="membership()">
     <!-- Header Section -->
     <header class="club-header">
         <div class="header-content">
             <div class="club-visual">
-                <img *ngIf="club()?.logo" [src]="club()?.logo" alt="Club Logo" class="club-logo-large">
-                <div *ngIf="!club()?.logo" class="club-icon-placeholder">
+                <img *ngIf="membership()?.logo" [src]="membership()?.logo" alt="Club Logo" class="club-logo-large">
+                <div *ngIf="!membership()?.logo" class="club-icon-placeholder">
                     <i class="bi bi-shield-shaded"></i>
                 </div>
             </div>
             <div class="club-info">
                 <div class="title-row">
-                    <h1>{{ club()?.name }}</h1>
-                    <span class="role-badge" [attr.data-role]="club()?.userRole">
+                    <h1>{{ membership()?.name }}</h1>
+                    <span class="role-badge" [attr.data-role]="membership()?.userRole">
                         <i class="bi bi-person-badge"></i>
-                        {{ club()?.userRole }}
+                        {{ membership()?.userRole }}
                     </span>
                 </div>
-                <p class="club-description">{{ club()?.description }}</p>
+                <p class="club-description">{{ membership()?.description }}</p>
                 <div class="membership-meta">
-                    <span><i class="bi bi-calendar3"></i> Membre depuis : {{ club()?.dateDebut | date:'mediumDate'
+                    <span><i class="bi bi-calendar3"></i> Membre depuis : {{ membership()?.dateDebut | date:'mediumDate'
                         }}</span>
                 </div>
             </div>
@@ -42,12 +42,9 @@
             }
 
             <!-- Documents -->
-            @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY])) {
-              <div
-                class="action-card"
-                [routerLink]="['/club-responsability', club()?.id, 'documents']"
-                style="--accent-color: #0891b2"
-              >
+            @if (canManageDocuments()) {
+            <div class="action-card" [routerLink]="['/club-responsability', membership()?.membershipId, 'documents']"
+                style="--accent-color: #0891b2">
                 <div class="card-icon"><i class="bi bi-files"></i></div>
                 <div class="card-body">
                     <h3>Documents</h3>
@@ -58,7 +55,7 @@
             }
 
             <!-- Téléchargements -->
-            @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY])) {
+            @if (canManageDocuments()) {
             <div class="action-card" routerLink="/documents/downloads" style="--accent-color: #0d9488">
                 <div class="card-icon"><i class="bi bi-download"></i></div>
                 <div class="card-body">
@@ -70,7 +67,7 @@
             }
 
             <!-- Finances -->
-            @if (hasRole([UserRole.PRESIDENT, UserRole.TREASURER])) {
+            @if (canManageFinances()) {
             <div class="action-card" routerLink="/finances" style="--accent-color: #059669">
                 <div class="card-icon"><i class="bi bi-cash-coin"></i></div>
                 <div class="card-body">
@@ -82,7 +79,7 @@
             }
 
             <!-- Statuts de paiement -->
-            @if (hasRole([UserRole.PRESIDENT, UserRole.TREASURER])) {
+            @if (canManageFinances()) {
             <div class="action-card" routerLink="/finances/payments" style="--accent-color: #2563eb">
                 <div class="card-icon"><i class="bi bi-credit-card"></i>
                 </div>
@@ -133,8 +130,8 @@
     </section>
 </div>
 
-<!-- Fallback if no club data -->
-<div class="no-data-container" *ngIf="!club()">
+<!-- Fallback if no membership data -->
+<div class="no-data-container" *ngIf="!membership()">
     <div class="empty-state">
         <i class="bi bi-exclamation-circle"></i>
         <h2>Données introuvables</h2>

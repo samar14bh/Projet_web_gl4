@@ -244,10 +244,21 @@ export class EventsController {
   }
 
   /**
-   * GET /api/events/:id/registrations
+   * POST /api/events/:id/registrations
    */
   @Get(':id/registrations')
   getRegistrations(@Param('id') id: string) {
     return this.eventsService.getEventRegistrations(+id);
+  }
+
+  /**
+   * POST /api/events/:eventId/cancel/:userId
+   */
+  @Post(':eventId/cancel/:userId')
+  async cancelRegistration(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.eventsService.cancelRegistration(eventId, userId);
   }
 }

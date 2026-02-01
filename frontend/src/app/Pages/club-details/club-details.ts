@@ -31,6 +31,7 @@ export class ClubDetails {
 
 
   readonly showContactModal = signal(false);
+  readonly eventsVisible = signal(true);
   readonly clubId = input.required<number, string>({
     alias: 'clubId',
     transform: (value: string) => parseInt(value, 10)
@@ -47,11 +48,16 @@ export class ClubDetails {
   });
 
   readonly clubEventsResource = resource({
-    params: () => ({
-      userId: this.USER_ID,
-      clubId: this.clubId()
-    }),
+    params: () => {
+      const id = this.clubId();
+      if (!this.eventsVisible() || !id) return null;
+      return {
+        userId: this.USER_ID,
+        clubId: id
+      };
+    },
     loader: async ({ params }) => {
+      if (!params) return null;
       const filters: any = {
         clubId: params.clubId,
         limit: 3,

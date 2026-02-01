@@ -304,6 +304,7 @@
 .events-section {
     position: relative;
     padding-top: 1rem;
+    margin-top: 0 !important;
 }
 
 .event-controls {

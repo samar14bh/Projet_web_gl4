@@ -10,7 +10,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { PaginatedResult } from '../../Core/models/paginated-result.model';
-import { UserEventDto } from '../../Core/dtos/user-event.dto';
 import { EventService } from '../../Core/services/event.service';
 import { Loader } from '../../shared/components/loader/loader';
 import { EventStatus, EventType } from '../../Core/models/event.model';
@@ -18,6 +17,7 @@ import { UserEventsCard } from '../../features/events/user-events-card/user-even
 import { PaginationComponent } from '../../shared/components/pagination/pagination';
 import { Error } from '../../shared/components/error/error';
 import {AuthService} from '../../Core/services/auth.service';
+import {UserEventDto} from '../../Core/dtos/user-events/user-event.dto';
 
 type FilterType = 'all' | 'upcoming' | 'past';
 

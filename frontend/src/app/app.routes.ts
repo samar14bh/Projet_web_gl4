@@ -3,6 +3,8 @@ import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
 import { guestGuard } from './Core/guards/guest.guard';
 import { roleGuard } from './Core/guards/role.guard';
+import { clubRoleGuard } from './Core/guards/club-role.guard';
+import { UserRoleInClub } from './Core/dtos/application/membership-club.dto';
 
 
 /**
@@ -21,27 +23,37 @@ export const routes: Routes = [
       },
       {
         path: 'my-events',
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         loadComponent: () =>
           import('./Pages/user-events/user-events').then(m => m.UserEvents)
       },
       {
         path: 'discover-events/:clubId',
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         loadComponent: () =>
           import('./Pages/user-events/user-events').then(m => m.UserEvents)
       },
       {
         path: 'my-clubs',
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         loadComponent: () =>
           import('./Pages/user-clubs/user-clubs').then(m => m.UserClubs)
       },
       {
         path: 'my-clubs/:clubId',
         loadComponent: () =>
-          import('./Pages/club-details/club-details').then(m => m.ClubDetails)
+          import('./Pages/club-details/club-details').then(m => m.ClubDetails),
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
         path: 'user-event-details/:userId/:eventId',
-        loadComponent: () => import('./Pages/event-details/event-details').then(m => m.EventDetails)
+        loadComponent: () => import('./Pages/event-details/event-details').then(m => m.EventDetails),
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
 
 
@@ -78,14 +90,18 @@ export const routes: Routes = [
           import('./features/member/join-club-form/join-club-form')
             .then(m => m.JoinClubForm),
 
-        title: 'Join Club'
+        title: 'Join Club',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
         path: 'my-applications',
         loadComponent: () =>
           import('./Pages/user-applications/user-applications')
             .then(m => m.UserApplications),
-        title: 'My Applications'
+        title: 'My Applications',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
         path: 'applications/:applicationId',
@@ -117,8 +133,8 @@ export const routes: Routes = [
         path: 'register',
         loadComponent: () => import('./features/auth/register/register')
           .then(m => m.RegisterComponent),
-          title: 'Inscription',
-          canActivate: [guestGuard]
+        title: 'Inscription',
+        canActivate: [guestGuard]
       },
       {
         path: 'verify-email',
@@ -199,12 +215,15 @@ export const routes: Routes = [
       {
         path: 'club-responsability/:membershipId',
         loadComponent: () => import('./Pages/club-responsability/club-responsability').then(m => m.ClubResponsability),
-        title: 'Responsabilités Club'
+        title: 'Responsabilités Club',
+        canActivate: [clubRoleGuard]
       },
       {
-        path: 'club-responsability/:clubId/documents',
+        path: 'club-responsability/:membershipId/documents',
         loadComponent: () => import('./Pages/club-documents/club-documents').then(m => m.ClubDocuments),
-        title: 'Documents du Club'
+        title: 'Documents du Club',
+        canActivate: [clubRoleGuard],
+        data: { clubRoles: [UserRoleInClub.PRESIDENT, UserRoleInClub.SECRETARY] }
       }
       ,
        {

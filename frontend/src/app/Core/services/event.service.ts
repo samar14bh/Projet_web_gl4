@@ -12,12 +12,9 @@ import {
 } from '../models/event.model';
 import { environment } from '../../../environments/environment';
 import { PaginatedResult } from '../models/paginated-result.model';
-import { UserEventDto } from '../dtos/user-event.dto';
+import { UserEventDto } from '../dtos/user-events/user-event.dto';
 
-/**
- * Service de gestion des événements
- * Utilise les nouvelles fonctionnalités Angular 20 (inject function)
- */
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,12 +23,11 @@ export class EventService {
   private readonly apiUrl = `${environment.apiUrl}/events`;
 
   /**
-   * Récupérer tous les événements avec filtres et pagination
+   * recuperer events avec filtres et pagination
    */
   getEvents(filters: EventFilters = {}): Observable<PaginatedResponse<Event>> {
     let params = new HttpParams();
 
-    // Ajouter les filtres aux query parameters
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params = params.append(key, String(value));
@@ -143,8 +139,8 @@ export class EventService {
 
 
 
-  cancelRegistration(eventId: number) {
-    return this.http.post(`${this.apiUrl}/${eventId}/cancel`, {});
+  cancelRegistration(eventId: number, userId: number) {
+    return this.http.post(`${this.apiUrl}/${eventId}/cancel/${userId}`, {});
   }
 
   downloadReceipt(eventId: number) {
@@ -161,7 +157,7 @@ export class EventService {
   }
 
   /**
-   * Discovery: Récupérer tous les événements avec le statut pour un utilisateur
+   * recuperer tous les événements avec le statut pour un utilisateur
    */
   getEventsDiscovery(
     userId: number,

@@ -1,6 +1,6 @@
-import {Component, Input, input, output, Output} from '@angular/core';
-import {ApplicationResponseDto} from '../../../Core/dtos/application-response.dto';
-import {DatePipe} from '@angular/common';
+import { Component, Input, input, output, Output } from '@angular/core';
+import { ApplicationResponseDto } from '../../../Core/dtos/application/application-response.dto';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-application-item',
@@ -11,7 +11,7 @@ import {DatePipe} from '@angular/common';
   styleUrl: './application-item.css',
 })
 export class ApplicationItem {
-  application  = input.required<ApplicationResponseDto>();
+  application = input.required<ApplicationResponseDto>();
   viewDetails = output<number>();
 
 

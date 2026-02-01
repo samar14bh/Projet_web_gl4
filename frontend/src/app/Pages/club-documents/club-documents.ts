@@ -2,37 +2,46 @@ import { Component, inject, signal, computed, input, resource } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DocumentService, DocumentDto, PaginatedDocuments } from '../../Core/services/document.service';
-import { ClubResponsabilityService } from '../../Core/services/club-responsability.service';
+import { DocumentService } from '../../Core/services/document.service';
+import { MembershipService } from '../../Core/services/membership.service';
 import { AuthService } from '../../Core/services/auth.service';
 import { Loader } from '../../shared/components/loader/loader';
 import { PaginationComponent } from '../../shared/components/pagination/pagination';
+import { DocumentDto } from '../../Core/dtos/documents/document.dto';
+import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
+import { Error as ErrorComponent } from '../../shared/components/error/error';
+import { MembershipClubDto } from '../../Core/dtos/application/membership-club.dto';
 
 @Component({
     selector: 'app-club-documents',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, Loader, PaginationComponent],
+    imports: [CommonModule, RouterModule, FormsModule, Loader, PaginationComponent, ConfirmModal, ErrorComponent],
     templateUrl: './club-documents.html',
     styleUrl: './club-documents.css'
 })
 export class ClubDocuments {
     private documentService = inject(DocumentService);
     private authService = inject(AuthService);
-    public clubResponsabilityService = inject(ClubResponsabilityService);
+    private membershipService = inject(MembershipService);
 
-    clubId = input.required({
-        alias: 'clubId',
+    membershipId = input.required({
+        alias: 'membershipId',
         transform: (val: string | number) => Number(val)
     });
     currentPage = signal(1);
-    pageSize = signal(12);
+    pageSize = signal(2);
     activeTab = signal<'all' | 'image' | 'pdf'>('all');
     isUploading = signal(false);
+    showConfirmModal = signal(false);
+    selectedDoc = signal<DocumentDto | null>(null);
+    showError = signal(false);
+    errorMessage = signal<string>('');
 
-    club = this.clubResponsabilityService.club;
+    // Derive membership details declaratively from the shared resource
+    membership = this.membershipService.getMembership(this.membershipId);
 
     documentsResource = this.documentService.getDocumentsResource(() => ({
-        clubId: this.clubId(),
+        clubId: this.membership()?.id,
         page: this.currentPage(),
         limit: this.pageSize(),
         type: this.activeTab()
@@ -40,7 +49,10 @@ export class ClubDocuments {
 
     documents = computed(() => this.documentsResource.value()?.data ?? []);
     totalDocuments = computed(() => this.documentsResource.value()?.total ?? 0);
-    totalPages = computed(() => this.documentsResource.value()?.lastPage ?? 0);
+    totalPages = computed(() => {
+        const total = this.documentsResource.value()?.total ?? 0;
+        return Math.ceil(total / this.pageSize());
+    });
     isLoading = computed(() => this.documentsResource.isLoading());
 
     setTab(tab: 'all' | 'image' | 'pdf') {
@@ -60,7 +72,7 @@ export class ClubDocuments {
     private uploadFile(file: File) {
         const user = this.authService.currentUser();
         const userId = user ? Number(user.id) : 1;
-        const clubId = this.clubId();
+        const clubId = this.membership()?.id;
 
         if (!clubId) return;
 
@@ -71,7 +83,8 @@ export class ClubDocuments {
                 this.documentsResource.reload();
             },
             error: (err) => {
-                console.error('Upload failed:', err);
+                this.errorMessage.set('Le téléversement a échoué. Veuillez réessayer.');
+                this.showError.set(true);
                 this.isUploading.set(false);
             }
         });
@@ -82,12 +95,30 @@ export class ClubDocuments {
     }
 
     delete(doc: DocumentDto) {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) return;
+        this.selectedDoc.set(doc);
+        this.showConfirmModal.set(true);
+    }
+
+    confirmDelete() {
+        const doc = this.selectedDoc();
+        if (!doc) return;
 
         this.documentService.delete(doc.id).subscribe({
-            next: () => this.documentsResource.reload(),
-            error: (err) => console.error('Delete failed:', err)
+            next: () => {
+                this.documentsResource.reload();
+                this.closeConfirmModal();
+            },
+            error: (err) => {
+                this.errorMessage.set('La suppression a échoué.');
+                this.showError.set(true);
+                this.closeConfirmModal();
+            }
         });
+    }
+
+    closeConfirmModal() {
+        this.showConfirmModal.set(false);
+        this.selectedDoc.set(null);
     }
 
     getFileIcon(type: string): string {

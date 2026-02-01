@@ -1,15 +1,15 @@
-import {Component, effect, inject, signal} from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MembershipService } from '../../../Core/services/membership.service';
 import { ClubService } from '../../../Core/services/club.service';
-import { CreateApplicationDto } from '../../../Core/dtos/create-application.dto';
+import { CreateApplicationDto } from '../../../Core/dtos/application/create-application.dto';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime } from 'rxjs';
 import { takeUntilDestroyed, rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { Error } from '../../../shared/components/error/error';
-import {Loader} from '../../../shared/components/loader/loader';
+import { Loader } from '../../../shared/components/loader/loader';
 
 @Component({
   selector: 'app-join-club-form',
@@ -31,18 +31,12 @@ export class JoinClubForm {
   private clubId: number;
   private userId: number;
   success = signal(false);
+  errorMessage = signal('');
 
   statusResource = rxResource({
     stream: () =>
       this.clubService.getUserClubStatus(this.clubId, this.userId)
   });
-
-
-
-
-
-
-
 
   constructor() {
     this.clubId = Number(this.route.snapshot.paramMap.get('clubId'));
@@ -145,7 +139,7 @@ export class JoinClubForm {
         },
         error: (err) => {
           console.error('Error submitting application', err);
-          alert('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
+          this.errorMessage.set('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
         },
       });
   }

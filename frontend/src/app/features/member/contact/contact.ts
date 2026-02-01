@@ -1,6 +1,6 @@
 import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { MailService } from '../../../Core/services/mail.service';
 
 @Component({
@@ -17,37 +17,34 @@ export class Contact {
   readonly recipientEmail = input.required<string>();
   readonly close = output<void>();
 
-  readonly subject = signal('');
-  readonly message = signal('');
   readonly isSending = signal(false);
   readonly isSuccess = signal(false);
   readonly errorMessage = signal('');
 
-  onSubmit() {
-    console.log(this.recipientEmail());
-    console.log(this.subject());
-    console.log(this.message());
-    if (!this.subject().trim() || !this.message().trim()) return;
+  onSubmit(form: NgForm) {
+    if (form.invalid) return;
 
     this.isSending.set(true);
     this.errorMessage.set('');
 
+    const { subject, message } = form.value;
+
     this.mailService.sendContactClubEmail(
       this.recipientEmail(),
-      this.subject(),
-      this.message()
+      subject,
+      message
     ).subscribe({
       next: () => {
-        this.isSending.set(false);
         this.isSuccess.set(true);
+        this.isSending.set(false);
         setTimeout(() => {
           this.close.emit();
         }, 2000);
       },
       error: (err) => {
         console.error('Error sending message:', err);
-        this.isSending.set(false);
         this.errorMessage.set('Échec de l\'envoi du message. Veuillez réessayer.');
+        this.isSending.set(false);
       }
     });
   }
