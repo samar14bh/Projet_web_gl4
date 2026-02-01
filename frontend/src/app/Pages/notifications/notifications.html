@@ -1,6 +1,4 @@
-<!-- notifications.html - VERSION AVEC FILTRES AMÉLIORÉS -->
 <div class="notifications-container">
-  <!-- Header avec titre et indicateurs -->
   <div class="header-section">
     <div class="header-content">
       <div class="title-section">
@@ -8,118 +6,41 @@
           <i class="bi bi-bell-fill"></i>
         </div>
         <h1 class="page-title">Notifications</h1>
-        <div class="badge-section">
-          @if (unreadCount() > 0) {
-            <span class="unread-badge animate-pulse">
-              {{ unreadCount() }} notification{{ unreadCount() > 1 ? 's' : '' }} non lue{{ unreadCount() > 1 ? 's' : '' }}
-            </span>
-          }
-          @if (unreadCount() === 0) {
-            <span class="no-notifications-badge">
-              Aucune notification non lue
-            </span>
-          }
-        </div>
+       
       </div>
       
-      <!-- Filtre amélioré pour basculer entre tous/non lus/lus -->
       <div class="filter-section">
         <div class="filter-buttons">
-          <button (click)="setFilter('unread')" 
+          <app-button (clicked)="setFilter('unread')" 
                   class="filter-btn"
-                  [class.active]="currentFilter() === 'unread'">
-            <i class="bi bi-circle-fill"></i>
-            Non lues
-            @if (unreadCount() > 0) {
-              <span class="filter-count">{{ unreadCount() }}</span>
-            }
-          </button>
+                  [class.active]="currentFilter() === 'unread'"
+                  variant="ghost"
+                  icon="circle-fill"
+                  [label]="'Non lues' + (unreadCount() > 0 ? ' (' + unreadCount() + ')' : '')">
+          </app-button>
           
-          <button (click)="setFilter('read')" 
+          <app-button (clicked)="setFilter('read')" 
                   class="filter-btn"
-                  [class.active]="currentFilter() === 'read'">
-            <i class="bi bi-check-circle"></i>
-            Lues
-            @if (readCount() > 0) {
-              <span class="filter-count">{{ readCount() }}</span>
-            }
-          </button>
+                  [class.active]="currentFilter() === 'read'"
+                  variant="ghost"
+                  icon="check-circle"
+                  [label]="'Lues' + (readCount() > 0 ? ' (' + readCount() + ')' : '')">
+          </app-button>
           
-          <button (click)="setFilter('all')" 
+          <app-button (clicked)="setFilter('all')" 
                   class="filter-btn"
-                  [class.active]="currentFilter() === 'all'">
-            <i class="bi bi-list-ul"></i>
-            Toutes
-            @if (notifications().length > 0) {
-              <span class="filter-count">{{ notifications().length }}</span>
-            }
-          </button>
+                  [class.active]="currentFilter() === 'all'"
+                  variant="ghost"
+                  icon="list-ul"
+                  [label]="'Toutes' + (notifications().length > 0 ? ' (' + notifications().length + ')' : '')">
+          </app-button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Console de test -->
-  <div class="test-console">
-    <div class="console-header">
-      <h3 class="console-title">
-        <i class="bi bi-terminal"></i>
-        Console de Test
-      </h3>
-      <p class="console-subtitle">Envoyez des notifications de test pour vérifier le système SSE</p>
-    </div>
-    
-    <div class="test-buttons-grid">
-      <button (click)="sendPaymentNotification()" 
-              [disabled]="loading" 
-              class="test-btn payment-btn">
-        <div class="btn-icon">
-          <i class="bi bi-credit-card"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Paiement</span>
-          <span class="btn-subtitle">Simuler un paiement</span>
-        </div>
-      </button>
-      
-      <button (click)="sendClubNotification()" 
-              [disabled]="loading" 
-              class="test-btn club-btn">
-        <div class="btn-icon">
-          <i class="bi bi-person-circle"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Club</span>
-          <span class="btn-subtitle">Activité de club</span>
-        </div>
-      </button>
-      
-      <button (click)="sendEventNotification()" 
-              [disabled]="loading" 
-              class="test-btn event-btn">
-        <div class="btn-icon">
-          <i class="bi bi-calendar-event"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Événement</span>
-          <span class="btn-subtitle">Nouvel événement</span>
-        </div>
-      </button>
-      
-      <!-- Bouton pour créer une notification personnalisée -->
-      <button (click)="openCustomNotificationModal()" 
-              class="test-btn custom-btn">
-        <div class="btn-icon">
-          <i class="bi bi-plus-circle"></i>
-        </div>
-        <div class="btn-content">
-          <span class="btn-title">Personnalisée</span>
-          <span class="btn-subtitle">Créer une notification</span>
-        </div>
-      </button>
-    </div>
-    
-    <!-- Feedback message -->
+  <!-- Section de feedback pour l'envoi de notification -->
+  <div class="notification-feedback-section">
     @if (response || error) {
       <div class="feedback-message"
            [ngClass]="{'success': response, 'error': error}">
@@ -129,7 +50,6 @@
     }
   </div>
 
-  <!-- Liste des notifications -->
   <div class="notifications-list-container">
     <div class="list-header">
       <h2 class="list-title">
@@ -141,32 +61,9 @@
           Toutes les notifications
         }
       </h2>
-      <div class="header-actions">
-        @if (currentFilter() === 'unread' && unreadCount() > 0) {
-          <button (click)="markAllAsRead()" 
-                  class="action-btn mark-all-btn">
-            <i class="bi bi-check-all"></i>
-            Tout marquer comme lu
-          </button>
-        }
-        @if (currentFilter() === 'all' && unreadCount() > 0) {
-          <button (click)="markAllAsRead()" 
-                  class="action-btn mark-all-btn">
-            <i class="bi bi-check-all"></i>
-            Tout marquer comme lu
-          </button>
-        }
-        @if ((currentFilter() === 'read' || currentFilter() === 'all') && readCount() > 0) {
-          <button (click)="markAllAsUnread()" 
-                  class="action-btn mark-all-unread-btn">
-            <i class="bi bi-arrow-counterclockwise"></i>
-            Tout rétablir non lu
-          </button>
-        }
-      </div>
+     
     </div>
     
-    <!-- Loading state -->
     @if (isLoading()) {
       <div class="loading-state">
         <div class="loading-spinner">
@@ -176,7 +73,6 @@
       </div>
     }
     
-    <!-- Empty states -->
     @if (!isLoading()) {
       @if (currentFilter() === 'unread' && filteredNotifications().length === 0) {
         <div class="empty-state">
@@ -184,14 +80,7 @@
             <i class="bi bi-check-circle"></i>
           </div>
           <h4 class="empty-title">Félicitations !</h4>
-          <p class="empty-subtitle">
-            Vous avez lu toutes vos notifications
-            @if (!sseConnected()) {
-              <span class="warning-text">
-                <i class="bi bi-exclamation-triangle"></i> Connexion SSE inactive
-              </span>
-            }
-          </p>
+          <p class="empty-subtitle">Vous avez lu toutes vos notifications</p>
         </div>
       } 
       
@@ -201,14 +90,6 @@
             <i class="bi bi-envelope-open"></i>
           </div>
           <h4 class="empty-title">Aucune notification lue</h4>
-          <p class="empty-subtitle">
-            Vous n'avez pas encore de notifications lues
-            @if (!sseConnected()) {
-              <span class="warning-text">
-                <i class="bi bi-exclamation-triangle"></i> Connexion SSE inactive
-              </span>
-            }
-          </p>
         </div>
       }
       
@@ -218,19 +99,10 @@
             <i class="bi bi-bell-slash"></i>
           </div>
           <h4 class="empty-title">Aucune notification</h4>
-          <p class="empty-subtitle">
-            Vous n'avez pas encore de notifications
-            @if (!sseConnected()) {
-              <span class="warning-text">
-                <i class="bi bi-exclamation-triangle"></i> Connexion SSE inactive
-              </span>
-            }
-          </p>
         </div>
       }
     }
     
-    <!-- Notifications list -->
     @if (!isLoading() && filteredNotifications().length > 0) {
       <div class="notifications-list">
         @for (notif of filteredNotifications(); track notif.id) {
@@ -248,17 +120,6 @@
                 <div class="header-left">
                   <span class="notification-type">{{ getNotificationTypeLabel(notif.type) }}</span>
                   <span class="notification-priority">{{ notif.priority }}</span>
-                  @if (!notif.isRead) {
-                    <span class="unread-indicator">
-                      <i class="bi bi-circle-fill"></i>
-                      Non lu
-                    </span>
-                  } @else {
-                    <span class="read-indicator">
-                      <i class="bi bi-check-circle"></i>
-                      Lu
-                    </span>
-                  }
                 </div>
                 <span class="notification-time">{{ notif.createdAt | date:'dd/MM à HH:mm' }}</span>
               </div>
@@ -268,17 +129,19 @@
               <div class="notification-actions">
                 <div class="action-buttons">
                   @if (!notif.isRead) {
-                    <button (click)="markAsRead(notif.id)" 
-                            class="read-btn">
-                      <i class="bi bi-check"></i>
-                      Marquer comme lu
-                    </button>
+                    <app-button (clicked)="markAsRead(notif.id)" 
+                            variant="ghost"
+                            size="sm"
+                            icon="check"
+                            label="Marquer comme lu">
+                    </app-button>
                   } @else {
-                    <button (click)="markAsUnread(notif.id)" 
-                            class="unread-btn">
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      Rétablir non lu
-                    </button>
+                    <app-button (clicked)="markAsUnread(notif.id)" 
+                            variant="ghost"
+                            size="sm"
+                            icon="arrow-counterclockwise"
+                            label="Rétablir non lu">
+                    </app-button>
                   }
                 </div>
                 
@@ -294,11 +157,6 @@
                 }
               </div>
             </div>
-          </div>
-        } @empty {
-          <div class="empty-list">
-            <i class="bi bi-inbox"></i>
-            <p>Aucune notification à afficher</p>
           </div>
         }
       </div>

@@ -1,0 +1,280 @@
+<div class="club-form">
+  <h2 class="form-title">{{ club() ? 'Modifier le club' : 'Créer un nouveau club' }}</h2>
+
+  <!-- Erreur globale -->
+  @if (submitError()) {
+    <div class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span>{{ submitError() }}</span>
+    </div>
+  }
+
+  <form (ngSubmit)="onSubmit()" #clubForm="ngForm">
+    <!-- Nom du club -->
+    <div class="form-group">
+      <label for="name" class="form-label">
+        Nom du club <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        [(ngModel)]="name"
+        class="form-input"
+        [class.error]="errors.name"
+        placeholder="Ex: Club Robotique"
+        required
+        minlength="3"
+      />
+      @if (errors.name) {
+        <span class="error-text">{{ errors.name }}</span>
+      }
+    </div>
+
+    <!-- Slug -->
+    <div class="form-group">
+      <label for="slug" class="form-label">
+        Slug (identifiant URL) <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="slug"
+        name="slug"
+        [(ngModel)]="slug"
+        class="form-input"
+        [class.error]="errors.slug"
+        placeholder="Ex: club-robotique"
+        required
+      />
+      <span class="help-text">Uniquement lettres minuscules, chiffres et tirets</span>
+      @if (errors.slug) {
+        <span class="error-text">{{ errors.slug }}</span>
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description" class="form-label">
+        Description <span class="required">*</span>
+      </label>
+      <textarea
+        id="description"
+        name="description"
+        [(ngModel)]="description"
+        class="form-textarea"
+        [class.error]="errors.description"
+        placeholder="Décrivez les objectifs et activités du club..."
+        rows="4"
+        required
+        minlength="10"
+      ></textarea>
+      @if (errors.description) {
+        <span class="error-text">{{ errors.description }}</span>
+      }
+    </div>
+
+    <!-- Email de contact -->
+    <div class="form-group">
+      <label for="contactEmail" class="form-label">
+        Email de contact <span class="required">*</span>
+      </label>
+      <input
+        type="email"
+        id="contactEmail"
+        name="contactEmail"
+        [(ngModel)]="contactEmail"
+        class="form-input"
+        [class.error]="errors.contactEmail"
+        placeholder="contact@club.com"
+        required
+      />
+      @if (errors.contactEmail) {
+        <span class="error-text">{{ errors.contactEmail }}</span>
+      }
+    </div>
+
+    <!-- Catégorie -->
+    <div class="form-group">
+      <label for="categoryId" class="form-label">
+        Catégorie <span class="required">*</span>
+      </label>
+      <select
+        id="categoryId"
+        name="categoryId"
+        [(ngModel)]="categoryId"
+        class="form-select"
+        [class.error]="errors.categoryId"
+        required
+      >
+        <option [ngValue]="null">Sélectionnez une catégorie</option>
+        <option [ngValue]="1">Technologie</option>
+        <option [ngValue]="2">Business</option>
+        <option [ngValue]="3">Arts & Culture</option>
+        <option [ngValue]="4">Sport</option>
+        <option [ngValue]="5">Sciences</option>
+        <option [ngValue]="6">Environnement</option>
+      </select>
+      @if (errors.categoryId) {
+        <span class="error-text">{{ errors.categoryId }}</span>
+      }
+    </div>
+
+    <!-- Montant cotisation -->
+    <div class="form-group">
+      <label for="membershipFeeAmount" class="form-label">
+        Montant de la cotisation (TND)
+      </label>
+      <input
+        type="number"
+        id="membershipFeeAmount"
+        name="membershipFeeAmount"
+        [(ngModel)]="membershipFeeAmount"
+        class="form-input"
+        [class.error]="errors.membershipFeeAmount"
+        placeholder="0"
+        min="0"
+        step="0.01"
+      />
+      <span class="help-text">Laissez 0 si le club est gratuit</span>
+      @if (errors.membershipFeeAmount) {
+        <span class="error-text">{{ errors.membershipFeeAmount }}</span>
+      }
+    </div>
+
+    <!-- Club public -->
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          name="isPublic"
+          [(ngModel)]="isPublic"
+          class="form-checkbox"
+        />
+        <span>Club public (visible par tous les étudiants)</span>
+      </label>
+    </div>
+
+    <!-- Date de création -->
+    <div class="form-group">
+      <label for="creationDate" class="form-label">
+        Date de création <span class="required">*</span>
+      </label>
+      <input
+        type="date"
+        id="creationDate"
+        name="creationDate"
+        [(ngModel)]="creationDate"
+        class="form-input"
+        [class.error]="errors.creationDate"
+        required
+      />
+      @if (errors.creationDate) {
+        <span class="error-text">{{ errors.creationDate }}</span>
+      }
+    </div>
+
+    <!-- Logo du club -->
+    <div class="form-group">
+      <label class="form-label">Logo du club</label>
+
+      <!-- Zone d'upload -->
+      @if (!logoPreview()) {
+        <div class="upload-zone">
+          <input
+            type="file"
+            id="logo"
+            accept="image/png,image/jpeg,image/jpg"
+            (change)="onLogoSelected($event)"
+            class="file-input"
+          />
+          <label for="logo" class="upload-label">
+            <div class="upload-icon">📸</div>
+            <p class="upload-text">Cliquez pour choisir une image</p>
+            <p class="upload-hint">PNG, JPG ou JPEG (max 2 MB)</p>
+          </label>
+        </div>
+      }
+
+      <!-- Preview du logo -->
+      @if (logoPreview()) {
+        <div class="logo-preview-container">
+          <img [src]="logoPreview()" alt="Logo preview" class="logo-preview" />
+          <button
+            type="button"
+            (click)="removeLogo()"
+            class="remove-logo-btn"
+            title="Supprimer le logo"
+          >
+            ✕
+          </button>
+        </div>
+      }
+
+      @if (errors.logo) {
+        <span class="error-text">{{ errors.logo }}</span>
+      }
+    </div>
+    <!-- Image de couverture -->
+    <div class="form-group">
+      <label class="form-label">Image de couverture</label>
+
+      <!-- Zone d'upload -->
+      @if (!coverImagePreview()) {
+        <div class="upload-zone">
+          <input
+            type="file"
+            id="coverImage"
+            accept="image/png,image/jpeg,image/jpg"
+            (change)="onCoverImageSelected($event)"
+            class="file-input"
+          />
+          <label for="coverImage" class="upload-label">
+            <div class="upload-icon">🖼️</div>
+            <p class="upload-text">Cliquez pour choisir une image de couverture</p>
+            <p class="upload-hint">PNG, JPG ou JPEG (max 5 MB)</p>
+          </label>
+        </div>
+      }
+
+      <!-- Preview de la cover image -->
+      @if (coverImagePreview()) {
+        <div class="logo-preview-container">
+          <img [src]="coverImagePreview()" alt="Cover preview" class="logo-preview" />
+          <button
+            type="button"
+            (click)="removeCoverImage()"
+            class="remove-logo-btn"
+            title="Supprimer l'image"
+          >
+            ✕
+          </button>
+        </div>
+      }
+
+      @if (errors.coverImage) {
+        <span class="error-text">{{ errors.coverImage }}</span>
+      }
+    </div>
+
+    <!-- Boutons -->
+    <div class="form-actions">
+      <app-button
+        label="Annuler"
+        type="button"
+        variant="ghost"
+        (clicked)="cancel()"
+        [disabled]="isSubmitting()"
+      />
+
+      <app-button
+        [label]="isSubmitting()
+    ? (club() ? 'Modification...' : 'Création...')
+    : (club() ? 'Modifier le club' : 'Créer le club')"
+        type="submit"
+        variant="primary"
+        [loading]="isSubmitting()"
+        [disabled]="isSubmitting()"
+      />
+    </div>
+  </form>
+</div>

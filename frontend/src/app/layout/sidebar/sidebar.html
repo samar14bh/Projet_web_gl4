@@ -45,6 +45,50 @@
     </ul>
   </div>
 
+  @if (isLoggedIn()) {
+  <div class="nav-section">
+    <div class="nav-section-title">Bureau</div>
+    <ul class="nav-list">
+      @if (specialClubs.isLoading()) {
+      <li class="nav-loading">
+        <div class="spinner-small"></div>
+        <span>Chargement...</span>
+      </li>
+      } @else if (specialClubs.value(); as clubs) {
+      @for (club of clubs; track club.id) {
+      <li class="nav-item">
+        <a [routerLink]="['/club-responsability', club.membershipId]" routerLinkActive="active" class="nav-link"
+          (click)="selectClub(club)">
+          @if (club.logo) {
+          <img [src]="club.logo" class="club-nav-logo" alt="logo">
+          } @else {
+          <i class="bi bi-briefcase"></i>
+          }
+          <div class="nav-label-container">
+            <span class="nav-label">{{ club.name }}</span>
+            <span class="badge-role">{{ club.userRole }}</span>
+          </div>
+        </a>
+      </li>
+      } @empty {
+      <li class="nav-info">
+        <i class="bi bi-info-circle"></i>
+        <span>Aucun club géré</span>
+      </li>
+      }
+      } @else if (specialClubs.error()) {
+      <li class="nav-error">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>Erreur de chargement</span>
+      </li>
+      }
+    </ul>
+  </div>
+  }
+
+
+
+
   <!-- Section Gestion du Club -->
   <div class="nav-section">
     <div class="nav-section-title">Gestion du Club</div>
@@ -167,13 +211,3 @@
     </ul>
   </div>
 </nav>
-
-<!-- Footer -->
-<div class="sidebar-footer">
-  <div class="upgrade-card">
-    <i class="bi bi-star-fill"></i>
-    <h6>Passer à Pro</h6>
-    <p>Débloquez toutes les fonctionnalités premium</p>
-    <button class="btn-upgrade">Upgrade Now</button>
-  </div>
-</div>

@@ -227,3 +227,71 @@
 .btn-upgrade:active {
   transform: translateY(0);
 }
+
+/* Bureau Section Styles */
+.nav-label-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.club-nav-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid var(--gray-100);
+}
+
+.badge-role {
+  font-size: 9px;
+  padding: 1px 6px;
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: fit-content;
+  letter-spacing: 0.5px;
+}
+
+.nav-link.active .badge-role {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.nav-info,
+.nav-loading,
+.nav-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+.nav-error {
+  color: var(--error-600);
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gray-200);
+  border-top-color: var(--primary-500);
+  border-radius: 50%;
+  animation: rotate 0.8s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

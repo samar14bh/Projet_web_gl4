@@ -10,7 +10,7 @@ import { UserEventsCard } from '../../features/events/user-events-card/user-even
 import { FormsModule } from '@angular/forms';
 import { Contact } from '../../features/member/contact/contact';
 import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
-import { MailService } from '../../Core/services/mail.service';
+import { AuthService } from '../../Core/services/auth.service';
 
 @Component({
   selector: 'app-club-details',
@@ -24,10 +24,9 @@ export class ClubDetails {
   private readonly clubService = inject(ClubService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
-  private readonly USER_ID = 17;
+  private readonly USER_ID = inject(AuthService).currentUser()?.id ?? 0;
 
   errorMessage = signal<string>('');
-  private readonly mailService = inject(MailService);
 
 
 
@@ -43,7 +42,7 @@ export class ClubDetails {
       clubId: this.clubId()
     }),
     loader: async ({ params }) => {
-      return (await this.clubService.getClubMembershipDetails(params.clubId, params.userId).toPromise());
+      return (await this.clubService.getClubMembershipDetails(params.clubId, Number(params.userId)).toPromise());
     }
   });
 
@@ -59,7 +58,7 @@ export class ClubDetails {
         startDateFrom: new Date().toISOString()
       };
 
-      return (await this.eventService.getEventsDiscovery(params.userId, filters).toPromise());
+      return (await this.eventService.getEventsDiscovery(Number(params.userId), filters).toPromise());
     }
   });
 
@@ -75,7 +74,7 @@ export class ClubDetails {
 
   confirmLeaveClub() {
     this.showLeaveModal.set(false);
-    this.clubService.leaveClub(this.clubId(), this.USER_ID).subscribe({
+    this.clubService.leaveClub(this.clubId(), Number(this.USER_ID)).subscribe({
       next: () => {
         this.router.navigate(['/my-clubs']);
       },
@@ -89,23 +88,5 @@ export class ClubDetails {
 
   onContactMember() {
     this.showContactModal.set(true);
-  }
-
-
-
-  onSendMessage(data: { subject: string; message: string }) {
-    const clubEmail = this.membershipResource.value()?.club?.email;
-
-
-    this.mailService.sendContactClubEmail(clubEmail, data.subject, data.message).subscribe({
-      next: () => {
-        console.log('Message sent successfully');
-
-      },
-      error: (err) => {
-        console.error('Error sending message', err);
-        this.errorMessage.set('Failed to send message.');
-      }
-    });
   }
 }

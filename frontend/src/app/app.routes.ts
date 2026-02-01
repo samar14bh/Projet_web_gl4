@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { PageNotFound } from "./Pages/page-not-found/page-not-found";
+import { guestGuard } from './Core/guards/guest.guard';
 import { roleGuard } from './Core/guards/role.guard';
-import { PaymentPageComponent } from './Pages/payment-page/payment-page';
 
 
 /**
@@ -16,7 +16,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'home',
         pathMatch: 'full'
       },
       {
@@ -48,6 +48,9 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () => import('./Pages/member-dashboard/member-dashboard').then(m => m.MemberDashboardComponent),
+        title: 'Tableau de bord',
+        canActivate: [roleGuard],
+        data: { role: 'USER' }
       },
       {
         path: 'events',
@@ -106,12 +109,16 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login')
-          .then(m => m.LoginComponent)
+          .then(m => m.LoginComponent),
+        title: 'Connexion',
+        canActivate: [guestGuard]
       },
       {
         path: 'register',
         loadComponent: () => import('./features/auth/register/register')
-          .then(m => m.RegisterComponent)
+          .then(m => m.RegisterComponent),
+          title: 'Inscription',
+          canActivate: [guestGuard]
       },
       {
         path: 'verify-email',
@@ -125,15 +132,15 @@ export const routes: Routes = [
         title: 'Inscription réussie'
       },
 
-       {
-      path: 'notifications',
-      loadComponent: () => import('./Pages/notifications/notifications')
-        .then(m => m.NotificationComponent),
-      title: 'Notifications',
-         canActivate: [roleGuard],
+      {
+        path: 'notifications',
+        loadComponent: () => import('./Pages/notifications/notifications')
+          .then(m => m.NotificationComponent),
+        title: 'Notifications',
+        canActivate: [roleGuard],
         data: { role: 'USER' }
-    },
-       {
+      },
+      {
         path: 'verify-success',
         loadComponent: () => import('./features/auth/verify-success/verify-success')
           .then(m => m.VerifySuccessComponent),
@@ -188,6 +195,16 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { role: 'USER' },
         title: 'Gérer les membres'
+      },
+      {
+        path: 'club-responsability/:membershipId',
+        loadComponent: () => import('./Pages/club-responsability/club-responsability').then(m => m.ClubResponsability),
+        title: 'Responsabilités Club'
+      },
+      {
+        path: 'club-responsability/:clubId/documents',
+        loadComponent: () => import('./Pages/club-documents/club-documents').then(m => m.ClubDocuments),
+        title: 'Documents du Club'
       }
 
 

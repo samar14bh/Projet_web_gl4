@@ -17,6 +17,7 @@ import { CreateMembershipDto } from '../memberships/dto/create-membership.dto';
 import { ApplicationResponseDto } from '../memberships/dto/application-response.dto';
 import { Membership } from '../memberships/entities/membership.entity';
 import { MemberRole } from '../common/enums/member-role.enum';
+import {MembershipClubDto} from "../memberships/dto/membership-club.dto";
 
 /**
  * Controller pour gérer les adhésions (memberships) et les candidatures (applications)
@@ -91,37 +92,52 @@ export class MembershipsController {
     return await this.membershipsService.updateMemberRole(membershipId, role);
   }
 
-  /**
-   * DELETE /memberships/:membershipId
-   * Supprimer un membre d'un club
-   */
-  @Delete(':membershipId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeMember(
-    @Param('membershipId', ParseIntPipe) membershipId: number,
-  ): Promise<void> {
-    await this.membershipsService.removeMember(membershipId);
-  }
 
-  @Get('applications/:applicationId')
-  async getApplicationResponse(
-    @Param('applicationId', ParseIntPipe) applicationId: number,
-  ): Promise<ApplicationResponseDto> {
-    const application =
-      await this.membershipsService.getApplicationResponse(applicationId);
-    if (!application) {
-      throw new NotFoundException(
-        `Application with ID ${applicationId} not found`,
-      );
+
+
+
+ 
+ 
+    /**
+     * DELETE /memberships/:membershipId
+     * Supprimer un membre d'un club
+     */
+    @Delete(':membershipId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async removeMember(
+        @Param('membershipId', ParseIntPipe) membershipId: number,
+    ): Promise<void> {
+        await this.membershipsService.removeMember(membershipId);
     }
-    return application;
-  }
 
-  @Delete('applications/:applicationId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteApplication(
-    @Param('applicationId', ParseIntPipe) applicationId: number,
-  ): Promise<void> {
-    await this.membershipsService.deleteApplication(applicationId);
-  }
+
+
+    @Get('applications/:applicationId')
+    async getApplicationResponse(
+        @Param('applicationId', ParseIntPipe) applicationId: number,
+    ): Promise<ApplicationResponseDto> {
+        const application = await this.membershipsService.getApplicationResponse(applicationId);
+        if (!application) {
+            throw new NotFoundException(`Application with ID ${applicationId} not found`);
+        }
+        return application;
+    }
+
+    @Delete('applications/:applicationId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteApplication(
+        @Param('applicationId', ParseIntPipe) applicationId: number,
+    ): Promise<void> {
+        await this.membershipsService.deleteApplication(applicationId);
+    }
+
+
+    @Get('special-memberships/users/:userId')
+    async getClubSpecialMemberships(
+        @Param('userId', ParseIntPipe) userId: number,
+    ): Promise<MembershipClubDto[]> {
+        return await this.membershipsService.getAllClubSpecialMemberships(userId);
+    }
+
+
 }

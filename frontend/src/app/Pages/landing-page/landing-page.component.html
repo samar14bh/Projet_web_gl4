@@ -12,11 +12,12 @@
           Participez à des activités qui vous passionnent et développez vos compétences au sein de notre communauté universitaire
         </p>
         
-         <app-button
-        label="Explorer les clubs"
-        class="action-btn join"
-        title="Explorer les clubs">
-      </app-button>
+        <app-button
+          label="Explorer les clubs"
+          class="action-btn join"
+          (click)="navigateToClubs()"
+          title="Explorer les clubs">
+        </app-button>
       </div>
       
       <div class="hero-image">
@@ -30,10 +31,8 @@
     </div>
   </section>
 
-  <!-- Trigger avec directive réutilisable -->
   <div appLazyLoading (visible)="onAboutVisible()" style="height: 10px;"></div>
 
-  <!-- Section À propos avec lazy loading -->
   @if (showAboutSection()) {
     <section id="about" class="about-section">
       <div class="container">
@@ -61,10 +60,8 @@
     </section>
   }
 
-  <!-- Trigger pour clubs -->
   <div appLazyLoading (visible)="onClubsVisible()" style="height: 10px;"></div>
 
-  <!-- Section Clubs avec lazy loading -->
   @if (showClubsSection()) {
     @if (topClubsData().length > 0) {
       <section class="clubs-section" id="clubs">
@@ -111,5 +108,4 @@
     <app-footer></app-footer>
   }
   
-
 </div>

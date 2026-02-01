@@ -178,17 +178,34 @@
           <p class="file-hint">JPG, PNG ou GIF - Max 5 MB</p>
         </div>
 
-        <!-- Submit Button -->
-        <app-button
-          type="submit"
-          [disabled]="registerForm.invalid || isLoading()"
-          [loading]="isLoading()"
-          variant="primary"
-          size="lg"
-          fullWidth="true"
-          [label]="isLoading() ? 'Création du compte...' : 'Créer mon compte'"
-        >
-        </app-button>
+    
+        <div class="form-actions">
+          <app-button
+            type="submit"
+            [disabled]="registerForm.invalid || isLoading()"
+            [loading]="isLoading()"
+            variant="primary"
+            size="lg"
+            fullWidth="true"
+            [label]="isLoading() ? 'Création du compte...' : 'Créer mon compte'"
+          >
+          </app-button>
+
+          <app-button 
+            type="button" 
+            variant="ghost"
+            icon="trash"
+            size="lg"
+            label="Effacer les données saisies"
+            class="clear-form-btn"
+            fullWidth="true"
+            [disabled]="isLoading()"
+            (clicked)="clearSavedData()"
+          >
+          
+            
+         </app-button>
+        </div>
       </form>
 
       <div class="login-link-section">

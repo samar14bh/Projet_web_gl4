@@ -15,13 +15,18 @@ import {
   UseGuards,
   BadRequestException,
   UnauthorizedException,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PaginatedResult } from '../common/pagination/pagination.dto';
+import { extname } from 'path';
 
 import { ClubsService } from './clubs.service';
 import { CreateClubDto, UpdateClubDto, FilterClubDto } from './dto';
 import { Club } from './entities/club.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 /**
  * Controller pour la gestion des clubs
@@ -36,8 +41,7 @@ async getRecommendations(
   @Req() req: any,
   @Query('limit', new DefaultValuePipe(3), ParseIntPipe) limit: number,
 ) {
-  // Ensure the userId exists in the request object
-  console.log('👤 User from request:', req.user);
+  console.log('User from request:', req.user);
   const rawUserId = req.user?.userId;
   
   if (rawUserId === undefined || rawUserId === null) {
@@ -59,8 +63,141 @@ async getRecommendations(
    * Créer un nouveau club
    */
   @Post()
-  create(@Body() createClubDto: CreateClubDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'logo', maxCount: 1 },
+      { name: 'coverImage', maxCount: 1 },
+    ], {
+      storage: diskStorage({
+        destination: './uploads/clubs',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(new Error('Seulement JPG, JPEG, PNG'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  create(
+    @Body() body: any,
+    @UploadedFiles() files: { logo?: Express.Multer.File[]; coverImage?: Express.Multer.File[] },
+  ) {
+    console.log(body);
+    // Convertir les types correctement
+    const createClubDto: CreateClubDto = {
+      name: body.name,
+      slug: body.slug,
+      description: body.description,
+      contactEmail: body.contactEmail,
+      categoryId: parseInt(body.categoryId, 10),
+      isPublic: body.isPublic === 'true',
+      membershipFeeAmount: parseFloat(body.membershipFeeAmount),
+      creationDate: body.creationDate,
+    };
+
+    // Ajouter les chemins des images
+    if (files?.logo?.[0]) {
+      createClubDto.logo = `/uploads/clubs/${files.logo[0].filename}`;
+    }
+    if (files?.coverImage?.[0]) {
+      createClubDto.coverImage = `/uploads/clubs/${files.coverImage[0].filename}`;
+    }
+
     return this.clubsService.create(createClubDto);
+  }
+  /**
+   * PUT /api/clubs/:id
+   * Mettre à jour un club avec upload de fichiers
+   */
+  @Patch(':id/update-with-files')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'logo', maxCount: 1 },
+      { name: 'coverImage', maxCount: 1 },
+    ], {
+      storage: diskStorage({
+        destination: './uploads/clubs',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(new Error('Seulement JPG, JPEG, PNG'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  updateWithFiles(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: any,
+    @UploadedFiles() files: { logo?: Express.Multer.File[]; coverImage?: Express.Multer.File[] },
+  ) {
+    const updateClubDto: UpdateClubDto = {
+      name: body.name,
+      slug: body.slug,
+      description: body.description,
+      contactEmail: body.contactEmail,
+      categoryId: parseInt(body.categoryId, 10),
+      isPublic: body.isPublic === 'true',
+      membershipFeeAmount: parseFloat(body.membershipFeeAmount),
+      creationDate: body.creationDate,
+    };
+
+    // Ajouter les nouvelles images si présentes
+    if (files?.logo?.[0]) {
+      updateClubDto.logo = `/uploads/clubs/${files.logo[0].filename}`;
+    }
+    if (files?.coverImage?.[0]) {
+      updateClubDto.coverImage = `/uploads/clubs/${files.coverImage[0].filename}`;
+    }
+
+    return this.clubsService.update(id, updateClubDto);
+  }
+  /**
+   * GET /api/clubs/:clubId/president
+   * Récupérer le président actuel du club
+   */
+  @Get(':clubId/president')
+  async getClubPresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ) {
+    return this.clubsService.getClubPresident(clubId);
+  }
+
+  /**
+   * POST /api/clubs/:clubId/president
+   * Assigner un nouveau président au club
+   */
+  @Post(':clubId/president')
+  async assignPresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Body('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.clubsService.assignPresident(clubId, userId);
+  }
+
+  /**
+   * DELETE /api/clubs/:clubId/president
+   * Supprimer le président actuel du club
+   */
+  @Delete(':clubId/president')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removePresident(
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ) {
+    return this.clubsService.removePresident(clubId);
   }
 
   /**
@@ -94,7 +231,13 @@ async getRecommendations(
   async findManagedClubs(@Param('userId', ParseIntPipe) userId: number) {
     return this.clubsService.findManagedClubs(userId);
   }
-
+@Get('status/:clubId/user/:userId')
+  async getUserClubMembershipStatus (
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<string> {
+    return this.clubsService.getUserClubMembershipStatus (clubId, userId);
+  }
   /**
    * GET /api/clubs/stats
    * Récupérer les statistiques globales des clubs
@@ -210,7 +353,4 @@ async getRecommendations(
   ): Promise<string> {
     return this.clubsService.getUserClubStatus(clubId, userId);
   }
-
-
 }
-

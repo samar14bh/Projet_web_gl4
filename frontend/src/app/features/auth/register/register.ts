@@ -1,11 +1,12 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, NavigationStart } from '@angular/router';
 import { RegisterDto, StudyMajor } from '../../../Core/models/auth.models';
 import { AuthService } from '../../../Core/services/auth.service';
 import { ButtonComponent } from '../../../shared/components/button/button';
-import { Observable, of, map, catchError, delay } from 'rxjs';
+import { Observable, of, map, catchError, debounceTime, filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-register',
@@ -18,6 +19,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   isLoading = signal(false);
   errorMessage = signal('');
@@ -27,7 +29,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   imagePreview = signal('');
   fileError = signal('');
 
-  // Clés pour le localStorage
   private readonly FORM_STORAGE_KEY = 'register_form_data';
   private readonly IMAGE_STORAGE_KEY = 'register_image_data';
 
@@ -43,129 +44,118 @@ export class RegisterComponent implements OnInit, OnDestroy {
   registerForm = this.fb.nonNullable.group({
     email: ['', 
       [Validators.required, Validators.email],
-      [this.emailValidator.bind(this)] // Validateur asynchrone
+      [this.emailValidator.bind(this)]
     ],
     password: ['', [Validators.required, Validators.minLength(8)]],
     name: ['', [Validators.required]],
     lastName: ['', [Validators.required]],
     major: ['', [Validators.required]],
     dateOfBirth: ['', 
-      [Validators.required, this.minimumAgeValidator(18)] // Validateur d'âge
+      [Validators.required, this.minimumAgeValidator(18)]
     ]
   });
 
-  ngOnInit(): void {
-    this.restoreFormData();
-    
-    // Sauvegarde automatique lors des changements
-    this.registerForm.valueChanges.subscribe(() => {
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationStart),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.saveFormData();
     });
-    
-    // Nettoie le localStorage si le formulaire est soumis avec succès
-    this.registerForm.statusChanges.subscribe(status => {
-      if (status === 'VALID') {
-        // Si l'utilisateur a déjà soumis avec succès, on nettoie
-        if (this.successMessage()) {
-          this.clearFormData();
-        }
-      }
-    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    this.saveFormData();
+  }
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      return;
+    }
+
+    this.restoreFormData();
+    this.registerForm.valueChanges
+      .pipe(
+        debounceTime(500),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.saveFormData();
+      });
   }
 
   ngOnDestroy(): void {
-    // Nettoie le localStorage si le formulaire a été soumis avec succès
-    if (this.successMessage()) {
-      this.clearFormData();
-    }
+    this.saveFormData();
   }
 
-  // Validateur d'âge minimum
-  private minimumAgeValidator(minAge: number) {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) {
-        return null;
-      }
-
-      const birthDate = new Date(control.value);
-      const today = new Date();
-      
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-
-      return age >= minAge ? null : { minimumAge: { requiredAge: minAge, actualAge: age } };
-    };
-  }
-
- private emailValidator(control: AbstractControl): Observable<ValidationErrors | null> {
-  if (!control.value || control.errors?.['required'] || control.errors?.['email']) {
-    return of(null);
-  }
-
-  return this.authService.checkEmailExists(control.value).pipe(
-    map(response => {
-      return response.exists ? { emailTaken: true } : null;
-    }),
-    catchError(() => of(null)) 
-  );
-}
-
-  // Sauvegarde des données du formulaire
   private saveFormData(): void {
     try {
-      // Sauvegarde les données du formulaire
       const formData = this.registerForm.getRawValue();
-      localStorage.setItem(this.FORM_STORAGE_KEY, JSON.stringify(formData));
+      const hasData = Object.values(formData).some(value => value && value !== '');
       
-      // Sauvegarde les métadonnées de l'image (pas le fichier lui-même)
-      if (this.selectedFile()) {
-        const imageData = {
-          fileName: this.selectedFileName(),
-          preview: this.imagePreview()
-        };
-        localStorage.setItem(this.IMAGE_STORAGE_KEY, JSON.stringify(imageData));
-      } else {
-        localStorage.removeItem(this.IMAGE_STORAGE_KEY);
+      if (hasData) {
+        localStorage.setItem(this.FORM_STORAGE_KEY, JSON.stringify(formData));
+        
+        if (this.selectedFile() && this.imagePreview()) {
+          const imageData = {
+            fileName: this.selectedFileName(),
+            preview: this.imagePreview()
+          };
+          localStorage.setItem(this.IMAGE_STORAGE_KEY, JSON.stringify(imageData));
+        }
       }
     } catch (error) {
-      console.warn('Erreur lors de la sauvegarde du formulaire:', error);
+      console.warn('Erreur lors de la sauvegarde locale:', error);
     }
   }
 
-  // Restauration des données du formulaire
   private restoreFormData(): void {
     try {
-      // Restaure les données du formulaire
       const savedFormData = localStorage.getItem(this.FORM_STORAGE_KEY);
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
-        
-        // Met à jour le formulaire
         this.registerForm.patchValue(formData, { emitEvent: false });
         
-        // Restaure les métadonnées de l'image
         const savedImageData = localStorage.getItem(this.IMAGE_STORAGE_KEY);
         if (savedImageData) {
           const imageData = JSON.parse(savedImageData);
           this.selectedFileName.set(imageData.fileName);
           this.imagePreview.set(imageData.preview);
-          // Note: on ne peut pas restaurer le File objet, on indique juste qu'il y avait une image
         }
       }
     } catch (error) {
-      console.warn('Erreur lors de la restauration du formulaire:', error);
-      this.clearFormData();
+      console.error('Erreur lors de la restauration:', error);
     }
   }
 
-  // Nettoyage des données sauvegardées
   private clearFormData(): void {
     localStorage.removeItem(this.FORM_STORAGE_KEY);
     localStorage.removeItem(this.IMAGE_STORAGE_KEY);
+  }
+
+  private minimumAgeValidator(minAge: number) {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) return null;
+      const birthDate = new Date(control.value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= minAge ? null : { minimumAge: { requiredAge: minAge, actualAge: age } };
+    };
+  }
+
+  private emailValidator(control: AbstractControl): Observable<ValidationErrors | null> {
+    if (!control.value || control.errors?.['required'] || control.errors?.['email']) {
+      return of(null);
+    }
+    return this.authService.checkEmailExists(control.value).pipe(
+      map(response => response.exists ? { emailTaken: true } : null),
+      catchError(() => of(null)) 
+    );
   }
 
   onFileSelected(event: Event): void {
@@ -173,37 +163,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
     if (!input.files?.length) return;
 
     const file = input.files[0];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-
-    this.fileError.set('');
-
-    if (!allowedTypes.includes(file.type)) {
-      this.fileError.set('Format non supporté. Utilisez JPG, PNG ou GIF.');
-      this.selectedFile.set(null);
-      this.selectedFileName.set('');
-      this.imagePreview.set('');
-      return;
-    }
-
-    if (file.size > maxSize) {
-      this.fileError.set('L\'image ne doit pas dépasser 5 MB.');
-      this.selectedFile.set(null);
-      this.selectedFileName.set('');
-      this.imagePreview.set('');
-      return;
-    }
-
-    this.selectedFile.set(file);
-    this.selectedFileName.set(file.name);
-
-    // Preview
     const reader = new FileReader();
     reader.onload = (e) => {
-      const preview = e.target?.result as string;
-      this.imagePreview.set(preview);
-      // Sauvegarde après chargement de l'image
-      this.saveFormData();
+      this.selectedFile.set(file);
+      this.selectedFileName.set(file.name);
+      this.imagePreview.set(e.target?.result as string);
+      this.saveFormData(); 
     };
     reader.readAsDataURL(file);
   }
@@ -213,7 +178,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
     const formData: RegisterDto = {
       ...this.registerForm.getRawValue(),
@@ -229,15 +193,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
         this.successMessage.set('✓ Compte créé avec succès !');
         this.isLoading.set(false);
         
-        // Nettoyage des données sauvegardées après succès
-        this.clearFormData();
-        
-        // Stocker temporairement l'utilisateur (non vérifié)
         if (response.user) {
           this.authService.currentUser.set(response.user);
         }
-        
-        // Redirige vers la page de confirmation
         setTimeout(() => {
           this.router.navigate(['/register-success'], { 
             queryParams: { email: formData.email } 
@@ -250,8 +208,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  // Méthode pour effacer manuellement les données sauvegardées
   clearSavedData(): void {
     this.clearFormData();
     this.registerForm.reset();
@@ -259,5 +215,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.selectedFileName.set('');
     this.imagePreview.set('');
     this.fileError.set('');
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 }
