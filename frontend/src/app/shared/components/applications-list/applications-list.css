@@ -163,52 +163,93 @@
     justify-content: center;
 }
 
-/* ===== BUTTONS - ICON ONLY STYLE ===== */
+/* ===== ICON-ONLY ACTION BUTTONS ===== */
 .btn-action {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 18px;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.btn-icon-only {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+.btn-action i {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* PRIMARY BUTTON (View Details) */
+.btn-icon-primary {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+    color: #6366f1;
+}
+
+.btn-icon-primary:hover {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
-    border-color: #6366f1;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35), 0 3px 8px rgba(99, 102, 241, 0.2);
 }
 
-.btn-icon-only:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+.btn-icon-primary:hover i {
+    transform: scale(1.15);
 }
 
+.btn-icon-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+/* SUCCESS BUTTON (Approve) */
 .btn-icon-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.08) 100%);
+    color: #10B981;
 }
 
 .btn-icon-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35), 0 3px 8px rgba(16, 185, 129, 0.2);
 }
 
+.btn-icon-success:hover i {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.btn-icon-success:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+/* DANGER BUTTON (Reject) */
 .btn-icon-danger {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-    border-color: #ef4444;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%);
+    color: #EF4444;
 }
 
 .btn-icon-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35), 0 3px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-icon-danger:hover i {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.btn-icon-danger:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
 /* ===== BADGES ===== */

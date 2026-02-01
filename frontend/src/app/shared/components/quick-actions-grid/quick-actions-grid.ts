@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, output, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, output, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
@@ -21,7 +21,11 @@ export class QuickActionsGridComponent {
     viewFinances = output<void>();
     canManageClub = input<boolean>(true);
     canCreateEvent = input<boolean>(true);
+    canManageMembers = input<boolean>(true);
     canViewFinances = input<boolean>(true);
+
+    constructor() {
+    }
 
     // Event handlers
     onCreateEvent() {

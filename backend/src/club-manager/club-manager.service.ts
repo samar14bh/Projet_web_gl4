@@ -142,10 +142,24 @@ export class ClubManagerService {
   }
 
   async getMyRole(clubId: number, userId: number): Promise<{ role: string }> {
-    const result = await this.membershipsService.findByUserAndClub(userId, clubId);
-    if (!result.exists || !result.membership) {
-      return { role: 'MEMBER' };
+    try {
+      const membership = await this.membershipsService.findMembershipByUserAndClub(userId, clubId);
+      if (membership) {
+        return { role: membership.role };
+      }
+    } catch (err) {
+      // Silently continue to fallback
     }
-    return { role: result.membership.role };
+
+    try {
+      const result = await this.membershipsService.findByUserAndClub(userId, clubId);
+      if (result.exists && result.membership) {
+        return { role: result.membership.role };
+      }
+    } catch (err) {
+      // Silently continue to default
+    }
+
+    return { role: 'MEMBER' };
   }
 }

@@ -2,6 +2,9 @@
 .dashboard-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
+  overflow-x: hidden;
+  /* Prevent horizontal scroll */
+  width: 100%;
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -9,14 +12,35 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px 60px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ===== CONTENT SECTIONS GRID ===== */
+/* ===== NEW LAYOUT STRUCTURE ===== */
+.dashboard-top-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-events-row,
+.dashboard-actions-row {
+  margin-top: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== OLD GRID (for backwards compatibility) ===== */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   margin-top: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-col-left,
@@ -24,6 +48,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
+  /* Prevent flex items from overflowing */
 }
 
 /* ===== LOADING STATE ===== */
@@ -60,6 +86,8 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 968px) {
+
+  .dashboard-top-row,
   .dashboard-grid {
     grid-template-columns: 1fr;
   }

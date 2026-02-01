@@ -15,12 +15,14 @@
                 <span>Nouvel Événement</span>
             </button>
             }
+            @if (canManageMembers()) {
             <button (click)="onManageMembers()" class="action-card" title="Gérer les adhésions">
                 <div class="action-icon-large">
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <span>Membres</span>
             </button>
+            }
             @if (canManageClub()) {
             <button (click)="onManageClub()" class="action-card" title="Paramètres du club">
                 <div class="action-icon-large">

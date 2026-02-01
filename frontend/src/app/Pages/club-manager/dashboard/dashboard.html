@@ -16,8 +16,8 @@
     <!-- STATISTICS CARDS -->
     <app-dashboard-stats-grid [stats]="stats()" [loading]="loading()" />
 
-    <div class="dashboard-grid">
-      <!-- LEFT COLUMN -->
+    <!-- TOP ROW: PENDING REQUESTS + RECENT MEMBERS -->
+    <div class="dashboard-top-row">
       <div class="dashboard-col-left">
         @if (internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH') {
         <app-pending-members-list [members]="pendingMembers()"
@@ -25,22 +25,27 @@
           (approveMember)="onApproveMember($event)" (rejectMember)="onRejectMember($event)"
           (viewAll)="navigateToMembers()" />
         }
+      </div>
 
+      <div class="dashboard-col-right">
         <app-recent-members-list [members]="recentMembers()" [maxDisplay]="5" (viewAll)="navigateToMembers()" />
       </div>
+    </div>
 
-      <!-- RIGHT COLUMN -->
-      <div class="dashboard-col-right">
-        <app-quick-actions-grid
-          [canCreateEvent]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
-          [canManageClub]="internalRole().toUpperCase() === 'PRESIDENT'"
-          [canViewFinances]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH' || internalRole().toUpperCase() === 'TREASURER'"
-          (createEvent)="navigateToCreateEvent()" (manageMembers)="navigateToMembers()"
-          (manageClub)="navigateToManageClub()" (viewFinances)="navigateToFinances()" />
+    <!-- MIDDLE ROW: UPCOMING EVENTS -->
+    <div class="dashboard-events-row">
+      <app-upcoming-events-list [events]="upcomingEvents()" (viewAll)="navigateToAllEvents()"
+        (createEvent)="navigateToCreateEvent()" />
+    </div>
 
-        <app-upcoming-events-list [events]="upcomingEvents()" (viewAll)="navigateToAllEvents()"
-          (createEvent)="navigateToCreateEvent()" />
-      </div>
+    <!-- BOTTOM ROW: QUICK ACTIONS -->
+    <div class="dashboard-actions-row">
+      <app-quick-actions-grid
+        [canCreateEvent]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+        [canManageClub]="internalRole().toUpperCase() === 'PRESIDENT'" [canManageMembers]="true"
+        [canViewFinances]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH' || internalRole().toUpperCase() === 'TREASURER'"
+        (createEvent)="navigateToCreateEvent()" (manageMembers)="navigateToMembers()"
+        (manageClub)="navigateToManageClub()" (viewFinances)="navigateToFinances()" />
     </div>
     }
   </main>

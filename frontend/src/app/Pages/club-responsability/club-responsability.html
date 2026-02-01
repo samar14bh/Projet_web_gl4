@@ -31,7 +31,7 @@
         <div class="actions-grid">
             <!-- Tableau de bord -->
             @if (hasRole([UserRole.PRESIDENT, UserRole.SECRETARY, UserRole.TREASURER, UserRole.RH])) {
-            <div class="action-card" routerLink="/club-manager/dashboard" style="--accent-color: #4f46e5">
+            <div class="action-card"   [routerLink]="['/club-manager', club()?.id, 'dashboard']" style="--accent-color: #4f46e5">
                 <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
                 <div class="card-body">
                     <h3>Tableau de bord</h3>
@@ -96,7 +96,7 @@
 
             <!-- Membres -->
             @if (hasRole([UserRole.PRESIDENT, UserRole.RH])) {
-            <div class="action-card" routerLink="/club-manager/manage-members" style="--accent-color: #7c3aed">
+            <div class="action-card"   [routerLink]="['/club-manager', club()?.id, 'manage-members']" style="--accent-color: #7c3aed">
                 <div class="card-icon"><i class="bi bi-people"></i></div>
                 <div class="card-body">
                     <h3>Membres</h3>
@@ -108,7 +108,7 @@
 
             <!-- Candidatures -->
             @if (hasRole([UserRole.PRESIDENT, UserRole.RH])) {
-            <div class="action-card" routerLink="/club-manager/manage-members" style="--accent-color: #db2777">
+            <div class="action-card" [routerLink]="['/club-manager', club()?.id, 'manage-members']" style="--accent-color: #db2777">
                 <div class="card-icon"><i class="bi bi-file-earmark-person"></i></div>
                 <div class="card-body">
                     <h3>Candidatures</h3>
@@ -120,7 +120,7 @@
 
             <!-- Configuration Club -->
             @if (hasRole([UserRole.PRESIDENT])) {
-            <div class="action-card" routerLink="/club-manager/manage-club" style="--accent-color: #4b5563">
+            <div class="action-card" [routerLink]="['/club-manager', club()?.id, 'manage-club']" style="--accent-color: #4b5563">
                 <div class="card-icon"><i class="bi bi-gear"></i></div>
                 <div class="card-body">
                     <h3>Configuration Club</h3>

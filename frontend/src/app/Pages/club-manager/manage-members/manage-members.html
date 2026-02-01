@@ -5,6 +5,7 @@
     [pendingRequests]="pendingCount()" [showBackButton]="true" (backClick)="goBack()" />
 
   <!-- EXPORT BUTTON SECTION -->
+  @if (internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH') {
   <div class="export-section">
     <button class="btn-export" (click)="exportCSV()">
       <i class="bi bi-download"></i>
@@ -13,6 +14,7 @@
     <!-- Hidden download link for @ViewChild -->
     <a #downloadLink style="display: none"></a>
   </div>
+  }
 
   <!-- MAIN CONTENT -->
   <main class="main-content">

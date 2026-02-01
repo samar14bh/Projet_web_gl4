@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit, effect, inject, ChangeDetectionStrategy, NgZone } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
 import { TabNavigationComponent } from '../../../shared/components/tab-navigation/tab-navigation';
@@ -47,6 +47,7 @@ export class ManageClubComponent implements OnInit {
   private router = inject(Router);
   private clubContext = inject(ClubContextService);
   private clubManagerService = inject(ClubManagerService);
+  private location = inject(Location);
   private ngZone = inject(NgZone);
 
   // CONSOLIDATED STATE SIGNALS
@@ -180,8 +181,7 @@ export class ManageClubComponent implements OnInit {
       next: (res) => {
         this.internalRole.set(res.role || 'MEMBER');
       },
-      error: (err) => {
-        console.error('Erreur chargement rôle:', err);
+      error: () => {
         this.internalRole.set('MEMBER');
       }
     });
@@ -260,7 +260,7 @@ export class ManageClubComponent implements OnInit {
 
   // ACTIONS DE NAVIGATION
   goBack() {
-    this.router.navigate(['/club-manager', this.state().clubId, 'dashboard']);
+    this.location.back();
   }
 
   navigateToEvents() {

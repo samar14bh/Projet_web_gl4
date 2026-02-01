@@ -175,8 +175,7 @@ export class ClubManagerDashboardComponent implements OnInit {
       next: (res) => {
         this.internalRole.set(res.role || 'MEMBER');
       },
-      error: (err) => {
-        console.error('Erreur chargement rôle:', err);
+      error: () => {
         this.internalRole.set('MEMBER');
       }
     });
@@ -220,7 +219,7 @@ export class ClubManagerDashboardComponent implements OnInit {
   navigateToCreateEvent() {
     const clubId = this.state().clubId;
     if (clubId)
-      this.router.navigate(['/events/create'], { queryParams: { clubId } });
+      this.router.navigate(['/events'], { queryParams: { clubId: this.state().clubId } });
   }
 
   navigateToManageClub() {

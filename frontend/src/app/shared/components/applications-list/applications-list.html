@@ -54,21 +54,18 @@
                 </div>
             </div>
             <div class="application-card-actions">
-                <!-- Détails Button -->
-                <button class="btn-action btn-icon-only" (click)="onViewDetails(app)" title="Voir les détails">
+                <button class="btn-action btn-icon-primary" (click)="onViewDetails(app)" title="Voir les détails">
                     <i class="bi bi-eye"></i>
                 </button>
-            </div>
-            @if (canManage() && isApplicationPending(app.status)) {
-            <div class="application-card-footer">
-                <button class="btn-action btn-approve" (click)="onApprove(app.id)">
-                    <i class="bi bi-check-lg"></i> Approuver
+                @if (canManage() && isApplicationPending(app.status)) {
+                <button class="btn-action btn-icon-success" (click)="onApprove(app.id)" title="Approuver">
+                    <i class="bi bi-check-lg"></i>
                 </button>
-                <button class="btn-action btn-reject" (click)="onReject(app.id)">
-                    <i class="bi bi-x-lg"></i> Rejeter
+                <button class="btn-action btn-icon-danger" (click)="onReject(app.id)" title="Rejeter">
+                    <i class="bi bi-x-lg"></i>
                 </button>
+                }
             </div>
-            }
         </div>
         }
     </div>

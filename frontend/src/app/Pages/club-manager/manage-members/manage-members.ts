@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit, inject, effect, ChangeDetectionStrategy, ViewChild, ElementRef, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -58,6 +58,7 @@ export class ManageMembersComponent implements OnInit {
   private clubContext = inject(ClubContextService);
   public clubManagerService = inject(ClubManagerService);
   private destroyRef = inject(DestroyRef);
+  private location = inject(Location);
   private searchSubject = new Subject<string>();
 
   // CONSOLIDATED STATE SIGNALS
@@ -539,6 +540,6 @@ export class ManageMembersComponent implements OnInit {
 
   // NAVIGATION
   goBack() {
-    this.router.navigate(['/club-manager', this.state().clubId, 'dashboard']);
+    this.location.back();
   }
 }

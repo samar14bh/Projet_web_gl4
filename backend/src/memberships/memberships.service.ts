@@ -207,6 +207,32 @@ export class MembershipsService {
   }
 
   /**
+   * ✅ OBTENIR UNE ADHÉSION DIRECTEMENT (Version src/memberships)
+   * Utile pour les rôles internes (Président, etc.) qui n'ont pas forcément d'application
+   */
+  async findMembershipByUserAndClub(
+    userId: number,
+    clubId: number,
+  ): Promise<Membership | null> {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId }
+      },
+    });
+
+    if (membership) {
+      // Vérifier si l'adhésion est encore valide (dateFin est null ou dans le futur)
+      const now = new Date();
+      if (membership.dateFin && membership.dateFin < now) {
+        return null;
+      }
+    }
+
+    return membership;
+  }
+
+  /**
    * Obtenir les détails d'une membership avec son application
    */
   async getMembershipWithApplication(membershipId: number) {
