@@ -1,0 +1,47 @@
+<div class="dashboard-page">
+  <!-- HERO SECTION -->
+  <app-dashboard-hero [clubName]="clubHeaderState().clubName" [clubLogo]="clubHeaderState().clubLogo"
+    [clubCoverImage]="clubHeaderState().clubCoverImage" [totalMembers]="clubHeaderState().totalMembers"
+    [totalEvents]="clubHeaderState().totalEvents" [pendingRequests]="clubHeaderState().pendingRequests" />
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    @if (loading()) {
+    <!-- LOADING STATE -->
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement de tes données...</p>
+    </div>
+    } @else {
+    <!-- STATISTICS CARDS -->
+    <app-dashboard-stats-grid [stats]="stats()" [loading]="loading()" />
+
+    <div class="dashboard-grid">
+      <!-- LEFT COLUMN -->
+      <div class="dashboard-col-left">
+        @if (internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH') {
+        <app-pending-members-list [members]="pendingMembers()"
+          [canManage]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+          (approveMember)="onApproveMember($event)" (rejectMember)="onRejectMember($event)"
+          (viewAll)="navigateToMembers()" />
+        }
+
+        <app-recent-members-list [members]="recentMembers()" [maxDisplay]="5" (viewAll)="navigateToMembers()" />
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="dashboard-col-right">
+        <app-quick-actions-grid
+          [canCreateEvent]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+          [canManageClub]="internalRole().toUpperCase() === 'PRESIDENT'"
+          [canViewFinances]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH' || internalRole().toUpperCase() === 'TREASURER'"
+          (createEvent)="navigateToCreateEvent()" (manageMembers)="navigateToMembers()"
+          (manageClub)="navigateToManageClub()" (viewFinances)="navigateToFinances()" />
+
+        <app-upcoming-events-list [events]="upcomingEvents()" (viewAll)="navigateToAllEvents()"
+          (createEvent)="navigateToCreateEvent()" />
+      </div>
+    </div>
+    }
+  </main>
+</div>

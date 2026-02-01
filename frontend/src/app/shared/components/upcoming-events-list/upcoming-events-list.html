@@ -1,0 +1,41 @@
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-header-icon">
+            <i class="bi bi-calendar2-week"></i>
+        </div>
+        <h3>Événements à Venir</h3>
+    </div>
+    <div class="section-body">
+        @if (events().length === 0) {
+        <div class="empty-state">
+            <span class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+            </span>
+            <p>Aucun événement prévu</p>
+        </div>
+        } @else {
+        <div class="item-list">
+            @for (event of displayedEvents(); track event.id) {
+            <div class="list-item">
+                <div class="item-avatar event">
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <div class="item-content">
+                    <h4 class="item-title">{{ event.name }}</h4>
+                    <p class="item-meta">{{ formatDate(event.startDate) }}</p>
+                </div>
+                <button class="btn-action-small btn-view" (click)="onViewEvent(event.id)" title="Voir l'événement">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            }
+        </div>
+        }
+        @if (events().length > 0) {
+        <button (click)="onViewAll()" class="view-all-btn">
+            <span>Tous les événements</span>
+            <i class="bi bi-arrow-right"></i>
+        </button>
+        }
+    </div>
+</div>

@@ -1,0 +1,37 @@
+<div class="preview-section">
+    <div class="section-header">
+        <h3>Événements à venir</h3>
+        <button class="btn-text" (click)="onViewAll()">
+            Voir tous les événements
+            <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+
+    <div class="events-list">
+        @for (event of events(); track event.id) {
+        <div class="event-card">
+            <div class="event-icon">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="event-info">
+                <h4>{{ event.title }}</h4>
+                <div class="event-meta">
+                    <span class="event-date">
+                        <i class="bi bi-clock"></i>
+                        {{ formatDate(event.date) }}
+                    </span>
+                    <span class="event-participants">
+                        <i class="bi bi-people"></i>
+                        {{ event.participants }} participants
+                    </span>
+                </div>
+            </div>
+        </div>
+        } @empty {
+        <div class="empty-state">
+            <i class="bi bi-calendar3"></i>
+            <p>Aucun événement prévu</p>
+        </div>
+        }
+    </div>
+</div>

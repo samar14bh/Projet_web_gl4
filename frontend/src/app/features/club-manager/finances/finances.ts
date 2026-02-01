@@ -26,7 +26,7 @@ import { ExportService } from '../../../Core/services/export.service';
 @Component({
   selector: 'app-finances',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent,TransactionForm],
+  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, TransactionForm],
   templateUrl: './finances.html',
   styleUrl: './finances.css',
 })

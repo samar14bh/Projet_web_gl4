@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class PaymentModal {
   @Output() close = new EventEmitter<void>();
+  @Output() payOnline = new EventEmitter<void>();
 
   showCashInfo = false;
 
@@ -17,7 +18,7 @@ export class PaymentModal {
     if (method === 'cash') {
       this.showCashInfo = true;
     } else {
-      alert('Still not dev');
+      this.payOnline.emit();
       this.closeModal();
     }
   }

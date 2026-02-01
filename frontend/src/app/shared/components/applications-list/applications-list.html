@@ -1,0 +1,79 @@
+<div class="applications-section">
+    <div class="section-header-row">
+        <h3>Demandes d'Adhésion</h3>
+        <div class="status-filters">
+            @for (filter of statusFilters(); track filter.value) {
+            <button class="filter-btn" [class.active]="activeStatus() === filter.value"
+                (click)="onStatusFilterChange(filter.value)">
+                <i class="bi" [class]="'bi-' + filter.icon"></i>
+                {{ filter.label }}
+            </button>
+            }
+        </div>
+    </div>
+
+    @if (loading()) {
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement des demandes...</p>
+    </div>
+    } @else if (applications().length === 0) {
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h4>Aucune Demande</h4>
+        <p>Il n'y a pas de demandes avec ce statut</p>
+    </div>
+    } @else {
+    <div class="applications-grid">
+        @for (app of applications(); track app.id) {
+        <div class="application-card">
+            <div class="application-card-header">
+                <div class="applicant-avatar">
+                    @if (app.userImage) {
+                    <img [src]="app.userImage" [alt]="app.userName" />
+                    } @else {
+                    <i class="bi bi-person-fill"></i>
+                    }
+                </div>
+                <div class="applicant-info">
+                    <h4>{{ app.userName }} {{ app.userLastName }}</h4>
+                    <p>{{ app.userEmail }}</p>
+                </div>
+                <span class="badge" [class]="getStatusBadgeClass(app.status)">
+                    {{ getStatusLabel(app.status) }}
+                </span>
+            </div>
+            <div class="application-card-body">
+                <div class="application-detail">
+                    <span class="detail-label"><i class="bi bi-calendar"></i> Date de demande</span>
+                    <span class="detail-value">{{ formatDate(app.createdAt) }}</span>
+                </div>
+                <div class="application-detail">
+                    <span class="detail-label"><i class="bi bi-telephone"></i> Téléphone</span>
+                    <span class="detail-value">{{ app.phoneNumber }}</span>
+                </div>
+            </div>
+            <div class="application-card-actions">
+                <!-- Détails Button -->
+                <button class="btn-action btn-icon-only" (click)="onViewDetails(app)" title="Voir les détails">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            @if (canManage() && isApplicationPending(app.status)) {
+            <div class="application-card-footer">
+                <button class="btn-action btn-approve" (click)="onApprove(app.id)">
+                    <i class="bi bi-check-lg"></i> Approuver
+                </button>
+                <button class="btn-action btn-reject" (click)="onReject(app.id)">
+                    <i class="bi bi-x-lg"></i> Rejeter
+                </button>
+            </div>
+            }
+        </div>
+        }
+    </div>
+
+    <!-- PAGINATION -->
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" (pageChange)="onPageChange($event)" />
+    }
+</div>

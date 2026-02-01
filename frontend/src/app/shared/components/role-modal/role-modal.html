@@ -1,0 +1,61 @@
+@if (show()) {
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Assigner un Rôle</h3>
+            <button class="modal-close" (click)="onClose()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-description">
+                Sélectionnez un nouveau rôle pour
+                <strong>{{ member()?.name }} {{ member()?.lastName }}</strong>
+            </p>
+            <div class="role-selector">
+                <label class="role-option">
+                    <input type="radio" name="role" value="MEMBER" [(ngModel)]="selectedRole" />
+                    <span class="role-label">
+                        <i class="bi bi-person"></i>
+                        Membre
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="PRESIDENT" [(ngModel)]="selectedRole" />
+                    <span class="role-label">
+                        <i class="bi bi-star-fill"></i>
+                        Président
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="TREASURER" [(ngModel)]="selectedRole" />
+                    <span class="role-label">
+                        <i class="bi bi-wallet2"></i>
+                        Trésorier
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="SECRETARY" [(ngModel)]="selectedRole" />
+                    <span class="role-label">
+                        <i class="bi bi-journal-text"></i>
+                        Secrétaire
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="RH" [(ngModel)]="selectedRole" />
+                    <span class="role-label">
+                        <i class="bi bi-people"></i>
+                        Ressources Humaines
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-secondary" (click)="onClose()">Annuler</button>
+            <button class="btn-modal btn-primary" (click)="onConfirm()">
+                Confirmer
+            </button>
+        </div>
+    </div>
+</div>
+}

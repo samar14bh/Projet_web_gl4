@@ -1,0 +1,79 @@
+<div class="form-section">
+    <div class="form-card">
+        <div class="card-header">
+            <h2>
+                <i class="bi bi-credit-card-2-front"></i>
+                Informations de paiement
+            </h2>
+        </div>
+
+        <form [formGroup]="paymentForm()" (ngSubmit)="onSubmit()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-person"></i>
+                        <input type="text" formControlName="cardName" placeholder="Jean Dupont" class="form-input" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>E-mail *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-envelope"></i>
+                        <input type="email" formControlName="email" placeholder="jean@example.com" class="form-input" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Numéro de carte *</label>
+                <div #cardNumberElement id="card-number-element" class="stripe-input-wrapper"></div>
+
+                @if (state().cardError) {
+                <span class="error-text">{{ state().cardError }}</span>
+                }
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date d'expiration *</label>
+                    <div #cardExpiryElement id="expiry-element" class="stripe-input-wrapper"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>CVC *</label>
+                    <div #cardCvcElement id="cvc-element" class="stripe-input-wrapper"></div>
+                </div>
+            </div>
+
+            @if (state().formError) {
+            <div class="alert alert-error">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {{ state().formError }}
+            </div>
+            }
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" (click)="onCancel()" [disabled]="state().processing">
+                    Annuler
+                </button>
+
+                <button type="submit" class="btn-primary"
+                    [disabled]="state().processing || !paymentForm().valid || !state().elementsReady">
+                    @if (state().processing) {
+                    <span class="spinner-mini"></span> Traitement...
+                    } @else {
+                    Payer {{ formatCurrency(amount()) }}
+                    <i class="bi bi-arrow-right"></i>
+                    }
+                </button>
+            </div>
+        </form>
+
+        <div class="security-info">
+            <i class="bi bi-shield-lock"></i>
+            <span>Paiement chiffré SSL – aucune donnée sensible stockée</span>
+        </div>
+    </div>
+</div>

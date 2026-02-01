@@ -1,0 +1,42 @@
+<div class="payment-cards">
+    @for (payment of payments(); track payment.id) {
+    <div class="payment-card" [class]="'status-' + payment.status.toLowerCase()">
+        <div class="payment-card-header">
+            <div>
+                @if (payment.membership) {
+                <h3>{{ payment.membership.club.name }}</h3>
+                <p class="payment-card-subtitle">Cotisation annuelle</p>
+                } @else if (payment.event) {
+                <h3>{{ payment.event.title }}</h3>
+                <p class="payment-card-subtitle">Inscription événement</p>
+                }
+            </div>
+            <span [class]="getStatusBadgeClass(payment.status)">
+                {{ getStatusLabel(payment.status) }}
+            </span>
+        </div>
+
+        <div class="payment-card-body">
+            <div class="payment-card-row">
+                <span class="label">Date</span>
+                <span class="value">{{ formatDate(payment.date) }}</span>
+            </div>
+            <div class="payment-card-row">
+                <span class="label">Type</span>
+                <span class="value">{{ getPaymentTypeLabel(payment.type) }}</span>
+            </div>
+            <div class="payment-card-row amount">
+                <span class="label">Montant</span>
+                <span class="value">{{ formatCurrency(payment.amount) }}</span>
+            </div>
+        </div>
+
+        <div class="payment-card-footer">
+            <button class="btn-action-mobile" (click)="onDownloadReceipt(payment.id)" [disabled]="downloading()">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Reçu
+            </button>
+        </div>
+    </div>
+    }
+</div>

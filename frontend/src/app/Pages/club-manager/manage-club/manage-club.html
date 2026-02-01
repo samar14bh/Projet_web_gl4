@@ -1,0 +1,43 @@
+<div class="manage-club-page">
+  <!-- NOTIFICATION MESSAGE -->
+  <app-notification-toast [type]="notification().type" [message]="notification().message"
+    (closeClick)="closeNotification()" />
+
+  <!-- HERO SECTION -->
+  <app-dashboard-hero [clubName]="clubInfo().name" [clubLogo]="clubInfo().logo" [clubCoverImage]="clubInfo().coverImage"
+    [totalMembers]="stats().totalMembers" [totalEvents]="stats().totalEvents"
+    [pendingRequests]="stats().pendingRequests" [showBackButton]="true" (backClick)="goBack()" />
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- Stats Section -->
+    <app-club-stats-simple-grid [totalMembers]="stats().totalMembers" [totalEvents]="stats().totalEvents"
+      [pendingRequests]="stats().pendingRequests" [monthlyRevenue]="stats().monthlyRevenue" />
+
+    <!-- Tabs -->
+    <div class="content-card">
+      <app-tab-navigation [tabs]="tabs()" [activeTab]="state().activeTab" (tabChange)="onTabChange($event)" />
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        @if (state().activeTab === 'info') {
+        <!-- Club Information Tab -->
+        <app-club-info-section [categoryName]="clubInfo().categoryName" [categoryIcon]="clubInfo().categoryIcon"
+          [categoryColor]="categoryColor()" [description]="clubInfo().description" [isPublic]="clubInfo().isPublic"
+          [membershipFee]="clubInfo().membershipFee" [approvalRequired]="clubInfo().approvalRequired"
+          [isActive]="clubInfo().isActive" [creationDate]="clubInfo().creationDate" [email]="clubInfo().email" />
+
+        } @else if (state().activeTab === 'events') {
+        <!-- Events Preview Tab -->
+        <app-club-events-preview [events]="upcomingEvents()" [clubId]="state().clubId"
+          (viewAllClick)="navigateToEvents()" />
+
+        } @else if (state().activeTab === 'settings') {
+        <!-- Settings Tab -->
+        <app-club-settings-form [(isPublic)]="settingsIsPublic" [(membershipFee)]="settingsMembershipFee"
+          [(approvalRequired)]="settingsApprovalRequired" [saving]="state().saving" (saveClick)="saveSettings()" />
+        }
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,40 @@
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-header-icon">
+            <i class="bi bi-person-check-fill"></i>
+        </div>
+        <h3>Membres Récents</h3>
+    </div>
+    <div class="section-body">
+        @if (members().length === 0) {
+        <div class="empty-state">
+            <span class="empty-state-icon">
+                <i class="bi bi-clipboard-data"></i>
+            </span>
+            <p>Aucun membre pour le moment</p>
+        </div>
+        } @else {
+        <div class="item-list">
+            @for (member of displayedMembers(); track member.id) {
+            <div class="list-item">
+                <div class="item-avatar member">
+                    @if (member.image) {
+                    <img [src]="member.image" [alt]="member.name + ' ' + member.lastName" />
+                    } @else {
+                    <i class="bi bi-person-fill"></i>
+                    }
+                </div>
+                <div class="item-content">
+                    <h4 class="item-title">{{ member.name }} {{ member.lastName }}</h4>
+                    <p class="item-meta">Rejoint {{ member.joinDate | date:'dd MMM yyyy':'':'fr-FR' }}</p>
+                </div>
+            </div>
+            }
+        </div>
+        }
+        <button (click)="onViewAll()" class="view-all-btn">
+            <span>Tous les membres</span>
+            <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</div>

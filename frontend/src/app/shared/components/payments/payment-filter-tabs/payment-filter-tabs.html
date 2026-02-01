@@ -1,0 +1,18 @@
+<div class="filter-tabs">
+    <button class="filter-tab" [class.active]="activeFilter() === null" (click)="onFilterClick(null)">
+        <i class="bi bi-list"></i>
+        Tous
+    </button>
+    <button class="filter-tab" [class.active]="activeFilter() === 'CONFIRMED'" (click)="onFilterClick('CONFIRMED')">
+        <i class="bi bi-check-circle"></i>
+        Confirmés
+    </button>
+    <button class="filter-tab" [class.active]="activeFilter() === 'PENDING'" (click)="onFilterClick('PENDING')">
+        <i class="bi bi-hourglass-split"></i>
+        En attente
+    </button>
+    <button class="filter-tab" [class.active]="activeFilter() === 'REJECTED'" (click)="onFilterClick('REJECTED')">
+        <i class="bi bi-x-circle"></i>
+        Rejetés
+    </button>
+</div>

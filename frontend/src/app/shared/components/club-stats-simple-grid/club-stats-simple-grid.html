@@ -1,0 +1,33 @@
+<div class="stats-section">
+    <div class="stat-item stat-item-1">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-label">Total Membres</div>
+        <div class="stat-value">{{ totalMembers() }}</div>
+    </div>
+
+    <div class="stat-item stat-item-2">
+        <div class="stat-icon">
+            <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-label">Événements</div>
+        <div class="stat-value">{{ totalEvents() }}</div>
+    </div>
+
+    <div class="stat-item stat-item-3">
+        <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-label">Demandes en Attente</div>
+        <div class="stat-value">{{ pendingRequests() }}</div>
+    </div>
+
+    <div class="stat-item stat-item-4">
+        <div class="stat-icon">
+            <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stat-label">Revenus Mensuels</div>
+        <div class="stat-value">{{ formatCurrency(monthlyRevenue()) }}</div>
+    </div>
+</div>

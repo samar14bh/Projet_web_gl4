@@ -1,0 +1,36 @@
+<!-- HERO SECTION WITH COVER IMAGE -->
+<div class="hero-section" [style.backgroundImage]="clubCoverImage() ? 'url(' + clubCoverImage() + ')' : 'none'">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <!-- Back Button (conditional) -->
+        @if (showBackButton()) {
+        <div class="hero-top">
+            <button class="btn-back" (click)="onBackClick()">
+                <i class="bi bi-arrow-left"></i> Retour 
+            </button>
+        </div>
+        }
+
+        <!-- Club Header -->
+        <div class="club-header">
+            <div class="club-logo-wrapper">
+                @if (clubLogo()) {
+                <img [src]="clubLogo()" alt="Logo du club" />
+                } @else {
+                <i class="bi bi-building"></i>
+                }
+            </div>
+
+            <div class="club-title-info">
+                <h1>{{ clubName() }}</h1>
+                <div class="quick-stats">
+                    <span><i class="bi bi-people-fill"></i> {{ totalMembers() }} Membres</span>
+                    @if (totalEvents() !== undefined) {
+                    <span><i class="bi bi-calendar-event"></i> {{ totalEvents() }} Événements</span>
+                    }
+                    <span><i class="bi bi-hourglass-split"></i> {{ pendingRequests() }} Demandes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

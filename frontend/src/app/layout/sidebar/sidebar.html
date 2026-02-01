@@ -155,14 +155,14 @@
           <span class="nav-label">Notifications</span>
         </a>
       </li>
-    }
+      }
       @if (isLoggedIn()) {
-        <li class="nav-item">
-          <a (click)="onLogout()" class="nav-link logout-link" style="cursor: pointer;">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Déconnexion</span>
-          </a>
-        </li>
+      <li class="nav-item">
+        <a (click)="onLogout()" class="nav-link logout-link" style="cursor: pointer;">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Déconnexion</span>
+        </a>
+      </li>
       }
     </ul>
   </div>

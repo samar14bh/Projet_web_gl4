@@ -6,7 +6,10 @@ import {
   Param,
   Patch,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ClubManagerService } from './club-manager.service';
 import { Status } from '../common/enums';
 import { UpdateClubSettingsDto } from './dto/update-club-settings.dto';
@@ -14,9 +17,10 @@ import { GetMembersQueryDto } from './dto/get-members-query.dto';
 import { GetApplicationsQueryDto } from './dto/get-applications-query.dto';
 import { AssignRoleDto } from './dto/assign-role.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('club-manager')
 export class ClubManagerController {
-  constructor(private readonly service: ClubManagerService) {}
+  constructor(private readonly service: ClubManagerService) { }
 
   // ========================
   // DASHBOARD
@@ -39,6 +43,11 @@ export class ClubManagerController {
   @Get(':clubId/dashboard/upcoming-events')
   getEvents(@Param('clubId') clubId: number) {
     return this.service.getUpcomingEvents(+clubId);
+  }
+
+  @Get(':clubId/my-role')
+  getMyRole(@Param('clubId') clubId: number, @Req() req) {
+    return this.service.getMyRole(+clubId, req.user.userId);
   }
 
   // ========================

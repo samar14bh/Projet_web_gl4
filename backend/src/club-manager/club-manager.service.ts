@@ -18,7 +18,7 @@ export class ClubManagerService {
     private readonly eventsService: EventsService,
     private readonly membershipsService: MembershipsService,
     private readonly transactionsService: TransactionsService,
-  ) {}
+  ) { }
 
   // ========================
   // DASHBOARD STATS
@@ -139,5 +139,13 @@ export class ClubManagerService {
 
   async getUpcomingEvents(clubId: number) {
     return this.eventsService.getUpcomingEventsForDashboard(clubId);
+  }
+
+  async getMyRole(clubId: number, userId: number): Promise<{ role: string }> {
+    const result = await this.membershipsService.findByUserAndClub(userId, clubId);
+    if (!result.exists || !result.membership) {
+      return { role: 'MEMBER' };
+    }
+    return { role: result.membership.role };
   }
 }

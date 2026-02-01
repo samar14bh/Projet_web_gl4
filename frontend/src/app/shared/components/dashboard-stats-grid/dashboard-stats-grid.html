@@ -1,0 +1,41 @@
+<div class="stats-grid">
+    <!-- Membres actifs -->
+    <div class="stat-card stat-card-1">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-label">Membres Actifs</div>
+        <div class="stat-value">{{ stats()?.activeMembers || 0 }}</div>
+        <div class="stat-footer">sur {{ stats()?.totalMembers || 0 }} adhésions</div>
+    </div>
+
+    <!-- Événements à venir -->
+    <div class="stat-card stat-card-2">
+        <div class="stat-icon">
+            <i class="bi bi-calendar-event"></i>
+        </div>
+        <div class="stat-label">Événements</div>
+        <div class="stat-value">{{ stats()?.upcomingEvents || 0 }}</div>
+        <div class="stat-footer">programmés à venir</div>
+    </div>
+
+    <!-- Demandes en attente -->
+    <div class="stat-card stat-card-3">
+        <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-label">Demandes Actives</div>
+        <div class="stat-value">{{ stats()?.pendingRequests || 0 }}</div>
+        <div class="stat-footer">à valider rapidement</div>
+    </div>
+
+    <!-- Finances -->
+    <div class="stat-card stat-card-4">
+        <div class="stat-icon">
+            <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stat-label">Revenus ce Mois</div>
+        <div class="stat-value">{{ formatCurrency(stats()?.monthlyRevenue || 0) }}</div>
+        <div class="stat-footer">Total: {{ formatCurrency(stats()?.totalRevenue || 0) }}</div>
+    </div>
+</div>

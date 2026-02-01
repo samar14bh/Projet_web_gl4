@@ -1,0 +1,245 @@
+/* Payment Order Summary Styles - Extracted from payment-page.css */
+
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    position: sticky;
+    top: 32px;
+    height: fit-content;
+}
+
+.summary-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.card-header h2 {
+    font-size: 1.2rem;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.card-header i {
+    color: #6366f1;
+    font-size: 1.3rem;
+}
+
+.product-info {
+    padding: 24px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.product-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    animation: bounce 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.product-icon.membership-icon {
+    background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+    color: #0369a1;
+}
+
+.product-icon.event-icon {
+    background: linear-gradient(135deg, #dcfce7, #ecfdf5);
+    color: #047857;
+}
+
+.product-info h3 {
+    font-size: 1.4rem;
+    color: #1f2937;
+    margin: 0 0 10px;
+    font-weight: 700;
+}
+
+.badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(59, 130, 246, 0.1));
+    color: #6366f1;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    border-left: 3px solid #6366f1;
+}
+
+.product-description {
+    color: #6b7280;
+    margin: 16px 0 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.event-details span i {
+    margin-right: 8px;
+    color: #6366f1;
+}
+
+.pricing-section {
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.02) 100%);
+    border-top: 1px solid #e5e7eb;
+}
+
+.price-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+.price-row.discount {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.price-row.discount span:last-child {
+    color: #10b981;
+}
+
+.price-row .original {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+    margin: 12px 0;
+}
+
+.price-row.total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    padding-top: 8px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.total-amount {
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.4rem;
+}
+
+.trust-badge {
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-left: 4px solid #10b981;
+    color: #047857;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    margin: 0 24px 24px;
+}
+
+.trust-badge i {
+    font-size: 1.3rem;
+    color: #10b981;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .summary-card {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+
+    .product-info h3 {
+        font-size: 1.2rem;
+    }
+
+    .card-header {
+        padding: 20px;
+    }
+
+    .product-info,
+    .pricing-section,
+    .trust-badge {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 1.8rem;
+    }
+
+    .product-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .card-header h2 {
+        font-size: 1rem;
+    }
+
+    .trust-badge {
+        margin: 0 16px 20px;
+    }
+}

@@ -25,7 +25,7 @@ export class ClubManagerService {
   upcomingEvents = signal<DashboardEvent[]>([]);
   loading = signal(false);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ========================
   // DASHBOARD
@@ -202,5 +202,9 @@ export class ClubManagerService {
 
   pendingMembersValue() {
     return this.pendingMembers();
+  }
+
+  getMyRole(clubId: number): Observable<{ role: string }> {
+    return this.http.get<{ role: string }>(`${this.api}/${clubId}/my-role`);
   }
 }

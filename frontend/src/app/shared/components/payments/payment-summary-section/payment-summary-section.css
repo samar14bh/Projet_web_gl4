@@ -1,0 +1,11 @@
+/* ====== SUMMARY SECTION ====== */
+.summary-section {
+    flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .summary-section {
+        width: 100%;
+    }
+}

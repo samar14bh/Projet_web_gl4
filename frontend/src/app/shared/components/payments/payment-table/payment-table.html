@@ -1,0 +1,70 @@
+<div class="payments-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (payment of payments(); track payment.id) {
+            <tr [class]="'status-' + payment.status.toLowerCase()">
+                <td>
+                    <span class="payment-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ formatDate(payment.date) }}
+                    </span>
+                </td>
+                <td>
+                    <div class="payment-description">
+                        @if (payment.membership) {
+                        <div class="payment-info">
+                            <span class="payment-title">
+                                {{ payment.membership.club.name }}
+                            </span>
+                            <span class="payment-subtitle">Cotisation annuelle</span>
+                        </div>
+                        } @else if (payment.event) {
+                        <div class="payment-info">
+                            <span class="payment-title">
+                                {{ payment.event.title }}
+                            </span>
+                            <span class="payment-subtitle">Inscription événement</span>
+                        </div>
+                        }
+                    </div>
+                </td>
+                <td>
+                    <span class="payment-type-badge" [class]="getPaymentTypeClass(payment.type)">
+                        <i [class]="getPaymentTypeIcon(payment.type)"></i>
+                        {{ getPaymentTypeLabel(payment.type) }}
+                    </span>
+                </td>
+                <td>
+                    <span class="payment-amount">
+                        {{ formatCurrency(payment.amount) }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge" [class]="getStatusBadgeClass(payment.status)">
+                        <i [class]="getStatusIcon(payment.status)"></i>
+                        {{ getStatusLabel(payment.status) }}
+                    </span>
+                </td>
+                <td>
+                    <div class="payment-actions">
+                        <button class="btn-action" title="Télécharger le reçu" (click)="onDownloadReceipt(payment.id)"
+                            [disabled]="downloading()">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>

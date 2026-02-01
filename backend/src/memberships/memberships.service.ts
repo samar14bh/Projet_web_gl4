@@ -26,7 +26,7 @@ export class MembershipsService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(Application)
     private readonly applicationRepository: Repository<Application>,
-  ) {}
+  ) { }
 
   /**
    * Créer une nouvelle adhésion
@@ -389,7 +389,7 @@ export class MembershipsService {
       throw new Error('Membership not found');
     }
 
-    membership.role = (role as any) || 'member';
+    membership.role = (role as any) || MemberRole.MEMBER;
     await this.membershipRepository.save(membership);
 
     return this.mapToMemberResponse(membership);
@@ -514,7 +514,7 @@ export class MembershipsService {
         '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
         { today: new Date() },
       )
-      .andWhere('membership.role != :role', { role: 'MEMBER' }); // ✅ FILTRE BUREAU
+      .andWhere('membership.role NOT IN (:...roles)', { roles: ['MEMBER', 'member'] }); // ✅ FILTRE BUREAU ROBUSTE
 
     // Recherche par nom ou email
     if (query.search) {

@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { Membership } from '../memberships/entities/membership.entity';
+import { Application } from '../memberships/entities/application.entity';
 import { Club } from '../clubs/entities/club.entity';
 import { Event } from '../events/entities/event.entity';
 import { Registration } from '../events/entities/registration.entity';
@@ -18,6 +19,7 @@ import {
   RegistrationStatus,
   PaymentMethod,
   PaymentStatus,
+  Status,
 } from '../common/enums';
 
 /**
@@ -30,6 +32,8 @@ export class PaymentsService {
     private readonly paymentRepository: Repository<Payment>,
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(Application)
+    private readonly applicationRepository: Repository<Application>,
     @InjectRepository(Club)
     private readonly clubRepository: Repository<Club>,
     @InjectRepository(Event)
@@ -39,7 +43,7 @@ export class PaymentsService {
 
     private readonly receiptService: ReceiptService,
     private readonly stripeService: StripeService,
-  ) {}
+  ) { }
 
   /**
    * ✅ NOUVELLE MÉTHODE: Vérifier que le paiement appartient à l'utilisateur
@@ -258,6 +262,21 @@ export class PaymentsService {
       membership.dateFin = oneYearLater;
       await this.membershipRepository.save(membership);
 
+      // ✅ Mettre à jour le statut de l'application
+      const application = await this.applicationRepository.findOne({
+        where: {
+          user: { id: payment.user.id },
+          club: { id: membership.club.id },
+          status: Status.APPROVED, // On cherche l'application approuvée en attente de paiement
+        },
+      });
+
+      if (application) {
+        application.status = Status.CONFIRMED;
+        await this.applicationRepository.save(application);
+        console.log('✅ Application status updated to CONFIRMED');
+      }
+
       console.log('✅ Membership activated until:', oneYearLater);
 
       return payment;
@@ -304,7 +323,10 @@ export class PaymentsService {
       const registration = this.registrationRepository.create({
         user: { id: payment.user.id },
         event: { id: payment.event.id },
-        status: RegistrationStatus.REGISTERED,
+        status: RegistrationStatus.PAID, // ✅ Statut PAID au lieu de REGISTERED
+        qrCode: `EVT-${payment.event.id}-USR-${payment.user.id}-${Date.now()}`, // ✅ Génération du QR Code
+        date: new Date(),
+        isPresent: false,
       });
 
       await this.registrationRepository.save(registration);
