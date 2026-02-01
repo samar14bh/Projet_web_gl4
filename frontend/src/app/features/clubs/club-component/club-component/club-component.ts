@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Club } from '../../../../Core/models/club.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { Router } from '@angular/router';
 import { CLUB_STATUS, CLUB_CONFIG, CLUB_ROUTES, ButtonVariant } from '../../../../shared/constants/club.constants';
+import { DateFormatterPipe } from '../../../../shared/pipes/date-formatter.pipe';
+import { CurrencyTndPipe } from '../../../../shared/pipes/currency-tnd.pipe';
 
 @Component({
   selector: 'app-club-component',
   standalone: true,
-  imports: [ButtonComponent],
+  imports: [ButtonComponent, DateFormatterPipe, CurrencyTndPipe],
   templateUrl: './club-component.html',
   styleUrl: './club-component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,7 +41,6 @@ export class ClubComponent {
       this.router.navigate([CLUB_ROUTES.LOGIN]);
       return;
     }
-
     this.join.emit(this.club());
     if (this.redirectAfterAction()) {
       this.handleJoinAction();
@@ -47,28 +48,15 @@ export class ClubComponent {
   }
 
   private handleJoinAction(): void {
-    const clubId = this.club().id;
+    const id = this.club().id;
     const status = this.userClubStatus().toLowerCase();
+    
     if (status.includes(CLUB_STATUS.NON_MEMBER) || status.includes(CLUB_STATUS.REJECTED)) {
-      this.router.navigate([CLUB_ROUTES.JOIN, clubId]);
+      this.router.navigate([CLUB_ROUTES.JOIN, id]);
     } else if (status.includes(CLUB_STATUS.OLD_MEMBER)) {
-      this.router.navigate([CLUB_ROUTES.RENEW, clubId, 'renew']);
+      this.router.navigate([CLUB_ROUTES.RENEW, id, 'renew']);
     } else {
-      this.router.navigate([CLUB_ROUTES.DETAILS, clubId]);
+      this.router.navigate([CLUB_ROUTES.DETAILS, id]);
     }
-  }
-
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString(CLUB_CONFIG.LOCALE, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  }
-
-  getMembershipLabel(feeAmount: number): string {
-    return feeAmount === 0 
-      ? CLUB_CONFIG.FREE_LABEL 
-      : `${feeAmount} ${CLUB_CONFIG.CURRENCY_LABEL}`;
   }
 }
