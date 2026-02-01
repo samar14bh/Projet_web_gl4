@@ -3,7 +3,6 @@
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Mes événements</h1>
-      <p class="page-subtitle">Créez et gérez tous vos événements</p>
     </div>
     <app-button
       label="Créer un événement"
@@ -116,150 +115,177 @@
         />
       </div>
     } @else {
-      <!-- Grille d'événements -->
-      <div class="events-grid">
-        @for (event of events(); track event.id) {
-          <div class="event-card">
-            <!-- Image de couverture -->
-            <div class="event-cover">
-              @if (event.coverImage) {
-                <img [src]="getImageUrl(event.coverImage)" [alt]="event.title" />
-              } @else {
-                <div class="event-cover-placeholder">
-                  <i class="bi bi-calendar-event"></i>
-                </div>
-              }
-              <span class="event-status-badge" [class]="getStatusBadgeClass(event.status)">
-                {{ getStatusLabel(event.status) }}
-              </span>
-            </div>
-
-            <!-- Contenu -->
-            <div class="event-card-content">
-              <!-- Date -->
-              <div class="event-date">
-                <i class="bi bi-calendar3"></i>
-                <span>{{ formatDate(event.startDate) }}</span>
-                <span class="separator">•</span>
-                <i class="bi bi-clock"></i>
-                <span>{{ formatTime(event.startDate) }}</span>
-              </div>
-
-              <!-- Titre -->
-              <h3 class="event-title">{{ event.title }}</h3>
-
-              <!-- Description -->
-              @if (event.description) {
-                <p class="event-description">
-                  {{ event.description.substring(0, 100) }}
-                  @if (event.description.length > 100) {
-                    ...
+      <div class="events-grid-container">
+        <div class="events-grid">
+          @for (event of events(); track event.id) {
+            @defer (on viewport) {
+              <div class="event-card">
+                <!-- Image de couverture -->
+                <div class="event-cover">
+                  @if (event.coverImage) {
+                    <img [src]="getImageUrl(event.coverImage)" [alt]="event.title" />
+                  } @else {
+                    <div class="event-cover-placeholder">
+                      <i class="bi bi-calendar-event"></i>
+                    </div>
                   }
-                </p>
-              }
-
-              <!-- Stats -->
-              <div class="event-stats">
-                <div class="stat-item">
-                  <i class="bi bi-people"></i>
-                  <span>{{ event.registrations?.length || 0 }} / {{ event.capacity || '∞' }}</span>
+                  <span class="event-status-badge" [class]="getStatusBadgeClass(event.status)">
+                    {{ getStatusLabel(event.status) }}
+                  </span>
                 </div>
-                @if (event.subscriptionFees > 0) {
-                  <div class="stat-item">
-                    <i class="bi bi-currency-euro"></i>
-                    <span>{{ event.subscriptionFees }}€</span>
-                  </div>
-                } @else {
-                  <div class="stat-item stat-free">
-                    <i class="bi bi-check-circle"></i>
-                    <span>Gratuit</span>
-                  </div>
-                }
-              </div>
 
-              <!-- Actions -->
-              <div class="event-actions">
-                <button class="btn-action" (click)="openEditModal(event)" title="Modifier">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn-action" (click)="viewRegistrations(event)" title="Voir les inscrits">
-                  <i class="bi bi-people"></i>
-                </button>
-                <button class="btn-action" (click)="scanQRCodes(event)" title="Scanner QR codes">
-                  <i class="bi bi-qr-code-scan"></i>
-                </button>
+                <!-- Contenu -->
+                <div class="event-card-content">
+                  <!-- Date -->
+                  <div class="event-date">
+                    <i class="bi bi-calendar3"></i>
+                    <span>{{ formatDate(event.startDate) }}</span>
+                    <span class="separator">•</span>
+                    <i class="bi bi-clock"></i>
+                    <span>{{ formatTime(event.startDate) }}</span>
+                  </div>
 
-                <button
-                  class="btn-action btn-action-danger"
-                  (click)="deleteEvent(event)"
-                  title="Supprimer"
-                  [disabled]="isDeleting()"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
+                  <!-- Titre -->
+                  <h3 class="event-title">{{ event.title }}</h3>
+
+                  <!-- Description -->
+                  @if (event.description) {
+                    <p class="event-description">
+                      {{ event.description.substring(0, 100) }}
+                      @if (event.description.length > 100) {
+                        ...
+                      }
+                    </p>
+                  }
+
+                  <!-- Stats -->
+                  <div class="event-stats">
+                    <div class="stat-item">
+                      <i class="bi bi-people"></i>
+                      <span>{{ event.registrations?.length || 0 }} / {{ event.capacity || '∞' }}</span>
+                    </div>
+                    @if (event.subscriptionFees > 0) {
+                      <div class="stat-item">
+                        <i class="bi bi-currency-dollar"></i>
+                        <span>{{ event.subscriptionFees }} TND</span>
+                      </div>
+                    } @else {
+                      <div class="stat-item stat-free">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Gratuit</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="event-actions">
+                    <button class="btn-action" (click)="openEditModal(event)" title="Modifier">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-action" (click)="viewRegistrations(event)" title="Voir les inscrits">
+                      <i class="bi bi-people"></i>
+                    </button>
+                    <button
+                      class="btn-action btn-action-danger"
+                      (click)="deleteEvent(event)"
+                      title="Supprimer"
+                      [disabled]="isDeleting()"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        }
+            } @placeholder {
+              <!-- Placeholder : skeleton gris statique -->
+              <div class="event-card-skeleton">
+                <div class="skeleton-cover"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton-line skeleton-line-date"></div>
+                  <div class="skeleton-line skeleton-line-title"></div>
+                  <div class="skeleton-line skeleton-line-text"></div>
+                  <div class="skeleton-line skeleton-line-text"></div>
+                  <div class="skeleton-stats"></div>
+                </div>
+              </div>
+            } @loading (minimum 300ms) {
+              <!-- Loading : skeleton avec animation -->
+              <div class="event-card-skeleton">
+                <div class="skeleton-cover shimmer"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton-line skeleton-line-date shimmer"></div>
+                  <div class="skeleton-line skeleton-line-title shimmer"></div>
+                  <div class="skeleton-line skeleton-line-text shimmer"></div>
+                  <div class="skeleton-line skeleton-line-text shimmer"></div>
+                  <div class="skeleton-stats shimmer"></div>
+                </div>
+              </div>
+            }
+          }
+        </div>
       </div>
 
       <!-- Pagination -->
-      <div class="pagination">
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)"
-        >
-          <i class="bi bi-chevron-left"></i>
-          Précédent
-        </button>
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            <i class="bi bi-chevron-left"></i>
+            Précédent
+          </button>
 
-        <div class="pagination-info">
-          Page {{ currentPage() }} sur {{ totalPages() }}
-          <span class="separator">•</span>
-          {{ totalEvents() }} événement(s)
+          <div class="pagination-info">
+            Page {{ currentPage() }} sur {{ totalPages() }}
+            <span class="separator">•</span>
+            {{ totalEvents() }} événement(s)
+          </div>
+
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Suivant
+            <i class="bi bi-chevron-right"></i>
+          </button>
         </div>
-
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)"
-        >
-          Suivant
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
+      }
     }
   }
 </div>
 
-<!-- ... tout le code HTML reste identique jusqu'au modal ... -->
-
-<!-- Modal de création/édition (REMPLACER CE BLOC) -->
-<app-modal
-  [isOpen]="isFormModalOpen()"
-  [title]="selectedEvent() ? 'Modifier l\'événement' : 'Créer un événement'"
-  size="large"
-  (closed)="closeFormModal()"
->
-  <!-- Formulaire d'événement -->
-  <app-event-form
-    [event]="selectedEvent()"
-    (onSuccess)="onFormSuccess($event)"
-    (onCancel)="onFormCancel()"
-  />
-</app-modal>
-<!-- Modal des inscriptions -->
-@if (isRegistrationsModalOpen() && selectedEventForRegistrations()) {
+<!-- Modal de création/édition avec defer -->
+@defer (when isFormModalOpen()) {
   <app-modal
-    [isOpen]="isRegistrationsModalOpen()"
-    title=""
+    [isOpen]="isFormModalOpen()"
+    [title]="selectedEvent() ? 'Modifier l\'événement' : 'Créer un événement'"
     size="large"
-    (closed)="closeRegistrationsModal()"
+    (closed)="closeFormModal()"
   >
-    <app-registrations-modal
-      [event]="selectedEventForRegistrations()!"
-      (onClose)="closeRegistrationsModal()"
+    <app-event-form
+      [event]="selectedEvent()"
+      (onSuccess)="onFormSuccess($event)"
+      (onCancel)="onFormCancel()"
     />
   </app-modal>
+}
+
+<!-- Modal des inscriptions avec defer -->
+@defer (when isRegistrationsModalOpen()) {
+  @if (selectedEventForRegistrations()) {
+    <app-modal
+      [isOpen]="isRegistrationsModalOpen()"
+      title="Inscriptions"
+      size="large"
+      (closed)="closeRegistrationsModal()"
+    >
+      <app-registrations-modal
+        [event]="selectedEventForRegistrations()!"
+        (onClose)="closeRegistrationsModal()"
+      />
+    </app-modal>
+  }
 }
