@@ -77,4 +77,8 @@ export class NavbarComponent {
   markAllAsRead(): void {
     this.notifications.forEach(n => n.read = true);
   }
+
+  logout(): void {
+    this.authService.logout().subscribe();
+  }
 }

@@ -6,11 +6,12 @@ import { RegistrationStatus } from '../../Core/models/event.model';
 import { PaymentModal } from '../../features/payment-modal/payment-modal';
 import { Loader } from '../../shared/components/loader/loader';
 import { Error } from '../../shared/components/error/error';
+import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule, DefaultImagePipe, PaymentModal, Loader, Error],
+  imports: [CommonModule, DefaultImagePipe, PaymentModal, Loader, Error, ConfirmModal],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css',
 })
@@ -18,6 +19,7 @@ export class EventDetails {
 
   public readonly RegistrationStatus = RegistrationStatus;
   showPaymentModal = false;
+  showConfirmModal = false;
 
 
   private eventService = inject(EventService);
@@ -56,12 +58,22 @@ export class EventDetails {
 
 
   cancel() {
+    this.showConfirmModal = true;
+  }
+
+  onConfirmCancellation() {
     const e = this.event();
-    if (e && e.canCancel) {
-      this.eventService.cancelRegistration(e.id).subscribe(() => {
+    const uId = this.userId();
+    if (e && e.canCancel && uId) {
+      this.eventService.cancelRegistration(e.id, uId).subscribe(() => {
         this.eventResource.reload();
+        this.showConfirmModal = false;
       });
     }
+  }
+
+  closeConfirmModal() {
+    this.showConfirmModal = false;
   }
 
 }

@@ -9,16 +9,12 @@
 
   <!-- List Content -->
   <div class="application-list-content">
-    @if (applications().length > 0) {
-      <app-application-item
-        *ngFor="let app of applications(); trackBy: trackById"
-        [application]="app"
-        (viewDetails)="onViewDetails($event)"
-      />
-    } @else {
-      <div class="empty-state">
-        <p>You have not submitted any membership applications yet.</p>
-      </div>
+    @for (app of applications(); track app.id) {
+    <app-application-item [application]="app" (viewDetails)="onViewDetails($event)" />
+    } @empty {
+    <div class="empty-state">
+      <p>You have not submitted any membership applications yet.</p>
+    </div>
     }
   </div>
 </div>

@@ -77,6 +77,10 @@
 }
 
 /* Toolbar */
+.inline-error {
+    margin-bottom: 2rem;
+}
+
 .content-toolbar {
     display: flex;
     justify-content: space-between;

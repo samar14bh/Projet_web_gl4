@@ -1,11 +1,9 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { UserRoleInClub } from '../../Core/dtos/membership-club.dto';
-import { ClubResponsabilityService } from '../../Core/services/club-responsability.service';
+import { RouterModule } from '@angular/router';
+import { UserRoleInClub, MembershipClubDto } from '../../Core/dtos/application/membership-club.dto';
 import { ClubService } from '../../Core/services/club.service';
-import { AuthService } from '../../Core/services/auth.service';
-
+import { MembershipService } from '../../Core/services/membership.service';
 
 @Component({
   selector: 'app-club-responsability',
@@ -15,44 +13,24 @@ import { AuthService } from '../../Core/services/auth.service';
   styleUrl: './club-responsability.css',
 })
 export class ClubResponsability {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private clubResponsabilityService = inject(ClubResponsabilityService);
-  private clubService = inject(ClubService);
-  private authService = inject(AuthService);
+  private readonly membershipService = inject(MembershipService);
 
-  club = this.clubResponsabilityService.club;
+  membershipId = input.required({
+    transform: (val: string | number) => Number(val)
+  });
 
   protected readonly UserRole = UserRoleInClub;
 
-  constructor() {
-    console.log("in the constructor");
+  membership = this.membershipService.getMembership(this.membershipId);
 
-    this.route.paramMap.subscribe(params => {
-      const membershipId = params.get('membershipId');
-
-      if (membershipId && (!this.club() || this.club()?.membershipId !== Number(membershipId)) ) {
-        console.log("we are now here ")
-        this.clubService.getClubsWithSpecialMemberships(1).subscribe({
-          next: (clubs) => {
-            console.log("all clubs",clubs);
-            const foundClub = clubs.find(c => c.membershipId === Number(membershipId));
-            if (foundClub) {
-              this.clubResponsabilityService.setClub(foundClub);
-            }
-            console.log("found club",foundClub);
-          },
-          error: (err) => {
-            console.error('Erreur lors de la récupération du club:', err);
-          }
-        });
-      }
-    });
-  }
-
+  canManageDashboard = computed(() => this.hasRole([UserRoleInClub.PRESIDENT, UserRoleInClub.SECRETARY, UserRoleInClub.TREASURER, UserRoleInClub.RH]));
+  canManageDocuments = computed(() => this.hasRole([UserRoleInClub.PRESIDENT, UserRoleInClub.SECRETARY]));
+  canManageFinances = computed(() => this.hasRole([UserRoleInClub.PRESIDENT, UserRoleInClub.TREASURER]));
+  canManageMembers = computed(() => this.hasRole([UserRoleInClub.PRESIDENT, UserRoleInClub.RH]));
+  isPresident = computed(() => this.hasRole([UserRoleInClub.PRESIDENT]));
 
   hasRole(roles: UserRoleInClub[]): boolean {
-    const userRole = this.club()?.userRole;
+    const userRole = this.membership()?.userRole;
     return userRole ? roles.includes(userRole) : false;
   }
 }

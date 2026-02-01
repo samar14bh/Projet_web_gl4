@@ -69,7 +69,7 @@
                     </div>
                 </section>
 
-                <section class="events-section mt-5">
+                <section class="events-section mt-5" #eventsContainer>
                     <div class="section-header d-flex justify-content-between align-items-center mb-4">
                         <h2 class="section-title mb-0">Événements du club</h2>
                         <button class="btn btn-primary btn-sm rounded-pill px-3" (click)="onDiscoverEvents()">
@@ -113,12 +113,10 @@
                             <span class="label">Membre depuis</span>
                             <span class="value">{{ m.dateDebut | date:'longDate' }}</span>
                         </div>
-                        @if (m.dateFin) {
                         <div class="info-row">
                             <span class="label">Expire le</span>
                             <span class="value text-warning">{{ m.dateFin | date:'longDate' }}</span>
                         </div>
-                        }
                     </div>
                     } @else {
                     <div class="non-member-info">

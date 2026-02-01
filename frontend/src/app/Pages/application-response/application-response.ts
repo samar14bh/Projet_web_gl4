@@ -1,6 +1,6 @@
 import { Component, inject, input, resource, signal } from '@angular/core';
 import { MembershipService } from '../../Core/services/membership.service';
-import { ApplicationResponseDto } from '../../Core/dtos/application-response.dto';
+import { ApplicationResponseDto } from '../../Core/dtos/application/application-response.dto';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Loader } from '../../shared/components/loader/loader';
@@ -54,5 +54,10 @@ export class ApplicationResponse {
         alert('Failed to delete application');
       }
     });
+  }
+
+  onPayFees() {
+    console.log('Navigate to payment page');
+
   }
 }

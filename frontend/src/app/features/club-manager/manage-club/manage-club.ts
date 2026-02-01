@@ -7,7 +7,7 @@ import { TabNavigationComponent } from '../../../shared/components/tab-navigatio
 import { TabItem } from '../../../shared/interfaces/components.interface';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
 import { ClubContextService } from '../../../Core/services/club-context.service';
-import {Club} from '../../../Core/interfaces/club-manager.interface';
+import { Club } from '../../../Core/interfaces/club-manager.interface';
 
 
 @Component({

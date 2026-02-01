@@ -22,27 +22,26 @@
   }
 
   @if (!statusResource.isLoading() && statusResource.error()) {
-  <app-error [errorMessage]="'User or club not found' " [buttonText]="'return to clubs'"
-    [returnLink]="'/clubs'">
+  <app-error [errorMessage]="'User or club not found' " [buttonText]="'return to clubs'" [returnLink]="'/clubs'">
   </app-error>
   }
 
   @if(!statusResource.error() && !statusResource.isLoading() && statusResource.value()==="PENDING"){
-    <div class="info-message">
-      <div class="icon-circle pending">
-        <i class="bi bi-hourglass-split"></i>
-      </div>
-      <h3>Application Pending</h3>
-      <p>Your membership application is currently under review. We will notify you once a decision has been made.</p>
+  <div class="info-message">
+    <div class="icon-circle pending">
+      <i class="bi bi-hourglass-split"></i>
     </div>
+    <h3>Application Pending</h3>
+    <p>Your membership application is currently under review. We will notify you once a decision has been made.</p>
+  </div>
   } @else if (statusResource.value()==="MEMBER"){
-    <div class="info-message">
-      <div class="icon-circle member">
-        <i class="bi bi-check-circle"></i>
-      </div>
-      <h3>Already a Member</h3>
-      <p>You are already a member of this club. No need to apply again!</p>
+  <div class="info-message">
+    <div class="icon-circle member">
+      <i class="bi bi-check-circle"></i>
     </div>
+    <h3>Already a Member</h3>
+    <p>You are already a member of this club. No need to apply again!</p>
+  </div>
   }
   @else if (!statusResource.error() && !statusResource.isLoading()) {
   <form [formGroup]="joinClubForm" (ngSubmit)="submitForm()" class="club-form">

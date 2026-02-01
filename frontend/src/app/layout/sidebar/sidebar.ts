@@ -2,9 +2,8 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
-import { ClubService } from '../../Core/services/club.service';
-import { MembershipClubDto } from '../../Core/dtos/membership-club.dto';
-import { ClubResponsabilityService } from '../../Core/services/club-responsability.service';
+import { MembershipService } from '../../Core/services/membership.service';
+import { MembershipClubDto } from '../../Core/dtos/application/membership-club.dto';
 
 interface MenuItem {
   icon: string;
@@ -24,12 +23,11 @@ interface MenuItem {
 })
 export class SidebarComponent {
   private authService = inject(AuthService);
-  private clubService = inject(ClubService);
+  private membershipService = inject(MembershipService);
   private router = inject(Router);
-  private clubResponsabilityService = inject(ClubResponsabilityService);
 
   isLoggedIn = signal(true);
-  specialClubs = this.clubService.getClubsWithSpecialMembershipsResource(() => this.authService.currentUser()?.id ?? 0);
+  specialClubs = this.membershipService.specialMembershipsResource;
   onMenuItemClick(item: MenuItem): void {
     if (item.isLogout) {
       this.onLogout();
@@ -59,7 +57,6 @@ export class SidebarComponent {
   }
 
   selectClub(club: MembershipClubDto): void {
-    this.clubResponsabilityService.setClub(club);
     this.router.navigate(['/club-responsability', club.membershipId]);
   }
 

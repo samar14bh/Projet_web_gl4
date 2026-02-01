@@ -26,7 +26,7 @@ export class EventsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
-  ) {}
+  ) { }
 
   /**
    * Créer un nouvel événement
@@ -494,5 +494,26 @@ export class EventsService {
         club: { id: clubId },
       },
     });
+  }
+
+  async cancelRegistration(eventId: number, userId: number): Promise<void> {
+    const registration = await this.registrationRepository.findOne({
+      where: {
+        event: { id: eventId },
+        user: { id: userId },
+      },
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Inscription non trouvée');
+    }
+
+    // You can either delete it or mark it as CANCELLED
+    // If you delete it:
+    await this.registrationRepository.remove(registration);
+
+    // If you prefer to keep history:
+    // registration.status = RegistrationStatus.CANCELLED;
+    // await this.registrationRepository.save(registration);
   }
 }

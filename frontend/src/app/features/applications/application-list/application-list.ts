@@ -1,9 +1,9 @@
-import {Component, inject, input, output} from '@angular/core';
-import {MembershipService} from '../../../Core/services/membership.service';
-import {Observable} from 'rxjs';
-import {ApplicationResponseDto} from '../../../Core/dtos/application-response.dto';
-import {ApplicationItem} from '../application-item/application-item';
-import {CommonModule} from '@angular/common';
+import { Component, inject, input, output } from '@angular/core';
+import { MembershipService } from '../../../Core/services/membership.service';
+import { Observable } from 'rxjs';
+import { ApplicationResponseDto } from '../../../Core/dtos/application/application-response.dto';
+import { ApplicationItem } from '../application-item/application-item';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-application-list',
@@ -19,9 +19,7 @@ export class ApplicationList {
 
   viewDetails = output<number>();
 
-  trackById(_: number, app: ApplicationResponseDto): number {
-    return app.id;
-  }
+
 
   onViewDetails(applicationId: number): void {
     this.viewDetails.emit(applicationId);

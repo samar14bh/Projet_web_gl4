@@ -2,12 +2,12 @@
     <!-- Header -->
     <header class="page-header">
         <div class="header-content">
-            <button class="btn-back" [routerLink]="['/club-responsability', clubId()]">
+            <button class="btn-back" [routerLink]="['/club-responsability', membershipId()]">
                 <i class="bi bi-arrow-left"></i>
             </button>
             <div class="header-text">
                 <h1>Coffre-fort du Club</h1>
-                <p>Gérez et consultez les documents de <strong>{{ club()?.name }}</strong></p>
+                <p>Gérez et consultez les documents de <strong>{{ membership()?.name }}</strong></p>
             </div>
         </div>
 
@@ -38,6 +38,12 @@
         <div class="stats">
             <span>{{ totalDocuments() }} fichiers</span>
         </div>
+    </div>
+
+    <!-- Error Display -->
+    <div class="inline-error" *ngIf="showError()">
+        <app-error [errorMessage]="errorMessage()" (click)="showError.set(false)" buttonText="Fermer">
+        </app-error>
     </div>
 
     <!-- Main Grid -->
@@ -99,4 +105,10 @@
     <div class="loading-overlay" *ngIf="isLoading()">
         <app-loader> </app-loader>
     </div>
+
+    <!-- Confirm Delete Modal -->
+    <app-confirm-modal *ngIf="showConfirmModal()" title="Supprimer le document"
+        message="Êtes-vous sûr de vouloir supprimer {{ selectedDoc()?.name }} ? Cette action est irréversible."
+        (confirm)="confirmDelete()" (cancel)="closeConfirmModal()">
+    </app-confirm-modal>
 </div>

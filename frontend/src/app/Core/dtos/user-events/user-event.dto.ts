@@ -1,4 +1,5 @@
-import {EventStatus, RegistrationStatus,EventType} from '../models/event.model';
+import {EventStatus, RegistrationStatus} from '../../models/event.model';
+import {EventType} from '@angular/router';
 
 
 export interface UserEventDto {

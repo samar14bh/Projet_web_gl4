@@ -179,6 +179,13 @@
           <span>Cancel Application</span>
         </button>
       </div>
+
+      <div *ngIf="app.status==='APPROVED'" class="actions">
+        <button class="btn btn-pay" (click)="onPayFees()">
+          <i class="bi bi-credit-card"></i>
+          <span>Pay Fees</span>
+        </button>
+      </div>
     </div>
 
     <!-- ENHANCED FOOTER -->
@@ -205,9 +212,8 @@
   </div>
 
   <app-confirm-modal *ngIf="showDeleteModal()" title="Cancel Application?"
-                     message="Are you sure you want to cancel this application? This action cannot be undone."
-                     (confirm)="confirmDeleteApplication()" (cancel)="showDeleteModal.set(false)">
+    message="Are you sure you want to cancel this application? This action cannot be undone."
+    (confirm)="confirmDeleteApplication()" (cancel)="showDeleteModal.set(false)">
   </app-confirm-modal>
 
 </section>
-

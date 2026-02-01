@@ -85,3 +85,8 @@
 </div>
 <app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()">
 </app-payment-modal>
+
+<app-confirm-modal *ngIf="showConfirmModal" title="Quitter l'événement"
+  message="Êtes-vous sûr de vouloir annuler votre inscription à cet événement ?" (confirm)="onConfirmCancellation()"
+  (cancel)="closeConfirmModal()">
+</app-confirm-modal>
