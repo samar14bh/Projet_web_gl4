@@ -1,11 +1,10 @@
-import { Component, computed, inject, effect } from '@angular/core';
+import { Component, computed, inject, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MemberDashboardService } from '../../Core/services/member-dashboard.service';
 import { UpcomingEvent } from '../../Core/models/dashboard.model';
 import { AuthService } from '../../Core/services/auth.service';
-import { ClubService } from '../../Core/services/club.service'; 
 import { EventCardComponent } from '../../shared/components/event-card-component/event-card';
 import { ClubComponent } from '../../features/clubs/club-component/club-component/club-component';
 import { ButtonComponent } from '../../shared/components/button/button';
@@ -13,24 +12,24 @@ import { createResource } from '../../shared/utils/resource-loader.util';
 import { createFilterSortState, handleSearch, handleSortChange, sortItems, filterBySearch, filterByPrice } from '../../shared/utils/filter-sort-clubs.util';
 import { createPagination } from '../../shared/utils/pagination-clubs.util';
 import { createClubStatusManager } from '../../shared/utils/club-status.util';
+import { LazyLoading } from '../../shared/directives/lazy-loading';
+import { PaginationComponent } from '../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, EventCardComponent, ClubComponent, ButtonComponent,LazyLoading,PaginationComponent],
   templateUrl: './member-dashboard.html',
   styleUrls: ['./member-dashboard.css']
 })
 export class MemberDashboardComponent {
   private dashboardService = inject(MemberDashboardService);
   private authService = inject(AuthService);
-  private clubService = inject(ClubService); 
-  private router = inject(Router);
   
   readonly dashboardRes = createResource({
     loader: () => this.dashboardService.getMemberDashboard()
   });
-
+  readonly recommendationsVisible = signal(false);
   readonly currentUser = this.authService.currentUser;
   readonly isLoading = this.dashboardRes.isLoading;
   readonly error = this.dashboardRes.error;
@@ -119,4 +118,5 @@ export class MemberDashboardComponent {
   getClubMeta(clubId: number) {
     return this.statusManager.getMeta(clubId);
   }
+  
 }

@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
 import { DefaultImagePipe } from '../../shared/pipes/default-image.pipe';
 
@@ -24,9 +24,10 @@ interface Notification {
 export class NavbarComponent {
   showNotifications = signal(false);
   showUserMenu = signal(false);
-  private readonly authService = inject(AuthService);
+   authService = inject(AuthService);
   user = this.authService.currentUser;
-
+  admin= computed(() => this.authService.isAdmin());
+   private router = inject(Router);
 
   notifications: Notification[] = [
     {
@@ -76,5 +77,26 @@ export class NavbarComponent {
 
   markAllAsRead(): void {
     this.notifications.forEach(n => n.read = true);
+  }
+   onLogout(): void {
+
+    if (this.authService.logout) {
+      this.authService.logout().subscribe({
+        next: (response) => {
+          console.log('Logout réussi:', response);
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          console.error('Erreur logout:', err);
+          this.router.navigate(['/login']);
+        },
+        complete: () => {
+          console.log('Observable terminé');
+        }
+      });
+    } else {
+
+      this.router.navigate(['/login']);
+    }
   }
 }

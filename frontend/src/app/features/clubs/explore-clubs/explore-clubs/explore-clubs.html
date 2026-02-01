@@ -92,63 +92,32 @@
       <app-button label="Réinitialiser" variant="secondary" (clicked)="resetFilters()" />
     </div>
   } @else {
-   <div class="clubs-grid">
-  @for (club of clubs(); track club.id) {
-    @let meta = getClubMeta(club.id);
-    <app-club-component
-      [club]="club"
-      [showJoinButton]="true"
-      [joinButtonLabel]="meta.text"
-      [joinButtonVariant]="meta.variant"
-      [joinButtonDisabled]="meta.disabled"
-      [isAuthenticated]="isAuthenticated()"
-      [userClubStatus]="meta.status" 
-      [redirectAfterAction]="true">
-    </app-club-component>
-  }
-</div>
+    <div class="clubs-grid">
+      @for (club of clubs(); track club.id) {
+        @let meta = getClubMeta(club.id);
+        <app-club-component
+          [club]="club"
+          [showJoinButton]="true"
+          [joinButtonLabel]="meta.text"
+          [joinButtonVariant]="meta.variant"
+          [joinButtonDisabled]="meta.disabled"
+          [isAuthenticated]="isAuthenticated()"
+          [userClubStatus]="meta.status" 
+          [redirectAfterAction]="true">
+        </app-club-component>
+      }
+    </div>
 
-    @if (totalPages() > 1) {
-      <div class="pagination-container">
-        <div class="pagination-controls">
-          <app-button 
-            variant="ghost"
-            icon="chevron-left"
-            label=""
-            [disabled]="currentPage() === 1" 
-            (clicked)="goToPage(currentPage() - 1)"
-            class="pagination-nav-btn"
-          />
-
-          <div class="pagination-numbers">
-            @for (page of pageNumbers(); track $index) {
-              @if (page === -1) {
-                <span class="pagination-ellipsis">...</span>
-              } @else {
-                <app-button 
-                  [label]="page.toString()"
-                  [variant]="page === currentPage() ? 'primary' : 'ghost'"
-                  class="pagination-number-btn"
-                  [class.active]="page === currentPage()"
-                  (clicked)="goToPage(page)"
-                />
-              }
-            }
-          </div>
-
-          <app-button 
-            variant="ghost"
-            icon="chevron-right"
-            label="Suivant"
-            [disabled]="currentPage() === totalPages()" 
-            (clicked)="goToPage(currentPage() + 1)"
-            class="pagination-nav-btn"
-          />
-        </div>
-        <div class="pagination-summary">
-          Page {{ currentPage() }} sur {{ totalPages() }} ({{ totalClubs() }} clubs)
-        </div>
+    <div class="pagination-wrapper" style="margin-top: 3rem;">
+      <app-pagination 
+        [currentPage]="currentPage()" 
+        [totalPages]="totalPages()" 
+        (pageChange)="goToPage($event)" 
+      />
+      
+      <div class="pagination-summary" style="text-align: center; margin-top: 1rem; color: #64748b; font-size: 0.9rem;">
+        Page {{ currentPage() }} sur {{ totalPages() }} ({{ totalClubs() }} clubs)
       </div>
-    }
+    </div>
   }
 </div>

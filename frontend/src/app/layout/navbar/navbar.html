@@ -48,9 +48,10 @@
     <div class="dropdown-wrapper">
       <button class="user-profile" (click)="toggleUserMenu()">
         <img [src]="user()?.image | defaultImage:'user'" alt="User" class="user-avatar">
-        <div class="user-info">
-          <span class="user-name">{{ user()?.name || 'Guest' }}</span>
-        </div>
+         <div class="user-info">
+           <span *ngIf="admin()" class="admin-label">Admin</span>
+           <span *ngIf="!admin()">{{ user()?.name || 'Guest' }}</span>
+          </div>
         <i class="bi bi-chevron-down"></i>
       </button>
 
@@ -62,27 +63,26 @@
         </div>
 
         <div class="user-menu-items">
-          <a href="#" class="menu-item">
+          <a routerLink="/profile" class="menu-item">
             <i class="bi bi-person-circle"></i>
             <span>My Profile</span>
           </a>
-          <a href="#" class="menu-item">
+          <a routerLink="/settings" class="menu-item">
             <i class="bi bi-gear"></i>
             <span>Account Settings</span>
           </a>
 
           <div class="menu-divider"></div>
-
-          <a href="#" class="menu-item text-danger">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </a>
+          <button type="button" class="menu-item text-danger" (click)="onLogout()">
+          <i class="bi bi-box-arrow-right"></i>
+           <span>Sign Out</span>
+          </button>
         </div>
       </div>
     </div>
     } @else {
     <div class="header-actions">
-      <button class="login-btn" routerLink="/login">
+      <button class="login-btn" routerLink="/login" >
         <i class="bi bi-box-arrow-in-right"></i>
         <span>Se connecter</span>
       </button>

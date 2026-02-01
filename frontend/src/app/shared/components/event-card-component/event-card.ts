@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
+import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UpcomingEvent } from '../../../Core/models/dashboard.model';
+import { STATUS_CONFIG } from '../../constants/event-card.constants';
+import { CURRENCY_CONFIG } from '../../constants/event-card.constants';
+
 
 @Component({
   selector: 'app-event-card',
@@ -13,28 +16,28 @@ import { UpcomingEvent } from '../../../Core/models/dashboard.model';
 })
 export class EventCardComponent {
   event = input.required<UpcomingEvent>();
-  viewDetails = output<number>();
-  
-  statusClass = computed(() => {
+  userId = input.required<string | null>();
+
+  private statusInfo = computed(() => {
     const status = this.event().paymentStatus?.toLowerCase() || '';
-    if (status === 'payé') return 'status-paid';
-    if (status === 'gratuit') return 'status-free';
-    return 'status-pending';
+    return STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.DEFAULT;
   });
 
-  statusIcon = computed(() => {
-    const status = this.event().paymentStatus?.toLowerCase() || '';
-    if (status === 'payé') return 'fa-check-circle';
-    if (status === 'gratuit') return 'fa-tag';
-    return 'fa-clock';
-  });
+  statusClass = computed(() => this.statusInfo().class);
+  statusIcon = computed(() => this.statusInfo().icon);
 
   formattedPrice = computed(() => {
-    if (this.event().isFree) return 'Gratuit';
-    return new Intl.NumberFormat('fr-FR', {
+    if (this.event().isFree) return CURRENCY_CONFIG.LABEL_FREE;
+    
+    return new Intl.NumberFormat(CURRENCY_CONFIG.LOCALE, {
       style: 'currency',
-      currency: 'TND',
-      minimumFractionDigits: 0
+      currency: CURRENCY_CONFIG.CODE,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
     }).format(this.event().subscriptionFees);
   });
+  
+  detailsRoute = computed(() => 
+    ['/user-event-details', this.userId(), this.event().id]
+  );
 }

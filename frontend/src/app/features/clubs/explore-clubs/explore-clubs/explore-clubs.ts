@@ -11,11 +11,12 @@ import { createClubStatusManager } from '../../../../shared/utils/club-status.ut
 import { createResource, createParameterizedResource } from '../../../../shared/utils/resource-loader.util';
 import { createServerPagination } from '../../../../shared/utils/server-pagination.util';
 import { createFilterSortState, handleSearch, handleSortChange } from '../../../../shared/utils/filter-sort-clubs.util';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-explore-clubs',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ClubComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, ClubComponent,PaginationComponent],
   templateUrl: './explore-clubs.html',
   styleUrl: './explore-clubs.css',
 })

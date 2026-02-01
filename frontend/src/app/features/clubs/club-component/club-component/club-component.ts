@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, input, output, inject } from '@angu
 import { Club } from '../../../../Core/models/club.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../../Core/services/auth.service';
+import { CLUB_STATUS, CLUB_CONFIG, CLUB_ROUTES, ButtonVariant } from '../../../../shared/constants/club.constants';
 
 @Component({
   selector: 'app-club-component',
+  standalone: true,
   imports: [ButtonComponent],
   templateUrl: './club-component.html',
   styleUrl: './club-component.css',
@@ -13,37 +14,33 @@ import { AuthService } from '../../../../Core/services/auth.service';
 })
 export class ClubComponent {
   private router = inject(Router);
-  private authService = inject(AuthService);
   
   club = input.required<Club>();
-  
   showJoinButton = input<boolean>(true);
   joinButtonLabel = input<string>('Rejoindre');
-  joinButtonVariant = input<'primary' | 'secondary' | 'danger' | 'ghost'>('primary');
+  joinButtonVariant = input<ButtonVariant>(CLUB_CONFIG.DEFAULT_VARIANT);
   joinButtonDisabled = input<boolean>(false);
   isAuthenticated = input<boolean>(false);
   redirectAfterAction = input<boolean>(true);
-  userClubStatus = input<string>('Non membre');
+  userClubStatus = input<string>(CLUB_STATUS.NON_MEMBER);
   
   viewDetails = output<Club>();
   join = output<Club>();
 
-  onViewDetails() {
+  onViewDetails(): void {
     this.viewDetails.emit(this.club());
-    
     if (this.redirectAfterAction()) {
-      this.router.navigate(['/my-clubs', this.club().id]);
+      this.router.navigate([CLUB_ROUTES.DETAILS, this.club().id]);
     }
   }
 
-  onJoin() {
+  onJoin(): void {
     if (!this.isAuthenticated() && this.redirectAfterAction()) {
-      this.router.navigate(['/login']);
+      this.router.navigate([CLUB_ROUTES.LOGIN]);
       return;
     }
 
     this.join.emit(this.club());
-    
     if (this.redirectAfterAction()) {
       this.handleJoinAction();
     }
@@ -52,18 +49,17 @@ export class ClubComponent {
   private handleJoinAction(): void {
     const clubId = this.club().id;
     const status = this.userClubStatus().toLowerCase();
-  
-    if (status.includes('non membre') || status.includes('rejetée')) {
-      this.router.navigate(['/join-club', clubId]);
-    } else if (status.includes('ancien membre')) {
-      this.router.navigate(['/clubs', clubId, 'renew']);
+    if (status.includes(CLUB_STATUS.NON_MEMBER) || status.includes(CLUB_STATUS.REJECTED)) {
+      this.router.navigate([CLUB_ROUTES.JOIN, clubId]);
+    } else if (status.includes(CLUB_STATUS.OLD_MEMBER)) {
+      this.router.navigate([CLUB_ROUTES.RENEW, clubId, 'renew']);
     } else {
-      this.router.navigate(['/my-clubs', clubId]);
+      this.router.navigate([CLUB_ROUTES.DETAILS, clubId]);
     }
   }
 
   formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('fr-FR', {
+    return new Date(date).toLocaleDateString(CLUB_CONFIG.LOCALE, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -71,6 +67,8 @@ export class ClubComponent {
   }
 
   getMembershipLabel(feeAmount: number): string {
-    return feeAmount === 0 ? 'Gratuit' : `${feeAmount} TND/an`;
+    return feeAmount === 0 
+      ? CLUB_CONFIG.FREE_LABEL 
+      : `${feeAmount} ${CLUB_CONFIG.CURRENCY_LABEL}`;
   }
 }

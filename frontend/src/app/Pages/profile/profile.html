@@ -1,0 +1,45 @@
+<div class="profile-container">
+  <header class="profile-header-section">
+    <div class="profile-top-bar">
+      <div>
+        <h1 class="profile-name">{{ getUserFullName() }}</h1>
+      </div>
+      
+      @if (displayImageUrl()) {
+        <img [src]="displayImageUrl()" class="user-avatar-dashboard">
+      } @else {
+        <div class="user-initials-dashboard">
+          {{ userInitials() }}
+        </div>
+      }
+    
+      <button class="btn-edit" (click)="editProfile()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 00 2 2h14a2 2 0 00 2-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Modifier le profil
+      </button>
+    </div>
+  </header>
+
+  <main class="profile-content">
+    <h2 class="section-title">Informations personnelles</h2>
+    
+    <div class="details-grid">
+      <div class="detail-item">
+        <div class="detail-label">Email</div>
+        <div class="detail-value">{{ user()?.email }}</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Âge</div>
+        <div class="detail-value">{{ userAge() }} ans</div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-label">Filière d'études</div>
+        <div class="detail-value">{{ majorFullName() }}</div>
+      </div>
+    </div>
+  </main>
+</div>

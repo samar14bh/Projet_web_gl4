@@ -22,16 +22,22 @@
       
       <div class="hero-image">
         <div class="image-card card-1">
-          <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=400&h=300&fit=crop" alt="Activité club">
+          <img 
+            src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=400&h=300&fit=crop" 
+            alt="Activité club"
+            loading="lazy">
         </div>
         <div class="image-card card-2">
-          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop" alt="Équipe club">
+          <img 
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop" 
+            alt="Équipe club"
+            loading="lazy">
         </div>
       </div>
     </div>
   </section>
 
-  <div appLazyLoading (visible)="onAboutVisible()" style="height: 10px;"></div>
+  <div appLazyLoading (visible)="onAboutVisible()"></div>
 
   @if (showAboutSection()) {
     <section id="about" class="about-section">
@@ -60,50 +66,35 @@
     </section>
   }
 
-  <div appLazyLoading (visible)="onClubsVisible()" style="height: 10px;"></div>
+  <div appLazyLoading (visible)="onClubsVisible()"></div>
 
   @if (showClubsSection()) {
-    @if (topClubsData().length > 0) {
-      <section class="clubs-section" id="clubs">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">Clubs populaires</h2>
-            <p class="section-subtitle">Découvrez les clubs les plus actifs</p>
-          </div>
+    <section class="clubs-section" id="clubs">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Clubs populaires</h2>
+          <p class="section-subtitle">Découvrez les clubs les plus actifs</p>
+        </div>
 
+        @if (topClubsData().length > 0) {
           <div class="clubs-grid">
             @for (club of topClubsData(); track club.id) {
               <app-club-component 
                 [club]="club"
                 [showJoinButton]="false"
-                (viewDetails)="onViewDetails($event)"
-                (join)="onJoin($event)">
+                (viewDetails)="onViewDetails($event)">
               </app-club-component>
             }
           </div>
-        </div>
-      </section>
-    } @else {
-      <section class="clubs-section" id="clubs">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">Clubs populaires</h2>
-            <p class="section-subtitle">Découvrez les clubs les plus actifs</p>
-          </div>
-          
+        } @else {
           <div class="no-clubs-message">
             <p>Aucun club disponible pour le moment.</p>
           </div>
-          
-          <div class="see-more">
-            <button class="secondary-button" (click)="navigateToClubs()">
-              Voir tous les clubs
-              <span class="arrow">→</span>
-            </button>
-          </div>
-        </div>
-      </section>
-    }
+        }
+        
+       
+      </div>
+    </section>
 
     <app-footer></app-footer>
   }

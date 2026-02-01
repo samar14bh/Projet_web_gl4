@@ -49,7 +49,8 @@ import { DocumentModule } from './documents/document.module';
     PaymentsModule,
     NotificationsModule,
     SseModule,
-    DocumentModule
+    DocumentModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],

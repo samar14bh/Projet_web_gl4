@@ -35,10 +35,14 @@ export function createClubStatusManager(userId: Signal<number | string | undefin
       const status = getStatus(clubId).toLowerCase();
       const isMember = status.startsWith('membre');
       const isPending = status.includes('en attente');
+      let displayText = status;
+      if (status === 'membre member') {
+        displayText = 'membre';
+      }
 
       return {
         text: status === 'ancien membre' ? 'Renouveler' : 
-              isMember ? status : 
+              isMember ? displayText.charAt(0).toUpperCase() + displayText.slice(1) :  
               (isPending ? 'En attente' : 'Rejoindre'),
         variant: isMember ? 'primary' : (isPending ? 'ghost' : (status === 'ancien membre' ? 'secondary' : 'primary')) as any,
         disabled: isMember || isPending,

@@ -203,9 +203,21 @@ export const routes: Routes = [
         loadComponent: () => import('./Pages/club-documents/club-documents').then(m => m.ClubDocuments),
         title: 'Documents du Club'
       }
-
-
       ,
+       {
+    path: 'profile',
+     loadComponent: () => import('./Pages/profile/profile').then(m => m.ProfileComponent),
+     canActivate: [roleGuard],
+        data: { role: 'USER' },
+         title: 'Profile'
+  },
+   {
+    path: 'settings',
+     loadComponent: () => import('./Pages/profile-settings/profile-settings').then(m => m.ProfileSettings),
+     canActivate: [roleGuard],
+        data: { role: 'USER' },
+         title: 'Paramètres'
+  },
       {
         path: '**',
         component: PageNotFound,
