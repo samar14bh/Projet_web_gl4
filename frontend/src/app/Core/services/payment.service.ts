@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, Renderer2, RendererFactory2, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -31,8 +31,11 @@ export class PaymentService {
   paymentStats = signal<any>(null);
   loading = signal(false);
   error = signal<string | null>(null);
+  private renderer: Renderer2;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, rendererFactory: RendererFactory2) {
+    this.renderer = rendererFactory.createRenderer(null, null);
+  }
 
   /**
    * Obtenir la clé publique Stripe
@@ -167,7 +170,20 @@ export class PaymentService {
     );
   }
 
-
+  /**
+   * ✅ Client-side helper to trigger a file download from a Blob
+   */
+  handleBlobDownload(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = this.renderer.createElement('a');
+    this.renderer.setAttribute(link, 'href', url);
+    this.renderer.setAttribute(link, 'download', fileName);
+    this.renderer.setStyle(link, 'display', 'none');
+    this.renderer.appendChild(document.body, link);
+    link.click();
+    this.renderer.removeChild(document.body, link);
+    window.URL.revokeObjectURL(url);
+  }
 
   /**
    * Gestion centralisée des erreurs HTTP

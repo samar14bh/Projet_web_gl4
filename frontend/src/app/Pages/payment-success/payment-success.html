@@ -1,0 +1,14 @@
+<div class="payment-success-page">
+  <div class="success-container">
+    @if (state().loading) {
+    <div class="loading-container">
+      <app-loader message="Chargement des détails..." />
+    </div>
+    } @else if (state().paymentId) {
+    <app-payment-success-card [paymentId]="state().paymentId!" [paymentType]="state().paymentType"
+      [paymentDate]="currentDate" [title]="message().title" [description]="message().description"
+      [icon]="message().icon" (downloadReceipt)="downloadReceipt()" (goToPayments)="goToPayments()"
+      (goHome)="goToHome()" />
+    }
+  </div>
+</div>

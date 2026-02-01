@@ -1,4 +1,4 @@
-import {EventStatus, RegistrationStatus,EventType} from '../models/event.model';
+import { EventStatus, RegistrationStatus, EventType } from '../models/event.model';
 
 
 export interface UserEventDto {
@@ -30,6 +30,7 @@ export interface UserEventDto {
   } | null;
 
   paymentStatus: 'paid' | 'pending' | null;
+  paymentId: number | null;
   attendanceStatus: 'present' | 'absent' | null;
   canCancel: boolean;
 }

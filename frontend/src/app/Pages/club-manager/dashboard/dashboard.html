@@ -1,0 +1,52 @@
+<div class="dashboard-page">
+  <!-- HERO SECTION -->
+  <app-dashboard-hero [clubName]="clubHeaderState().clubName" [clubLogo]="clubHeaderState().clubLogo"
+    [clubCoverImage]="clubHeaderState().clubCoverImage" [totalMembers]="clubHeaderState().totalMembers"
+    [totalEvents]="clubHeaderState().totalEvents" [pendingRequests]="clubHeaderState().pendingRequests" />
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    @if (loading()) {
+    <!-- LOADING STATE -->
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement de tes données...</p>
+    </div>
+    } @else {
+    <!-- STATISTICS CARDS -->
+    <app-dashboard-stats-grid [stats]="stats()" [loading]="loading()" />
+
+    <!-- TOP ROW: PENDING REQUESTS + RECENT MEMBERS -->
+    <div class="dashboard-top-row">
+      <div class="dashboard-col-left">
+        @if (internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH') {
+        <app-pending-members-list [members]="pendingMembers()"
+          [canManage]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+          (approveMember)="onApproveMember($event)" (rejectMember)="onRejectMember($event)"
+          (viewAll)="navigateToMembers()" />
+        }
+      </div>
+
+      <div class="dashboard-col-right">
+        <app-recent-members-list [members]="recentMembers()" [maxDisplay]="5" (viewAll)="navigateToMembers()" />
+      </div>
+    </div>
+
+    <!-- MIDDLE ROW: UPCOMING EVENTS -->
+    <div class="dashboard-events-row">
+      <app-upcoming-events-list [events]="upcomingEvents()" (viewAll)="navigateToAllEvents()"
+        (createEvent)="navigateToCreateEvent()" />
+    </div>
+
+    <!-- BOTTOM ROW: QUICK ACTIONS -->
+    <div class="dashboard-actions-row">
+      <app-quick-actions-grid
+        [canCreateEvent]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+        [canManageClub]="internalRole().toUpperCase() === 'PRESIDENT'" [canManageMembers]="true"
+        [canViewFinances]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH' || internalRole().toUpperCase() === 'TREASURER'"
+        (createEvent)="navigateToCreateEvent()" (manageMembers)="navigateToMembers()"
+        (manageClub)="navigateToManageClub()" (viewFinances)="navigateToFinances()" />
+    </div>
+    }
+  </main>
+</div>

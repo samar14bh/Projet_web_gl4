@@ -1,0 +1,37 @@
+<div class="payment-page">
+  <!-- Hero Section (Header) -->
+  <app-payment-header title="Paiement Sécurisé" subtitle="Effectuez votre paiement via Stripe" icon="bi bi-lock-fill" />
+
+  <div class="main-content">
+    <!-- Erreur globale -->
+    @if (state().error && !state().clubDetails && !state().eventDetails) {
+    <div class="error-container">
+      <app-error [errorMessage]="state().error || 'Une erreur inconnue est survenue'" [returnLink]="'/clubs'" />
+    </div>
+    }
+
+    <!-- Chargement -->
+    @if (state().loading) {
+    <div class="loading-container">
+      <app-loader message="Préparation du paiement..." />
+    </div>
+    }
+
+    <!-- Contenu principal -->
+    @if (!state().loading && (!state().error || state().clubDetails || state().eventDetails)) {
+    <div class="payment-layout">
+
+      <!-- Résumé Section -->
+      <app-payment-summary-section [paymentType]="state().paymentType" [clubDetails]="state().clubDetails"
+        [eventDetails]="state().eventDetails" [baseAmount]="baseAmount()" [finalAmount]="amount()"
+        [discount]="state().membershipDiscount" />
+
+      <!-- Formulaire Section (Smart Component) -->
+      <app-payment-form [paymentForm]="paymentForm" [stripe]="state().stripe" [amount]="amount()"
+        [paymentType]="state().paymentType" [userId]="userId()" [clubId]="state().clubId" [eventId]="state().eventId"
+        [membershipId]="state().membershipId" />
+
+    </div>
+    }
+  </div>
+</div>

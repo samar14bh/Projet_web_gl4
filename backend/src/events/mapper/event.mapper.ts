@@ -1,6 +1,6 @@
 import { Event } from '../entities/event.entity';
 import { UserEventDto } from '../dto/user-event.dto';
-import { EventStatus, RegistrationStatus } from '../../common/enums';
+import { EventStatus, RegistrationStatus, PaymentStatus, PaymentType } from '../../common/enums';
 
 export class EventMapper {
     static toUserEventDto(event: Event, userId: number): UserEventDto {
@@ -30,6 +30,10 @@ export class EventMapper {
             event.startDate > now &&
             event.status !== EventStatus.CANCELLED;
 
+        const payment = event.payments?.find(
+            (p) => p.user?.id === userId && p.status === PaymentStatus.CONFIRMED && p.type === PaymentType.EVENT
+        );
+
         return {
             id: event.id,
             title: event.title,
@@ -54,6 +58,7 @@ export class EventMapper {
                 }
                 : null,
             paymentStatus,
+            paymentId: payment ? payment.id : null,
             attendanceStatus,
             canCancel,
         };

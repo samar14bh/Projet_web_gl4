@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 
 /**
  * Service pour charger le script Stripe dynamiquement
@@ -10,8 +10,10 @@ import { Injectable } from '@angular/core';
 export class StripeLoaderService {
   private stripePromise: Promise<any>;
   private stripeLoaded = false;
+  private renderer: Renderer2;
 
-  constructor() {
+  constructor(rendererFactory: RendererFactory2) {
+    this.renderer = rendererFactory.createRenderer(null, null);
     this.stripePromise = this.loadStripeScript();
   }
 
@@ -27,7 +29,8 @@ export class StripeLoaderService {
       }
 
       // Vérifier si le script est déjà en cours de chargement
-      if (document.getElementById('stripe-script')) {
+      const head = document.head;
+      if (head.querySelector('#stripe-script')) {
         const checkStripe = setInterval(() => {
           if ((window as any).Stripe) {
             this.stripeLoaded = true;
@@ -39,10 +42,10 @@ export class StripeLoaderService {
       }
 
       // Créer et ajouter le script
-      const script = document.createElement('script');
-      script.id = 'stripe-script';
-      script.src = 'https://js.stripe.com/v3/';
-      script.async = true;
+      const script = this.renderer.createElement('script');
+      this.renderer.setAttribute(script, 'id', 'stripe-script');
+      this.renderer.setAttribute(script, 'src', 'https://js.stripe.com/v3/');
+      this.renderer.setAttribute(script, 'async', 'true');
 
       script.onload = () => {
         this.stripeLoaded = true;
@@ -53,7 +56,7 @@ export class StripeLoaderService {
         reject(new Error('Failed to load Stripe script'));
       };
 
-      document.head.appendChild(script);
+      this.renderer.appendChild(head, script);
     });
   }
 

@@ -46,7 +46,7 @@ export class JoinClubForm {
 
   constructor() {
     this.clubId = Number(this.route.snapshot.paramMap.get('clubId'));
-    this.userId = 1;
+    this.userId = 17;
     this.storageKey = `join-club-form-${this.userId}-${this.clubId}`;
 
     this.joinClubForm = this.fb.group({

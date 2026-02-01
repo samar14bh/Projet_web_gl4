@@ -1,0 +1,148 @@
+@if (show() && application()) {
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal-content modal-content-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-header-info">
+                <h3>Détails de la Demande</h3>
+                <span class="badge" [class]="getStatusBadgeClass(application()?.status)">
+                    {{ getStatusLabel(application()?.status) }}
+                </span>
+            </div>
+            <button class="modal-close" (click)="onClose()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body modal-body-large">
+            <!-- Applicant Info -->
+            <div class="application-detail-section applicant-section">
+                <div class="applicant-header-detail">
+                    <div class="applicant-avatar-large">
+                        @if (application()?.userImage) {
+                        <img [src]="application()?.userImage" [alt]="application()?.userName" />
+                        } @else {
+                        <i class="bi bi-person-fill"></i>
+                        }
+                    </div>
+                    <div class="applicant-detail-info">
+                        <h4>{{ application()?.userName }} {{ application()?.userLastName }}</h4>
+                        <p>{{ application()?.userEmail }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Details Grid -->
+            <div class="details-grid">
+                <!-- Left Column -->
+                <div class="detail-column">
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Date de Demande</label>
+                        <p class="detail-value-text">{{ formatDate(application()?.createdAt) }}</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Numéro de Téléphone</label>
+                        <p class="detail-value-text">{{ application()?.phoneNumber }}</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Membre d'un Autre Club</label>
+                        <p class="detail-value-text">
+                            @if (application()?.isMemberOfOtherClub) {
+                            <span class="badge badge-danger">Oui</span>
+                            } @else {
+                            <span class="badge badge-success">Non</span>
+                            }
+                        </p>
+                    </div>
+
+                    @if (application()?.previousClub) {
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Club Précédent</label>
+                        <p class="detail-value-text">{{ application()?.previousClub }}</p>
+                    </div>
+                    }
+                </div>
+
+                <!-- Right Column -->
+                <div class="detail-column">
+                    @if (application()?.availability) {
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Disponibilité</label>
+                        <p class="detail-value-text">{{ application()?.availability }}</p>
+                    </div>
+                    }
+
+                    @if (application()?.skills) {
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Compétences</label>
+                        <p class="detail-value-text">{{ application()?.skills }}</p>
+                    </div>
+                    }
+
+                    @if (application()?.expectations) {
+                    <div class="detail-group">
+                        <label class="detail-label-heading">Attentes</label>
+                        <p class="detail-value-text">{{ application()?.expectations }}</p>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Full Width Sections -->
+            <div class="detail-group full-width">
+                <label class="detail-label-heading">Pourquoi Rejoindre le Club</label>
+                <div class="detail-message-box">
+                    {{ application()?.whyJoin || 'Non fourni' }}
+                </div>
+            </div>
+
+            @if (application()?.goalsInClub) {
+            <div class="detail-group full-width">
+                <label class="detail-label-heading">Objectifs dans le Club</label>
+                <div class="detail-message-box">
+                    {{ application()?.goalsInClub }}
+                </div>
+            </div>
+            }
+
+            @if (application()?.additionalComments) {
+            <div class="detail-group full-width">
+                <label class="detail-label-heading">Commentaires Supplémentaires</label>
+                <div class="detail-message-box">
+                    {{ application()?.additionalComments }}
+                </div>
+            </div>
+            }
+
+            @if (application()?.adminResponse) {
+            <div class="detail-group full-width">
+                <label class="detail-label-heading">Réponse Admin</label>
+                <div class="detail-message-box admin-response">
+                    {{ application()?.adminResponse }}
+                </div>
+            </div>
+            }
+        </div>
+
+        @if (isApplicationPending(application()?.status)) {
+        <div class="modal-footer modal-footer-actions">
+            <button class="btn-modal btn-secondary" (click)="onClose()">Fermer</button>
+            <div class="modal-actions-group">
+                <button class="btn-modal btn-danger" (click)="onReject()">
+                    <i class="bi bi-x-lg"></i>
+                    Rejeter
+                </button>
+                <button class="btn-modal btn-success" (click)="onApprove()">
+                    <i class="bi bi-check-lg"></i>
+                    Approuver
+                </button>
+            </div>
+        </div>
+        } @else {
+        <div class="modal-footer">
+            <button class="btn-modal btn-secondary" (click)="onClose()">Fermer</button>
+        </div>
+        }
+    </div>
+</div>
+}

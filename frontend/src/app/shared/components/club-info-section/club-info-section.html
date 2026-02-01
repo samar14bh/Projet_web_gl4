@@ -1,0 +1,75 @@
+<div class="info-section">
+    <!-- Left: À Propos Section -->
+    <div class="info-left">
+        <div class="about-card">
+            <!-- Category Badge -->
+            <div class="category-section">
+                <div class="category-badge" [style.backgroundColor]="categoryColor() + '15'"
+                    [style.borderColor]="categoryColor()" [style.color]="categoryColor()">
+                    <i [class]="'bi ' + categoryIcon()"></i>
+                    {{ categoryName() }}
+                </div>
+            </div>
+            <h3><i class="bi bi-info-circle"></i> À propos du club</h3>
+            <p>{{ description() || 'Aucune description disponible' }}</p>
+        </div>
+    </div>
+
+    <!-- Right: Details Cards -->
+    <div class="info-right">
+        <!-- Card 1: Club Settings -->
+        <div class="detail-card detail-card-blue">
+            <div class="card-header">
+                <i class="bi bi-gear"></i>
+                <h4>Paramètres du club</h4>
+            </div>
+            <div class="card-content">
+                <div class="detail-item">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-badge" [class]="isPublic() ? 'badge-sky' : 'badge-violet'">
+                        {{ isPublic() ? 'Gratuit' : 'Payant' }}
+                    </span>
+                </div>
+
+                @if (!isPublic()) {
+                <div class="detail-item">
+                    <span class="detail-label">Cotisation</span>
+                    <span class="detail-badge badge-sky">{{ formatCurrency(membershipFee()) }}</span>
+                </div>
+                }
+
+                <div class="detail-item">
+                    <span class="detail-label">Approbation</span>
+                    <span class="detail-badge" [class]="approvalRequired() ? 'badge-violet' : 'badge-sky'">
+                        {{ approvalRequired() ? 'Requise' : 'Automatique' }}
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Statut</span>
+                    <span class="detail-badge badge-sky">
+                        {{ isActive() ? 'Actif' : 'Inactif' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Dates -->
+        <div class="detail-card detail-card-violet">
+            <div class="card-header">
+                <i class="bi bi-calendar-check"></i>
+                <h4>Informations</h4>
+            </div>
+            <div class="card-content">
+                <div class="detail-item">
+                    <span class="detail-label">Créé le</span>
+                    <span class="detail-value">{{ formatDate(creationDate()) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value email">{{ email() }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

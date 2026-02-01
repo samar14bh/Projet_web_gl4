@@ -1,0 +1,59 @@
+<div class="stats-grid">
+    @if (activeTab() === 'bureau' || activeTab() === 'members') {
+    <!-- Member Stats -->
+    <div class="stat-card stat-card-1">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-label">Total Membres</div>
+        <div class="stat-value">{{ totalMembers() }}</div>
+        <div class="stat-footer">membres actifs</div>
+    </div>
+
+    <div class="stat-card stat-card-2">
+        <div class="stat-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <div class="stat-label">Bureau</div>
+        <div class="stat-value">{{ bureauMembers() }}</div>
+        <div class="stat-footer">membres du bureau</div>
+    </div>
+
+    <div class="stat-card stat-card-3">
+        <div class="stat-icon">
+            <i class="bi bi-person-check"></i>
+        </div>
+        <div class="stat-label">Membres Normaux</div>
+        <div class="stat-value">{{ regularMembers() }}</div>
+        <div class="stat-footer">membres réguliers</div>
+    </div>
+    } @else if (activeTab() === 'applications') {
+    <!-- Applications Stats -->
+    <div class="stat-card stat-card-warning">
+        <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-label">En Attente</div>
+        <div class="stat-value">{{ pendingCount() }}</div>
+        <div class="stat-footer">à traiter</div>
+    </div>
+
+    <div class="stat-card stat-card-success">
+        <div class="stat-icon">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-label">Approuvées</div>
+        <div class="stat-value">{{ approvedCount() }}</div>
+        <div class="stat-footer">demandes acceptées</div>
+    </div>
+
+    <div class="stat-card stat-card-danger">
+        <div class="stat-icon">
+            <i class="bi bi-x-circle"></i>
+        </div>
+        <div class="stat-label">Rejetées</div>
+        <div class="stat-value">{{ rejectedCount() }}</div>
+        <div class="stat-footer">demandes refusées</div>
+    </div>
+    }
+</div>

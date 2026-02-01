@@ -8,14 +8,15 @@ import { Membership } from '../memberships/entities/membership.entity';
 import { Club } from '../clubs/entities/club.entity';
 import { Event } from '../events/entities/event.entity';
 import { Registration } from '../events/entities/registration.entity';
+import { Application } from '../memberships/entities/application.entity';
 import { Payment } from './entities/payment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment, Membership, Club, Event, Registration]),
+    TypeOrmModule.forFeature([Payment, Membership, Club, Event, Registration, Application]),
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, ReceiptService, StripeService],
   exports: [PaymentsService, ReceiptService, StripeService],
 })
-export class PaymentsModule {}
+export class PaymentsModule { }

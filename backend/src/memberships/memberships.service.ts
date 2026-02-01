@@ -26,7 +26,7 @@ export class MembershipsService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(Application)
     private readonly applicationRepository: Repository<Application>,
-  ) {}
+  ) { }
 
   /**
    * Créer une nouvelle adhésion
@@ -204,6 +204,32 @@ export class MembershipsService {
       status: application.status,
       application: application,
     };
+  }
+
+  /**
+   * ✅ OBTENIR UNE ADHÉSION DIRECTEMENT (Version src/memberships)
+   * Utile pour les rôles internes (Président, etc.) qui n'ont pas forcément d'application
+   */
+  async findMembershipByUserAndClub(
+    userId: number,
+    clubId: number,
+  ): Promise<Membership | null> {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId }
+      },
+    });
+
+    if (membership) {
+      // Vérifier si l'adhésion est encore valide (dateFin est null ou dans le futur)
+      const now = new Date();
+      if (membership.dateFin && membership.dateFin < now) {
+        return null;
+      }
+    }
+
+    return membership;
   }
 
   /**
@@ -389,7 +415,7 @@ export class MembershipsService {
       throw new Error('Membership not found');
     }
 
-    membership.role = (role as any) || 'member';
+    membership.role = (role as any) || MemberRole.MEMBER;
     await this.membershipRepository.save(membership);
 
     return this.mapToMemberResponse(membership);
@@ -514,7 +540,7 @@ export class MembershipsService {
         '(membership.date_fin IS NULL OR membership.date_fin >= :today)',
         { today: new Date() },
       )
-      .andWhere('membership.role != :role', { role: 'MEMBER' }); // ✅ FILTRE BUREAU
+      .andWhere('membership.role NOT IN (:...roles)', { roles: ['MEMBER', 'member'] }); // ✅ FILTRE BUREAU ROBUSTE
 
     // Recherche par nom ou email
     if (query.search) {

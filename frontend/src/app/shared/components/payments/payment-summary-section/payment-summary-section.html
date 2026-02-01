@@ -1,0 +1,13 @@
+<div class="summary-section">
+    @if (paymentType() === 'membership' && clubDetails()) {
+    <app-payment-order-summary [paymentType]="paymentType()" [productName]="clubDetails().name"
+        [productDescription]="clubDetails().description" [baseAmount]="baseAmount()" [finalAmount]="finalAmount()"
+        [discount]="discount()" />
+    }
+
+    @if (paymentType() === 'event' && eventDetails()) {
+    <app-payment-order-summary [paymentType]="paymentType()" [productName]="eventDetails().title"
+        [location]="eventDetails().location" [startDate]="eventDetails().startDate" [baseAmount]="baseAmount()"
+        [finalAmount]="finalAmount()" [discount]="discount()" />
+    }
+</div>

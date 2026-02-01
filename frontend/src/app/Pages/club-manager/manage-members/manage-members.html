@@ -1,0 +1,74 @@
+<div class="manage-members-page">
+  <!-- HERO SECTION -->
+  <app-dashboard-hero [clubName]="clubDetails()?.name || 'Gestion des Membres'" [clubLogo]="clubDetails()?.logo || ''"
+    [clubCoverImage]="clubDetails()?.coverImage || ''" [totalMembers]="totalMembers()"
+    [pendingRequests]="pendingCount()" [showBackButton]="true" (backClick)="goBack()" />
+
+  <!-- EXPORT BUTTON SECTION -->
+  @if (internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH') {
+  <div class="export-section">
+    <button class="btn-export" (click)="exportCSV()">
+      <i class="bi bi-download"></i>
+      Exporter CSV
+    </button>
+    <!-- Hidden download link for @ViewChild -->
+    <a #downloadLink style="display: none"></a>
+  </div>
+  }
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- STATISTICS CARDS -->
+    <app-members-stats-grid [activeTab]="state().activeTab" [totalMembers]="totalMembers()"
+      [bureauMembers]="bureauMembersCount()" [regularMembers]="regularMembersCount()" [pendingCount]="pendingCount()"
+      [approvedCount]="approvedCount()" [rejectedCount]="rejectedCount()" />
+
+    <!-- TABS & CONTENT -->
+    <div class="section-card section-card-full">
+      <app-tab-navigation [tabs]="tabs()" [activeTab]="state().activeTab" (tabChange)="onTabChange($event)" />
+
+      <div class="tab-content">
+        <!-- MEMBERS TAB -->
+        @if (state().activeTab === 'members' || state().activeTab === 'bureau') {
+        <app-members-list [members]="allMembers()" [loading]="state().loading" [searchQuery]="state().searchQuery"
+          [currentPage]="state().membersPage" [totalPages]="membersTotalPages()"
+          [emptyMessage]="state().activeTab === 'bureau' ? 'Aucun membre du bureau pour le moment' : 'Aucun membre pour le moment'"
+          [title]="state().activeTab === 'bureau' ? 'Membres du Bureau' : 'Tous les Membres'"
+          [canEditRole]="internalRole().toUpperCase() === 'PRESIDENT'"
+          [canRemoveMember]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+          (searchChange)="onSearchChange($event)" (editRole)="openRoleModal($event)"
+          (removeMember)="openRemoveModal($event)" (pageChange)="onMembersPageChange($event)" />
+        }
+
+        <!-- APPLICATIONS TAB -->
+        @else if (state().activeTab === 'applications') {
+        <app-applications-list [applications]="applicationsData()" [statusFilters]="statusFilters"
+          [activeStatus]="state().applicationStatus" [loading]="state().loading"
+          [currentPage]="state().applicationsPage" [totalPages]="applicationsTotalPages()"
+          [canManage]="internalRole().toUpperCase() === 'PRESIDENT' || internalRole().toUpperCase() === 'RH'"
+          (statusFilterChange)="onStatusFilterChange($event)" (viewDetails)="openApplicationDetailsModal($event)"
+          (approve)="approveMember($event)" (reject)="rejectMember($event)"
+          (pageChange)="onApplicationsPageChange($event)" />
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- ROLE MODAL -->
+  @defer (when roleModal().show) {
+  <app-role-modal [show]="roleModal().show" [member]="roleModal().selectedMember"
+    [(selectedRole)]="roleModal().selectedRole" (close)="closeRoleModal()" (confirm)="confirmRoleChange()" />
+  }
+
+  <!-- REMOVE MEMBER MODAL -->
+  @if (removeModal().show && removeModal().selectedMember) {
+  <app-confirm-modal [title]="'Retirer le Membre'" [message]="removeConfirmationMessage()"
+    [disclaimer]="'Cette action est irréversible.'" (confirm)="confirmRemoveMember()" (cancel)="closeRemoveModal()" />
+  }
+
+  <!-- APPLICATION DETAILS MODAL -->
+  @defer (when applicationModal().show) {
+  <app-application-details-modal [show]="applicationModal().show" [application]="applicationModal().selectedApplication"
+    (close)="closeApplicationDetailsModal()" (approve)="approveMember($event)" (reject)="rejectMember($event)" />
+  }
+</div>

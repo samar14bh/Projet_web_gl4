@@ -337,7 +337,9 @@ export class EventsService {
   ): Promise<PaginatedResult<UserEventDto>> {
     const query = this.eventRepository
       .createQueryBuilder('event')
-      .leftJoinAndSelect('event.club', 'club');
+      .leftJoinAndSelect('event.club', 'club')
+      .leftJoinAndSelect('event.payments', 'payments')
+      .leftJoinAndSelect('payments.user', 'paymentUser');
 
     if (registeredOnly) {
       query.innerJoinAndSelect(
@@ -383,6 +385,8 @@ export class EventsService {
     const event = await this.eventRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.club', 'club')
+      .leftJoinAndSelect('event.payments', 'payments')
+      .leftJoinAndSelect('payments.user', 'paymentUser')
       .leftJoinAndSelect(
         'event.registrations',
         'registrations',

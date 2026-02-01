@@ -1,0 +1,72 @@
+<div class="my-payments-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <i class="bi bi-wallet2"></i>
+        Mes Paiements
+      </h1>
+      <p>Historique complet de vos paiements et cotisations</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Statistics Cards - Using dumb components -->
+    <div class="stats-grid">
+      <app-payment-stats-card [label]="'Dépenses ce mois'" [value]="totalSpentThisMonth() | currencyTnd"
+        [icon]="'bi bi-calendar-month'" [variant]="'primary'" />
+
+      <app-payment-stats-card [label]="'Dépenses cette année'" [value]="totalSpentThisYear() | currencyTnd"
+        [icon]="'bi bi-calendar-year'" [variant]="'secondary'" />
+
+      <app-payment-stats-card [label]="'Clubs actifs'" [value]="stats()?.activeMemberships || 0"
+        [icon]="'bi bi-people-fill'" [variant]="'success'" />
+
+      <app-payment-stats-card [label]="'Total paiements'" [value]="state().payments.length" [icon]="'bi bi-receipt'"
+        [variant]="'accent'" />
+    </div>
+
+    <!-- Filters - Using dumb component -->
+    <div class="filters-section">
+      <app-payment-filter-tabs [activeFilter]="state().filterStatus" (filterChange)="filterByStatus($event)" />
+    </div>
+
+    <!-- Content Card -->
+    <div class="content-card">
+      <!-- Loading State -->
+      @if (state().loading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement de vos paiements...</p>
+      </div>
+      }
+
+      <!-- Empty State -->
+      @if (!state().loading && filteredPayments().length === 0) {
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h3>Aucun paiement</h3>
+        <p>Vous n'avez effectué aucun paiement pour le moment</p>
+      </div>
+      }
+
+      <!-- Payments Table/Grid View -->
+      @if (!state().loading && filteredPayments().length > 0) {
+      <div class="payments-container">
+        <!-- Desktop: Table View - Using dumb component -->
+        <div class="payments-table-wrapper">
+          <app-payment-table [payments]="filteredPayments()" [downloading]="state().downloading"
+            (downloadReceipt)="downloadReceipt($event)" />
+        </div>
+
+        <!-- Mobile: Card View - Using dumb component -->
+        <div class="payments-cards-wrapper">
+          <app-payment-card-list [payments]="filteredPayments()" [downloading]="state().downloading"
+            (downloadReceipt)="downloadReceipt($event)" />
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</div>

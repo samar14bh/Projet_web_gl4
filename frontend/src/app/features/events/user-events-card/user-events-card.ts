@@ -2,6 +2,7 @@ import { Component, Input, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserEventDto } from '../../../Core/dtos/user-event.dto';
 import { EventService } from '../../../Core/services/event.service';
+import { PaymentService } from '../../../Core/services/payment.service';
 import { Router } from '@angular/router';
 import { PaymentModal } from '../../payment-modal/payment-modal';
 
@@ -17,6 +18,7 @@ export class UserEventsCard {
   showPaymentModal: boolean = false;
 
   private readonly eventService = inject(EventService);
+  private readonly paymentService = inject(PaymentService);
   private readonly router = inject(Router);
 
   viewEventDetails() {
@@ -35,8 +37,18 @@ export class UserEventsCard {
     }
   }
 
-  async viewReceipt() {
-    console.log("will be dev")
+  viewReceipt() {
+    if (!this.event.paymentId) return;
+
+    this.paymentService.downloadReceipt(this.event.paymentId).subscribe({
+      next: (blob: Blob) => {
+        this.paymentService.handleBlobDownload(blob, `recu-event-${this.event.id}.pdf`);
+      },
+      error: (err: any) => {
+        console.error('Erreur téléchargement reçu:', err);
+        alert('Erreur lors du téléchargement du reçu.');
+      }
+    });
   }
 
 

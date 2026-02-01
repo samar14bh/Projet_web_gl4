@@ -27,6 +27,7 @@ export class UserEventDto {
     } | null;
 
     paymentStatus: 'paid' | 'pending' | null;
+    paymentId: number | null;
     attendanceStatus: 'present' | 'absent' | null;
     canCancel: boolean;
 }

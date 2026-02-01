@@ -148,49 +148,52 @@ export const routes: Routes = [
       },
       {
         path: 'payment',
-        loadComponent: () => import('./features/member/payment-page/payment-page')
+        loadComponent: () => import('./Pages/payment-page/payment-page')
           .then(m => m.PaymentPageComponent),
-        data: { title: 'Paiement Sécurisé' }
-      },
-      {
-        path: 'checkout',
-        loadComponent: () => import('./features/checkout/checkout')
-          .then(m => m.CheckoutComponent),
-        data: { title: 'Finaliser votre achat' }
+        canActivate: [roleGuard],
+        data: { title: 'Paiement Sécurisé', role: 'USER' }
       },
       {
         path: 'payment/success',
-        loadComponent: () => import('./features/member/payment-success/payment-success')
+        loadComponent: () => import('./Pages/payment-success/payment-success')
           .then(m => m.PaymentSuccessComponent),
-        data: { title: 'Paiement réussi' }
+        canActivate: [roleGuard],
+        data: { title: 'Paiement réussi', role: 'USER' }
       },
 
       {
         path: 'my-payments',  // ← PAGE 10
-        loadComponent: () => import('./features/member/my-payments/my-payments').then(m => m.MyPaymentsComponent),
+        loadComponent: () => import('./Pages/my-payments/my-payments').then(m => m.MyPaymentsComponent),
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         title: 'Mes paiements'
       },
-      // Dashboard du club avec clubId
       {
         path: 'club-manager/:clubId/dashboard',
-        loadComponent: () => import('./features/club-manager/dashboard/dashboard')
+        loadComponent: () => import('./Pages/club-manager/dashboard/dashboard')
           .then(m => m.ClubManagerDashboardComponent),
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         title: 'Tableau de bord du club'
       },
 
       // Gestion du club avec clubId
       {
         path: 'club-manager/:clubId/manage-club',
-        loadComponent: () => import('./features/club-manager/manage-club/manage-club')
+        loadComponent: () => import('./Pages/club-manager/manage-club/manage-club')
           .then(m => m.ManageClubComponent),
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         title: 'Gérer le club'
       },
 
       // Gestion des membres avec clubId
       {
         path: 'club-manager/:clubId/manage-members',
-        loadComponent: () => import('./features/club-manager/manage-members/manage-members')
+        loadComponent: () => import('./Pages/club-manager/manage-members/manage-members')
           .then(m => m.ManageMembersComponent),
+        canActivate: [roleGuard],
+        data: { role: 'USER' },
         title: 'Gérer les membres'
       },
       {

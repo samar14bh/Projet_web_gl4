@@ -1,0 +1,22 @@
+<div class="stripe-card-input">
+    <div class="form-group">
+        <label>Numéro de carte *</label>
+        <div id="card-number-element" class="stripe-input-wrapper"></div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Date d'expiration *</label>
+            <div id="expiry-element" class="stripe-input-wrapper"></div>
+        </div>
+
+        <div class="form-group">
+            <label>CVC *</label>
+            <div id="cvc-element" class="stripe-input-wrapper"></div>
+        </div>
+    </div>
+
+    @if (cardErrorMessage()) {
+    <span class="error-text">{{ cardErrorMessage() }}</span>
+    }
+</div>

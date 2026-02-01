@@ -1,0 +1,144 @@
+<div class="success-card">
+    <!-- Success Icon with Animation -->
+    <div class="success-icon-wrapper">
+        <div class="success-icon">
+            <i [class]="icon()"></i>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message">
+        <h1>{{ title() }}</h1>
+        <p>{{ description() }}</p>
+    </div>
+
+    <!-- Payment Details Card -->
+    <div class="details-section">
+        <div class="details-header">
+            <i class="bi bi-receipt-cutoff"></i>
+            <h2>Détails du Paiement</h2>
+        </div>
+
+        <div class="payment-details-grid">
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="bi bi-hash"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Numéro de paiement</span>
+                    <span class="detail-value">#{{ paymentId() }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Date et heure</span>
+                    <span class="detail-value">{{ paymentDate() | date:'dd MMM yyyy, HH:mm' }}</span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i [class]="paymentType() === 'membership' ? 'bi bi-people-fill' : 'bi bi-calendar-check-fill'"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Type de paiement</span>
+                    <span class="detail-value">
+                        {{ paymentType() === 'membership' ? 'Cotisation' : 'Événement' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Statut</span>
+                    <span class="detail-value status-success">
+                        <i class="bi bi-check-circle-fill"></i> Confirmé
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Steps Section -->
+    <div class="next-steps-section">
+        <div class="steps-header">
+            <i class="bi bi-lightbulb-fill"></i>
+            <h2>Prochaines étapes</h2>
+        </div>
+
+        <div class="steps-list">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-icon">
+                    <i class="bi bi-envelope-check"></i>
+                </div>
+                <div class="step-content">
+                    <h4>Email de confirmation</h4>
+                    <p>Un email de confirmation vous a été envoyé à votre adresse</p>
+                </div>
+            </div>
+
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-icon">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </div>
+                <div class="step-content">
+                    <h4>Téléchargez votre reçu</h4>
+                    <p>Votre reçu est disponible en téléchargement ci-dessous</p>
+                </div>
+            </div>
+
+            @if (paymentType() === 'membership') {
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-icon">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <div class="step-content">
+                    <h4>Accès aux avantages</h4>
+                    <p>Vous pouvez maintenant accéder à tous les avantages du club</p>
+                </div>
+            </div>
+            } @else {
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-icon">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div class="step-content">
+                    <h4>Détails de l'événement</h4>
+                    <p>Retrouvez les détails de l'événement dans votre espace personnel</p>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="btn-secondary" (click)="onDownloadReceipt()">
+            <i class="bi bi-download"></i>
+            Télécharger le reçu
+        </button>
+        <button class="btn-primary" (click)="onGoToPayments()">
+            <i class="bi bi-receipt"></i>
+            Voir mes paiements
+        </button>
+    </div>
+
+    <!-- Back Link -->
+    <div class="back-link">
+        <a (click)="onGoHome()" class="link-back">
+            <i class="bi bi-arrow-left"></i>
+            Retour à l'accueil
+        </a>
+    </div>
+</div>

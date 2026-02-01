@@ -1,0 +1,17 @@
+@if (type()) {
+<div class="notification" [class]="'notification-' + type()">
+    <div class="notification-content">
+        <div class="notification-message">
+            @if (type() === 'success') {
+            <i class="bi bi-check-circle"></i>
+            } @else {
+            <i class="bi bi-exclamation-circle"></i>
+            }
+            <span>{{ message() }}</span>
+        </div>
+        <button class="notification-close" (click)="onClose()">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+</div>
+}
