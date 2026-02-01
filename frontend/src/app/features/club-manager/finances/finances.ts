@@ -3,6 +3,7 @@ import {
   signal,
   computed,
   inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,56 +19,50 @@ import { ButtonComponent } from '../../../shared/components/button/button';
 import { ModalComponent } from '../../../shared/components/modal/modal';
 import { TransactionForm } from './transaction-form/transaction-form';
 import { ExportService } from '../../../Core/services/export.service';
+import { ToastService } from '../../../Core/services/toast.service';
 
 /**
  * PAGE 16 : Finances du club
  * Gestion et visualisation des finances du club
+ * Optimisé Angular 20 avec Signals et OnPush
  */
 @Component({
   selector: 'app-finances',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent,TransactionForm],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonComponent,
+    ModalComponent,
+    TransactionForm,
+  ],
   templateUrl: './finances.html',
   styleUrl: './finances.css',
+  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ OnPush
 })
 export class FinancesComponent {
+  // ========== SERVICES ==========
   private readonly financeService = inject(FinanceService);
   private readonly exportService = inject(ExportService);
+  private readonly toastService = inject(ToastService);
 
   // ========== SIGNALS D'ÉTAT ==========
-
-  // Période sélectionnée
-  selectedPeriod = signal<'month' | 'quarter' | 'year' | 'all'>('month');
-
-  // Type de transaction filtré
-  selectedTransactionType = signal<TransactionType | 'all'>('all');
-
-  // Catégorie de transaction
-  selectedCategory = signal<TransactionCategory | 'all'>('all');
-
-  // Recherche
-  searchQuery = signal('');
-
-  // Pagination
-  currentPage = signal(1);
-  pageSize = signal(10);
-
-  // Modal d'ajout de dépense
-  isExpenseModalOpen = signal(false);
-
-  // Modal de détails
-  isDetailsModalOpen = signal(false);
-  selectedTransaction = signal<Transaction | null>(null);
-
-  // Club ID (TODO: récupérer depuis l'authentification)
-  clubId = signal<number>(1);
+  readonly selectedPeriod = signal<'month' | 'quarter' | 'year' | 'all'>('month');
+  readonly selectedTransactionType = signal<TransactionType | 'all'>('all');
+  readonly selectedCategory = signal<TransactionCategory | 'all'>('all');
+  readonly searchQuery = signal('');
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(10);
+  readonly isExpenseModalOpen = signal(false);
+  readonly isDetailsModalOpen = signal(false);
+  readonly selectedTransaction = signal<Transaction | null>(null);
+  readonly clubId = signal<number>(1); // TODO: récupérer depuis l'authentification
 
   // ========== COMPUTED FILTERS ==========
-
-  filters = computed<TransactionFilters>(() => ({
+  readonly filters = computed<TransactionFilters>(() => ({
     period: this.selectedPeriod(),
-    type: this.selectedTransactionType(),
-    category: this.selectedCategory(),
+    type: this.selectedTransactionType() !== 'all' ? this.selectedTransactionType() : undefined,
+    category: this.selectedCategory() !== 'all' ? this.selectedCategory() : undefined,
     search: this.searchQuery() || undefined,
     page: this.currentPage(),
     limit: this.pageSize(),
@@ -79,7 +74,7 @@ export class FinancesComponent {
   /**
    * Resource pour les transactions avec filtres réactifs
    */
-  transactionsResource = rxResource({
+  readonly transactionsResource = rxResource({
     params: this.filters,
     stream: ({ params }) => this.financeService.getTransactions(params),
   });
@@ -87,186 +82,62 @@ export class FinancesComponent {
   /**
    * Resource pour les statistiques financières
    */
-  statsResource = rxResource({
+  readonly statsResource = rxResource({
     params: computed(() => ({
       clubId: this.clubId(),
       period: this.selectedPeriod(),
     })),
-    stream: ({ params }) => this.financeService.getFinancialStats(params.clubId, params.period),
+    stream: ({ params }) =>
+      this.financeService.getFinancialStats(params.clubId, params.period),
   });
 
   /**
    * Resource pour les données mensuelles du graphique
    */
-  chartResource = rxResource({
+  readonly chartResource = rxResource({
     params: computed(() => ({
       clubId: this.clubId(),
       months: 6,
     })),
-    stream: ({ params }) => this.financeService.getMonthlyData(params.clubId, params.months),
+    stream: ({ params }) =>
+      this.financeService.getMonthlyData(params.clubId, params.months),
   });
 
   // ========== COMPUTED SIGNALS DÉRIVÉS ==========
+  readonly transactions = computed(() => this.transactionsResource.value()?.data ?? []);
+  readonly totalTransactions = computed(() => this.transactionsResource.value()?.total ?? 0);
+  readonly totalPages = computed(() => this.transactionsResource.value()?.totalPages ?? 0);
+  readonly isLoading = computed(() => this.transactionsResource.isLoading());
+  readonly hasError = computed(() => !!this.transactionsResource.error());
 
-  transactions = computed(() => this.transactionsResource.value()?.data ?? []);
-  totalTransactions = computed(() => this.transactionsResource.value()?.total ?? 0);
-  totalPages = computed(() => this.transactionsResource.value()?.totalPages ?? 0);
-  isLoading = computed(() => this.transactionsResource.isLoading());
-  hasError = computed(() => !!this.transactionsResource.error());
-  error = computed(() => this.transactionsResource.error());
+  readonly financialStats = computed(
+    () =>
+      this.statsResource.value() ?? {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        balance: 0,
+        membershipRevenue: 0,
+        eventRevenue: 0,
+        donationRevenue: 0,
+        pendingPayments: 0,
+      },
+  );
 
-  financialStats = computed(() => this.statsResource.value() ?? {
-    totalRevenue: 0,
-    totalExpenses: 0,
-    balance: 0,
-    membershipRevenue: 0,
-    eventRevenue: 0,
-    donationRevenue: 0,
-    pendingPayments: 0,
-  });
-
-  chartData = computed(() => this.chartResource.value() ?? []);
-  isStatsLoading = computed(() => this.statsResource.isLoading());
-  isChartLoading = computed(() => this.chartResource.isLoading());
+  readonly chartData = computed(() => this.chartResource.value() ?? []);
+  readonly isStatsLoading = computed(() => this.statsResource.isLoading());
+  readonly isChartLoading = computed(() => this.chartResource.isLoading());
 
   // ========== ÉNUMÉRATIONS POUR LE TEMPLATE ==========
-  TransactionType = TransactionType;
-  TransactionCategory = TransactionCategory;
+  readonly TransactionType = TransactionType;
+  readonly TransactionCategory = TransactionCategory;
 
-  // ========== MÉTHODES ==========
+  // ========== TRACKBY FUNCTIONS ==========
+  // ✅ TrackBy pour optimiser le rendu des listes
+  readonly trackByTransactionId = (_index: number, transaction: Transaction) =>
+    transaction.id;
+  readonly trackByMonth = (_index: number, data: any) => data.month;
 
-  /**
-   * Changer la période
-   */
-  changePeriod(period: 'month' | 'quarter' | 'year' | 'all') {
-    this.selectedPeriod.set(period);
-    this.currentPage.set(1);
-    // rxResource se met à jour automatiquement
-  }
-
-  /**
-   * Changer le type de transaction
-   */
-  changeTransactionType(type: TransactionType | 'all') {
-    this.selectedTransactionType.set(type);
-    this.currentPage.set(1);
-    // rxResource se met à jour automatiquement
-  }
-
-  /**
-   * Changer la catégorie
-   */
-  changeCategory(category: TransactionCategory | 'all') {
-    this.selectedCategory.set(category);
-    this.currentPage.set(1);
-    // rxResource se met à jour automatiquement
-  }
-
-  /**
-   * Rechercher
-   */
-  onSearch(query: string) {
-    this.searchQuery.set(query);
-    this.currentPage.set(1);
-    // rxResource se met à jour automatiquement
-  }
-
-  /**
-   * Changer de page
-   */
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-      // rxResource se met à jour automatiquement
-    }
-  }
-
-  /**
-   * Recharger les données manuellement
-   */
-  reloadData(): void {
-    this.transactionsResource.reload();
-    this.statsResource.reload();
-    this.chartResource.reload();
-  }
-
-  /**
-   * Ouvrir le modal d'ajout de dépense
-   */
-  openExpenseModal() {
-    this.isExpenseModalOpen.set(true);
-  }
-
-  /**
-   * Fermer le modal d'ajout de dépense
-   */
-  closeExpenseModal() {
-    this.isExpenseModalOpen.set(false);
-  }
-  /**
-   * Succès de l'ajout de transaction
-   */
-  onTransactionSuccess() {
-    this.closeExpenseModal();
-    this.reloadData();
-    alert('Transaction ajoutée avec succès !');
-  }
-
-  /**
-   * Ouvrir le modal de détails
-   */
-  openDetailsModal(transaction: Transaction) {
-    this.selectedTransaction.set(transaction);
-    this.isDetailsModalOpen.set(true);
-  }
-
-  /**
-   * Fermer le modal de détails
-   */
-  closeDetailsModal() {
-    this.selectedTransaction.set(null);
-    this.isDetailsModalOpen.set(false);
-  }
-  /**
-   * Exporter les données en PDF ou Excel
-   */
-  exportData(format: 'pdf' | 'excel') {
-    const period = this.selectedPeriod();
-    const stats = this.financialStats();
-    const transactions = this.transactions();
-
-    if (transactions.length === 0) {
-      alert('Aucune transaction à exporter');
-      return;
-    }
-
-    if (format === 'pdf') {
-      // Export PDF avec rapport complet
-      this.exportService.exportFinancialReportPDF(
-        stats,
-        transactions,
-        period,
-        `rapport-financier-${period}-${Date.now()}.pdf`,
-      );
-    } else {
-      // Export Excel
-      const excelData = transactions.map((t) => ({
-        Date: new Date(t.date).toLocaleDateString('fr-FR'),
-        Référence: t.reference,
-        Description: t.description,
-        Catégorie: this.getCategoryLabel(t.category),
-        Type: t.type === 'REVENUE' ? 'Revenu' : 'Dépense',
-        Montant: t.amount,
-        Statut: 'Complété',
-      }));
-
-      this.exportService.exportToExcel(
-        excelData,
-        `transactions-${period}-${Date.now()}.xlsx`,
-        'Transactions',
-      );
-    }
-  }
+  // ========== MÉTHODES UTILITAIRES (PURES) ==========
 
   /**
    * Formater une date
@@ -310,5 +181,142 @@ export class FinancesComponent {
       [TransactionCategory.EXPENSE]: 'Dépense',
     };
     return labels[category] || category;
+  }
+
+  // ========== ACTIONS ==========
+
+  /**
+   * Changer la période
+   */
+  changePeriod(period: 'month' | 'quarter' | 'year' | 'all'): void {
+    this.selectedPeriod.set(period);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Changer le type de transaction
+   */
+  changeTransactionType(type: TransactionType | 'all'): void {
+    this.selectedTransactionType.set(type);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Changer la catégorie
+   */
+  changeCategory(category: TransactionCategory | 'all'): void {
+    this.selectedCategory.set(category);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Rechercher
+   */
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Changer de page
+   */
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  /**
+   * Recharger les données manuellement
+   */
+  reloadData(): void {
+    this.transactionsResource.reload();
+    this.statsResource.reload();
+    this.chartResource.reload();
+  }
+
+  /**
+   * Ouvrir le modal d'ajout de transaction
+   */
+  openExpenseModal(): void {
+    this.isExpenseModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal d'ajout de transaction
+   */
+  closeExpenseModal(): void {
+    this.isExpenseModalOpen.set(false);
+  }
+
+  /**
+   * Succès de l'ajout de transaction
+   */
+  onTransactionSuccess(): void {
+    this.closeExpenseModal();
+    this.reloadData();
+    this.toastService.success('Transaction ajoutée avec succès !');
+  }
+
+  /**
+   * Ouvrir le modal de détails
+   */
+  openDetailsModal(transaction: Transaction): void {
+    this.selectedTransaction.set(transaction);
+    this.isDetailsModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal de détails
+   */
+  closeDetailsModal(): void {
+    this.selectedTransaction.set(null);
+    this.isDetailsModalOpen.set(false);
+  }
+
+  /**
+   * Exporter les données en PDF ou Excel
+   */
+  exportData(format: 'pdf' | 'excel'): void {
+    const period = this.selectedPeriod();
+    const stats = this.financialStats();
+    const transactions = this.transactions();
+
+    if (transactions.length === 0) {
+      this.toastService.warning('Aucune transaction à exporter');
+      return;
+    }
+
+    try {
+      if (format === 'pdf') {
+        this.exportService.exportFinancialReportPDF(
+          stats,
+          transactions,
+          period,
+          `rapport-financier-${period}-${Date.now()}.pdf`,
+        );
+        this.toastService.success('Rapport PDF généré avec succès !');
+      } else {
+        const excelData = transactions.map((t) => ({
+          Date: this.formatDate(t.date),
+          Référence: t.reference,
+          Description: t.description,
+          Catégorie: this.getCategoryLabel(t.category),
+          Type: t.type === TransactionType.REVENUE ? 'Revenu' : 'Dépense',
+          Montant: t.amount,
+          Statut: 'Complété',
+        }));
+
+        this.exportService.exportToExcel(
+          excelData,
+          `transactions-${period}-${Date.now()}.xlsx`,
+          'Transactions',
+        );
+        this.toastService.success('Export Excel généré avec succès !');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      this.toastService.error('Erreur lors de l\'export des données');
+    }
   }
 }

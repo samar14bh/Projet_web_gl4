@@ -3,72 +3,64 @@ import {
   signal,
   computed,
   inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {rxResource} from '@angular/core/rxjs-interop';
-import {EventService} from '../../../Core/services/event.service';
-import {Event, EventFilters} from '../../../Core/models/event.model';
-import {EventStatus} from '../../../Core/models/event.model';
-import {ButtonComponent} from '../../../shared/components/button/button';
-import {ModalComponent} from '../../../shared/components/modal/modal';
-import {EventFormComponent} from '../events/event-form/event-form';
-import {RegistrationsModalComponent} from '../events/registrations-modal/registrations-modal';
-import {environment} from '../../../../environments/environment';
-import {ToastService} from '../../../Core/services/toast.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { EventService } from '../../../Core/services/event.service';
+import { Event, EventFilters } from '../../../Core/models/event.model';
+import { EventStatus } from '../../../Core/models/event.model';
+import { ButtonComponent } from '../../../shared/components/button/button';
+import { ModalComponent } from '../../../shared/components/modal/modal';
+import { EventFormComponent } from '../events/event-form/event-form';
+import { RegistrationsModalComponent } from '../events/registrations-modal/registrations-modal';
+import { environment } from '../../../../environments/environment';
+import { ToastService } from '../../../Core/services/toast.service';
 
-/**
- * PAGE 15 : Gérer les événements
- * Composant moderne Angular 20 avec Signals
- * Compatible avec le mode zoneless
- */
+
 @Component({
   selector: 'app-events-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, ModalComponent, EventFormComponent, RegistrationsModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonComponent,
+    ModalComponent,
+    EventFormComponent,
+    RegistrationsModalComponent,
+  ],
   templateUrl: './events-manager.html',
   styleUrl: './events-manager.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EventsManagerComponent {
   private readonly eventService = inject(EventService);
+  private readonly toastService = inject(ToastService);
 
-// Dans la classe :
- private readonly toastService = inject(ToastService);
+  readonly activeTab = signal<'upcoming' | 'past' | 'drafts'>('upcoming');
+  readonly searchQuery = signal('');
+  readonly selectedStatus = signal<EventStatus | 'all'>('all');
+  readonly sortBy = signal<'date' | 'title' | 'registrations'>('date');
+  readonly sortOrder = signal<'asc' | 'desc'>('desc');
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(10);
+  readonly isFormModalOpen = signal(false);
+  readonly selectedEvent = signal<Event | null>(null);
+  readonly isDeleting = signal(false);
+  readonly isRegistrationsModalOpen = signal(false);
+  readonly selectedEventForRegistrations = signal<Event | null>(null);
 
-  // ========== SIGNALS D'ÉTAT ==========
-
-  // Onglet actif (À venir, Passés, Brouillons)
-  activeTab = signal<'upcoming' | 'past' | 'drafts'>('upcoming');
-
-  // Filtres de recherche
-  searchQuery = signal('');
-  selectedStatus = signal<EventStatus | 'all'>('all');
-  sortBy = signal<'date' | 'title' | 'registrations'>('date');
-  sortOrder = signal<'asc' | 'desc'>('desc');
-
-  // Pagination
-  currentPage = signal(1);
-  pageSize = signal(10);
-
-  // État du modal
-  isFormModalOpen = signal(false);
-  selectedEvent = signal<Event | null>(null);
-
-  // États de chargement
-  isDeleting = signal(false);
-
-  // Modal des inscriptions
-  isRegistrationsModalOpen = signal(false);
-  selectedEventForRegistrations = signal<Event | null>(null);
-  // ========== COMPUTED SIGNALS ==========
 
   // Filtres combinés pour l'API
-  filters = computed<EventFilters>(() => {
+  readonly filters = computed<EventFilters>(() => {
     const tab = this.activeTab();
     const filters: EventFilters = {
       search: this.searchQuery() || undefined,
       page: this.currentPage(),
       limit: this.pageSize(),
+      sortBy: this.sortBy(),
+      order: this.sortOrder(),
     };
 
     // Filtrer par statut selon l'onglet
@@ -85,6 +77,26 @@ export class EventsManagerComponent {
 
     return filters;
   });
+
+  readonly eventsResource = rxResource({
+    params: this.filters,
+    stream: ({ params }) => this.eventService.getEvents(params),
+  });
+
+  // Computed signals dérivés de la resource
+  readonly events = computed(() => this.eventsResource.value()?.data ?? []);
+  readonly totalEvents = computed(() => this.eventsResource.value()?.total ?? 0);
+  readonly totalPages = computed(() => this.eventsResource.value()?.totalPages ?? 0);
+  readonly isLoading = computed(() => this.eventsResource.isLoading());
+  readonly hasError = computed(() => !!this.eventsResource.error());
+
+  readonly EventStatus = EventStatus;
+
+
+  readonly trackByEventId = (_index: number, event: Event) => event.id;
+
+  // ========== MÉTHODES UTILITAIRES (PURES) ==========
+
   /**
    * Obtenir l'URL complète d'une image
    */
@@ -92,160 +104,10 @@ export class EventsManagerComponent {
     if (!path) {
       return 'https://via.placeholder.com/400x200?text=No+Image';
     }
-
-    // Si le chemin commence déjà par http, le retourner tel quel
     if (path.startsWith('http')) {
       return path;
     }
-
-    // Sinon, ajouter l'URL du backend
-    return `${environment.uploadsUrl}${path}`;
-  }
-
-  // ========== RESOURCE POUR LES ÉVÉNEMENTS (rxResource) ==========
-
-  eventsResource = rxResource({
-    params: this.filters,
-    stream: ({params}) => this.eventService.getEvents(params),
-  });
-
-  // Computed signals dérivés de la resource
-  events = computed(() => this.eventsResource.value()?.data ?? []);
-  totalEvents = computed(() => this.eventsResource.value()?.total ?? 0);
-  totalPages = computed(() => this.eventsResource.value()?.totalPages ?? 0);
-  isLoading = computed(() => this.eventsResource.isLoading());
-  hasError = computed(() => !!this.eventsResource.error());
-  error = computed(() => this.eventsResource.error());
-
-  // ========== ÉNUMÉRATIONS POUR LE TEMPLATE ==========
-  EventStatus = EventStatus;
-
-  // ========== MÉTHODES ==========
-
-  /**
-   * Recharger les événements manuellement
-   */
-  reloadEvents(): void {
-    this.eventsResource.reload();
-  }
-
-  /**
-   * Changer d'onglet
-   */
-  setActiveTab(tab: 'upcoming' | 'past' | 'drafts') {
-    this.activeTab.set(tab);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Rechercher des événements
-   */
-  onSearch(query: string) {
-    this.searchQuery.set(query);
-    this.currentPage.set(1);
-  }
-
-  /**
-   * Changer le tri
-   */
-  changeSortBy(field: 'date' | 'title' | 'registrations') {
-    if (this.sortBy() === field) {
-      this.sortOrder.update((order) => (order === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortBy.set(field);
-      this.sortOrder.set('desc');
-    }
-  }
-
-  /**
-   * Changer de page
-   */
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
-  }
-
-  /**
-   * Ouvrir le modal de création
-   */
-  openCreateModal() {
-    this.selectedEvent.set(null);
-    this.isFormModalOpen.set(true);
-  }
-
-  /**
-   * Ouvrir le modal d'édition
-   */
-  openEditModal(event: Event) {
-    this.selectedEvent.set(event);
-    this.isFormModalOpen.set(true);
-  }
-
-  /**
-   * Fermer le modal de formulaire
-   */
-  closeFormModal() {
-    this.isFormModalOpen.set(false);
-    this.selectedEvent.set(null);
-  }
-
-
-
-  /**
-   * Annulation du formulaire
-   */
-  onFormCancel() {
-    this.closeFormModal();
-  }
-
-  /**
-   * Supprimer un événement
-   */
-
-
-  /**
-   * Dupliquer un événement
-   */
-  /**
-   * Dupliquer un événement
-   */
-  duplicateEvent(event: Event) {
-    this.eventService.duplicateEvent(event.id).subscribe({
-      next: (duplicatedEvent) => {
-        this.reloadEvents();
-        alert(`Événement "${duplicatedEvent.title}" dupliqué avec succès !`); // ← CORRIGÉ ICI
-      },
-      error: (error) => {
-        console.error('Erreur lors de la duplication:', error);
-        alert('Erreur lors de la duplication de l\'événement');
-      },
-    });
-  }
-
-  /**
-   * Voir les inscrits
-   */
-  viewRegistrations(event: Event) {
-    this.selectedEventForRegistrations.set(event);
-    this.isRegistrationsModalOpen.set(true);
-  }
-
-  /**
-   * Fermer le modal des inscriptions
-   */
-  closeRegistrationsModal() {
-    this.isRegistrationsModalOpen.set(false);
-    this.selectedEventForRegistrations.set(null);
-  }
-
-  /**
-   * Scanner les QR codes
-   */
-  scanQRCodes(event: Event) {
-    // TODO: Ouvrir scanner QR
-    console.log('Scanner QR:', event);
-    alert('Fonctionnalité "Scanner QR Code" à venir...');
+    return `${environment.apiUrl}${path}`;
   }
 
   /**
@@ -273,7 +135,7 @@ export class EventsManagerComponent {
    * Obtenir le badge de statut
    */
   getStatusBadgeClass(status: EventStatus): string {
-    const classes = {
+    const classes: Record<EventStatus, string> = {
       [EventStatus.UPCOMING]: 'badge-info',
       [EventStatus.ONGOING]: 'badge-success',
       [EventStatus.COMPLETED]: 'badge-secondary',
@@ -286,7 +148,7 @@ export class EventsManagerComponent {
    * Obtenir le label du statut
    */
   getStatusLabel(status: EventStatus): string {
-    const labels = {
+    const labels: Record<EventStatus, string> = {
       [EventStatus.UPCOMING]: 'À venir',
       [EventStatus.ONGOING]: 'En cours',
       [EventStatus.COMPLETED]: 'Terminé',
@@ -294,13 +156,88 @@ export class EventsManagerComponent {
     };
     return labels[status] || status;
   }
+
+
+  /**
+   * Recharger les événements manuellement
+   */
+  reloadEvents(): void {
+    this.eventsResource.reload();
+  }
+
+  /**
+   * Changer d'onglet
+   */
+  setActiveTab(tab: 'upcoming' | 'past' | 'drafts'): void {
+    this.activeTab.set(tab);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Rechercher des événements
+   */
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Changer le tri
+   */
+  changeSortBy(field: 'date' | 'title' | 'registrations'): void {
+    if (this.sortBy() === field) {
+      this.sortOrder.update((order) => (order === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortBy.set(field);
+      this.sortOrder.set('desc');
+    }
+  }
+
+  /**
+   * Changer de page
+   */
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  /**
+   * Ouvrir le modal de création
+   */
+  openCreateModal(): void {
+    this.selectedEvent.set(null);
+    this.isFormModalOpen.set(true);
+  }
+
+  /**
+   * Ouvrir le modal d'édition
+   */
+  openEditModal(event: Event): void {
+    this.selectedEvent.set(event);
+    this.isFormModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal de formulaire
+   */
+  closeFormModal(): void {
+    this.isFormModalOpen.set(false);
+    this.selectedEvent.set(null);
+  }
+
+  /**
+   * Annulation du formulaire
+   */
+  onFormCancel(): void {
+    this.closeFormModal();
+  }
+
   /**
    * Succès de création/modification
    */
-  onFormSuccess(event: Event) {
-    // Vérifier le mode AVANT de fermer le modal
+  onFormSuccess(event: Event): void {
     const isEditMode = this.selectedEvent() !== null;
-
     this.closeFormModal();
     this.reloadEvents();
 
@@ -313,9 +250,9 @@ export class EventsManagerComponent {
   /**
    * Supprimer un événement
    */
-  deleteEvent(event: Event) {
+  deleteEvent(event: Event): void {
     const confirmed = confirm(
-      `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`
+      `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`,
     );
 
     if (!confirmed) return;
@@ -326,13 +263,47 @@ export class EventsManagerComponent {
       next: () => {
         this.isDeleting.set(false);
         this.reloadEvents();
-        this.toastService.success(`Événement "${event.title}" supprimé avec succès !`);  // ← ICI
+        this.toastService.success(`Événement "${event.title}" supprimé avec succès !`);
       },
       error: (error) => {
         this.isDeleting.set(false);
         console.error('Erreur lors de la suppression:', error);
-        this.toastService.error('Erreur lors de la suppression de l\'événement');  // ← ICI
+        this.toastService.error("Erreur lors de la suppression de l'événement");
       },
     });
   }
+
+  /**
+   * Dupliquer un événement
+   */
+  duplicateEvent(event: Event): void {
+    this.eventService.duplicateEvent(event.id).subscribe({
+      next: (duplicatedEvent) => {
+        this.reloadEvents();
+        this.toastService.success(`Événement "${duplicatedEvent.title}" dupliqué avec succès !`);
+      },
+      error: (error) => {
+        console.error('Erreur lors de la duplication:', error);
+        this.toastService.error("Erreur lors de la duplication de l'événement");
+      },
+    });
+  }
+
+  /**
+   * Voir les inscrits
+   */
+  viewRegistrations(event: Event): void {
+    this.selectedEventForRegistrations.set(event);
+    this.isRegistrationsModalOpen.set(true);
+  }
+
+  /**
+   * Fermer le modal des inscriptions
+   */
+  closeRegistrationsModal(): void {
+    this.isRegistrationsModalOpen.set(false);
+    this.selectedEventForRegistrations.set(null);
+  }
+
+
 }

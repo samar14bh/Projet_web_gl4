@@ -1,9 +1,8 @@
 <div class="admin-dashboard-container">
-  <!-- Header -->
+  <!-- Header - Toujours visible immédiatement (Above the fold) -->
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Tableau de bord administrateur</h1>
-      <p class="page-subtitle">Vue d'ensemble de tous les clubs et activités</p>
     </div>
     <div class="header-actions">
       <app-button
@@ -27,7 +26,7 @@
     </div>
   </div>
 
-  <!-- Filtres de période -->
+  <!-- Filtres de période - Toujours visible immédiatement -->
   <div class="period-filters">
     <button
       class="period-btn"
@@ -59,27 +58,27 @@
     </button>
   </div>
 
-<!--  &lt;!&ndash; Alertes importantes &ndash;&gt;-->
-<!--  @if (alerts().length > 0) {-->
-<!--    <div class="alerts-section">-->
-<!--      @for (alert of alerts(); track alert.id) {-->
-<!--        <div class="alert" [class]="getAlertClass(alert.type)">-->
-<!--          <div class="alert-content">-->
-<!--            <div class="alert-header">-->
-<!--              <i class="bi bi-exclamation-triangle-fill"></i>-->
-<!--              <strong>{{ alert.title }}</strong>-->
-<!--            </div>-->
-<!--            <p>{{ alert.description }}</p>-->
-<!--          </div>-->
-<!--          <a [href]="alert.link" class="alert-action">-->
-<!--            {{ alert.action }} <i class="bi bi-arrow-right"></i>-->
-<!--          </a>-->
-<!--        </div>-->
-<!--      }-->
-<!--    </div>-->
-<!--  }-->
+  <!-- Alertes importantes - Toujours visible immédiatement (priorité haute) -->
+  @if (alerts().length > 0) {
+    <div class="alerts-section">
+      @for (alert of alerts(); track trackByAlertId($index, alert)) {
+        <div class="alert" [class]="getAlertClass(alert.type)">
+          <div class="alert-content">
+            <div class="alert-header">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <strong>{{ alert.title }}</strong>
+            </div>
+            <p>{{ alert.description }}</p>
+          </div>
+          <a [href]="alert.link" class="alert-action">
+            {{ alert.action }} <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      }
+    </div>
+  }
 
-  <!-- Statistiques principales -->
+  <!-- Statistiques principales - Chargement immédiat (Above the fold) -->
   @if (statsResource.isLoading()) {
     <div class="stats-loading">
       <div class="spinner"></div>
@@ -89,388 +88,388 @@
     <div class="error-state">
       <i class="bi bi-exclamation-triangle"></i>
       <p>Erreur lors du chargement des statistiques</p>
-      <app-button
-        label="Réessayer"
-        variant="secondary"
-        (clicked)="refreshData()"
-      />
+      <app-button label="Réessayer" variant="secondary" (clicked)="refreshData()" />
     </div>
   } @else {
-    <div class="main-stats-grid">
-      <!-- Total Clubs -->
-      <div class="stat-card primary-card">
-        <div class="stat-header">
-          <div class="stat-icon">
-            <i class="bi bi-building"></i>
+    <!-- Stats principales sans defer - contenu above the fold -->
+    <div class="main-stats-container">
+      <div class="main-stats-grid">
+        <!-- Total Clubs -->
+        <div class="stat-card primary-card">
+          <div class="stat-header">
+            <div class="stat-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <div class="stat-badge">
+              <span>{{ activeClubsRate() }}% actifs</span>
+            </div>
           </div>
-          <div class="stat-badge">
-            <span>{{ activeClubsRate() }}% actifs</span>
+          <div class="stat-body">
+            <h2 class="stat-value">{{ formatNumber(globalStats().totalClubs) }}</h2>
+            <p class="stat-label">Clubs enregistrés</p>
+            <div class="stat-detail">
+              <i class="bi bi-check-circle"></i>
+              <span>{{ globalStats().activeClubs }} clubs actifs</span>
+            </div>
           </div>
         </div>
-        <div class="stat-body">
-          <h2 class="stat-value">{{ formatNumber(globalStats().totalClubs) }}</h2>
-          <p class="stat-label">Clubs enregistrés</p>
-          <div class="stat-detail">
-            <i class="bi bi-check-circle"></i>
-            <span>{{ globalStats().activeClubs }} clubs actifs</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Total Membres -->
-      <div class="stat-card success-card">
-        <div class="stat-header">
-          <div class="stat-icon">
-            <i class="bi bi-people-fill"></i>
+        <!-- Total Membres -->
+        <div class="stat-card success-card">
+          <div class="stat-header">
+            <div class="stat-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-badge positive">
+              <i class="bi bi-arrow-up"></i>
+              <span>+{{ memberGrowthRate() }}%</span>
+            </div>
           </div>
-          <div class="stat-badge positive">
-            <i class="bi bi-arrow-up"></i>
-            <span>+{{ memberGrowthRate() }}%</span>
+          <div class="stat-body">
+            <h2 class="stat-value">{{ formatNumber(globalStats().totalMembers) }}</h2>
+            <p class="stat-label">Membres totaux</p>
+            <div class="stat-detail">
+              <i class="bi bi-person-plus"></i>
+              <span>+{{ globalStats().newMembersThisMonth }} ce mois</span>
+            </div>
           </div>
         </div>
-        <div class="stat-body">
-          <h2 class="stat-value">{{ formatNumber(globalStats().totalMembers) }}</h2>
-          <p class="stat-label">Membres totaux</p>
-          <div class="stat-detail">
-            <i class="bi bi-person-plus"></i>
-            <span>+{{ globalStats().newMembersThisMonth }} ce mois</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Événements -->
-      <div class="stat-card info-card">
-        <div class="stat-header">
-          <div class="stat-icon">
-            <i class="bi bi-calendar-event"></i>
+        <!-- Événements -->
+        <div class="stat-card info-card">
+          <div class="stat-header">
+            <div class="stat-icon">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="stat-badge">
+              <span>{{ globalStats().upcomingEvents }} à venir</span>
+            </div>
           </div>
-          <div class="stat-badge">
-            <span>{{ globalStats().upcomingEvents }} à venir</span>
+          <div class="stat-body">
+            <h2 class="stat-value">{{ formatNumber(globalStats().totalEvents) }}</h2>
+            <p class="stat-label">Événements organisés</p>
+            <div class="stat-detail">
+              <i class="bi bi-clock-history"></i>
+              <span>{{ globalStats().upcomingEvents }} événements prochains</span>
+            </div>
           </div>
         </div>
-        <div class="stat-body">
-          <h2 class="stat-value">{{ formatNumber(globalStats().totalEvents) }}</h2>
-          <p class="stat-label">Événements organisés</p>
-          <div class="stat-detail">
-            <i class="bi bi-clock-history"></i>
-            <span>{{ globalStats().upcomingEvents }} événements prochains</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Revenus -->
-      <div class="stat-card warning-card">
-        <div class="stat-header">
-          <div class="stat-icon">
-            <i class="bi bi-cash-stack"></i>
+        <!-- Revenus -->
+        <div class="stat-card warning-card">
+          <div class="stat-header">
+            <div class="stat-icon">
+              <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-badge">
+              <i class="bi bi-graph-up"></i>
+              <span>+8.5%</span>
+            </div>
           </div>
-          <div class="stat-badge">
-            <i class="bi bi-graph-up"></i>
-            <span>+8.5%</span>
-          </div>
-        </div>
-        <div class="stat-body">
-          <h2 class="stat-value">{{ formatCurrency(globalStats().totalRevenue) }}</h2>
-          <p class="stat-label">Revenus totaux</p>
-          <div class="stat-detail">
-            <i class="bi bi-currency-dollar"></i>
-            <span>Tous les clubs confondus</span>
+          <div class="stat-body">
+            <h2 class="stat-value">{{ formatCurrency(globalStats().totalRevenue) }}</h2>
+            <p class="stat-label">Revenus totaux</p>
+            <div class="stat-detail">
+              <i class="bi bi-currency-dollar"></i>
+              <span>Tous les clubs confondus</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   }
 
-  <!-- Graphiques et statistiques détaillées -->
-  <div class="charts-section">
-    <!-- Évolution des membres -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>Évolution des membres</h3>
-        <span class="chart-info">
-          <i class="bi bi-info-circle"></i>
-          Croissance de +{{ memberGrowthRate() }}% ce mois
-        </span>
+  <!-- ✅ DEFER: Graphiques - Chargé quand visible dans le viewport -->
+  @defer (on viewport; prefetch on idle) {
+    <div class="charts-section">
+      <!-- Évolution des membres -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Évolution des membres</h3>
+          <span class="chart-info">
+            <i class="bi bi-info-circle"></i>
+            Croissance de +{{ memberGrowthRate() }}% ce mois
+          </span>
+        </div>
+        <div class="chart-container">
+          @if (membershipTrendResource.isLoading()) {
+            <div class="chart-loading">
+              <div class="spinner"></div>
+            </div>
+          } @else if (membershipTrend().length === 0) {
+            <div class="chart-empty">
+              <i class="bi bi-graph-up"></i>
+              <p>Aucune donnée disponible</p>
+            </div>
+          } @else {
+            <div class="line-chart">
+              @for (data of membershipTrend(); track trackByMonth($index, data)) {
+                <div class="chart-point-group">
+                  <div class="chart-point-wrapper">
+                    <div
+                      class="chart-point"
+                      [style.height.%]="(data.count / 2000) * 100"
+                      [title]="data.count + ' membres'"
+                    >
+                      <span class="point-value">{{ data.count }}</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">{{ data.month }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
-      <div class="chart-container">
-        @if (membershipTrendResource.isLoading()) {
-          <div class="chart-loading">
+
+      <!-- Événements par mois -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Événements par mois</h3>
+          <span class="chart-info">
+            <i class="bi bi-calendar-check"></i>
+            {{ globalStats().upcomingEvents }} événements prévus
+          </span>
+        </div>
+        <div class="chart-container">
+          @if (eventsTrendResource.isLoading()) {
+            <div class="chart-loading">
+              <div class="spinner"></div>
+            </div>
+          } @else if (eventsTrend().length === 0) {
+            <div class="chart-empty">
+              <i class="bi bi-graph-up"></i>
+              <p>Aucune donnée disponible</p>
+            </div>
+          } @else {
+            <div class="bar-chart">
+              @for (data of eventsTrend(); track trackByMonth($index, data)) {
+                <div class="bar-group">
+                  <div
+                    class="bar"
+                    [style.height.%]="(data.count / 35) * 100"
+                    [title]="data.count + ' événements'"
+                  >
+                    <span class="bar-value">{{ data.count }}</span>
+                  </div>
+                  <span class="bar-label">{{ data.month }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Revenus mensuels -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Revenus mensuels</h3>
+          <span class="chart-info">
+            <i class="bi bi-cash-coin"></i>
+            Moyenne mensuelle: 20,763 TND
+          </span>
+        </div>
+        <div class="chart-container">
+          @if (revenueTrendResource.isLoading()) {
+            <div class="chart-loading">
+              <div class="spinner"></div>
+            </div>
+          } @else if (revenueTrend().length === 0) {
+            <div class="chart-empty">
+              <i class="bi bi-graph-up"></i>
+              <p>Aucune donnée disponible</p>
+            </div>
+          } @else {
+            <div class="bar-chart revenue-chart">
+              @for (data of revenueTrend(); track trackByMonth($index, data)) {
+                <div class="bar-group">
+                  <div
+                    class="bar bar-revenue"
+                    [style.height.%]="(data.amount / 25000) * 100"
+                    [title]="formatCurrency(data.amount)"
+                  >
+                    <span class="bar-value">{{ (data.amount / 1000).toFixed(1) }}k</span>
+                  </div>
+                  <span class="bar-label">{{ data.month }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @placeholder {
+    <div class="charts-section">
+      <div class="chart-card-skeleton"></div>
+      <div class="chart-card-skeleton"></div>
+      <div class="chart-card-skeleton"></div>
+    </div>
+  } @loading (minimum 1000ms) {
+    <div class="charts-section">
+      <div class="chart-card-skeleton shimmer"></div>
+      <div class="chart-card-skeleton shimmer"></div>
+      <div class="chart-card-skeleton shimmer"></div>
+    </div>
+  }
+
+  <!-- ✅ DEFER: Section Clubs et Activités - Chargé quand visible -->
+  @defer (on viewport; prefetch on idle) {
+    <div class="main-content-grid">
+      <!-- Clubs les plus actifs -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Clubs les plus actifs</h3>
+          <a routerLink="/admin/clubs" class="card-action">
+            Voir tout <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+        @if (topClubsResource.isLoading()) {
+          <div class="card-loading">
             <div class="spinner"></div>
+            <p>Chargement...</p>
           </div>
-        } @else if (membershipTrend().length === 0) {
-          <div class="chart-empty">
-            <i class="bi bi-graph-up"></i>
-            <p>Aucune donnée disponible</p>
+        } @else if (topClubs().length === 0) {
+          <div class="card-empty">
+            <i class="bi bi-building"></i>
+            <p>Aucun club disponible</p>
           </div>
         } @else {
-          <div class="line-chart">
-            @for (data of membershipTrend(); track data.month) {
-              <div class="chart-point-group">
-                <div class="chart-point-wrapper">
-                  <div
-                    class="chart-point"
-                    [style.height.%]="(data.count / 2000) * 100"
-                    [title]="data.count + ' membres'"
-                  >
-                    <span class="point-value">{{ data.count }}</span>
+          <div class="clubs-list">
+            @for (club of topClubs(); track trackByClubId($index, club)) {
+              <div class="club-item">
+                <img [src]="club.logo" [alt]="club.name" class="club-logo" />
+                <div class="club-info">
+                  <h4>{{ club.name }}</h4>
+                  <div class="club-stats">
+                    <span>
+                      <i class="bi bi-people"></i>
+                      {{ club.members }} membres
+                    </span>
+                    <span>
+                      <i class="bi bi-calendar-event"></i>
+                      {{ club.events }} événements
+                    </span>
                   </div>
                 </div>
-                <span class="chart-label">{{ data.month }}</span>
+                <div class="club-metrics">
+                  <div class="club-revenue">{{ formatCurrency(club.revenue) }}</div>
+                  <div class="club-growth positive">
+                    <i class="bi bi-arrow-up"></i>
+                    {{ club.growth }}
+                  </div>
+                </div>
               </div>
             }
           </div>
         }
       </div>
-    </div>
 
-    <!-- Événements par mois -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>Événements par mois</h3>
-        <span class="chart-info">
-          <i class="bi bi-calendar-check"></i>
-          {{ globalStats().upcomingEvents }} événements prévus
-        </span>
-      </div>
-      <div class="chart-container">
-        @if (eventsTrendResource.isLoading()) {
-          <div class="chart-loading">
+      <!-- Activités récentes -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Activités récentes</h3>
+          <button class="card-action-btn" (click)="refreshData()">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+        @if (activitiesResource.isLoading()) {
+          <div class="card-loading">
             <div class="spinner"></div>
+            <p>Chargement...</p>
           </div>
-        } @else if (eventsTrend().length === 0) {
-          <div class="chart-empty">
-            <i class="bi bi-graph-up"></i>
-            <p>Aucune donnée disponible</p>
+        } @else if (recentActivities().length === 0) {
+          <div class="card-empty">
+            <i class="bi bi-clock-history"></i>
+            <p>Aucune activité récente</p>
           </div>
         } @else {
-          <div class="bar-chart">
-            @for (data of eventsTrend(); track data.month) {
-              <div class="bar-group">
-                <div
-                  class="bar"
-                  [style.height.%]="(data.count / 35) * 100"
-                  [title]="data.count + ' événements'"
-                >
-                  <span class="bar-value">{{ data.count }}</span>
+          <div class="activities-list">
+            @for (activity of recentActivities(); track trackByActivityId($index, activity)) {
+              <div class="activity-item">
+                <div [class]="getActivityIconClass(activity.color)">
+                  <i [class]="activity.icon"></i>
                 </div>
-                <span class="bar-label">{{ data.month }}</span>
+                <div class="activity-content">
+                  <h5>{{ activity.title }}</h5>
+                  <p>{{ activity.description }}</p>
+                  <div class="activity-meta">
+                    <span class="activity-user">
+                      <i class="bi bi-person"></i>
+                      {{ activity.user }}
+                    </span>
+                    <span class="activity-time">
+                      <i class="bi bi-clock"></i>
+                      {{ formatTimeAgo(activity.timestamp) }}
+                    </span>
+                  </div>
+                </div>
               </div>
             }
           </div>
         }
       </div>
     </div>
-
-    <!-- Revenus mensuels -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>Revenus mensuels</h3>
-        <span class="chart-info">
-          <i class="bi bi-cash-coin"></i>
-          Moyenne mensuelle: 20,763 TND
-        </span>
-      </div>
-      <div class="chart-container">
-        @if (revenueTrendResource.isLoading()) {
-          <div class="chart-loading">
-            <div class="spinner"></div>
-          </div>
-        } @else if (revenueTrend().length === 0) {
-          <div class="chart-empty">
-            <i class="bi bi-graph-up"></i>
-            <p>Aucune donnée disponible</p>
-          </div>
-        } @else {
-          <div class="bar-chart revenue-chart">
-            @for (data of revenueTrend(); track data.month) {
-              <div class="bar-group">
-                <div
-                  class="bar bar-revenue"
-                  [style.height.%]="(data.amount / 25000) * 100"
-                  [title]="formatCurrency(data.amount)"
-                >
-                  <span class="bar-value">{{ (data.amount / 1000).toFixed(1) }}k</span>
-                </div>
-                <span class="bar-label">{{ data.month }}</span>
-              </div>
-            }
-          </div>
-        }
-      </div>
+  } @placeholder {
+    <div class="main-content-grid">
+      <div class="content-card-skeleton"></div>
+      <div class="content-card-skeleton"></div>
     </div>
-  </div>
+  } @loading (minimum 500ms) {
+    <div class="main-content-grid">
+      <div class="content-card-skeleton shimmer"></div>
+      <div class="content-card-skeleton shimmer"></div>
+    </div>
+  }
 
-  <!-- Section principale avec deux colonnes -->
-  <div class="main-content-grid">
-    <!-- Clubs les plus actifs -->
-    <div class="content-card">
-      <div class="card-header">
-        <h3>Clubs les plus actifs</h3>
-        <a routerLink="/admin/clubs" class="card-action">
-          Voir tout <i class="bi bi-arrow-right"></i>
-        </a>
+  <!-- ✅ DEFER: Distribution par catégorie - Chargé quand visible (bas de page) -->
+  @defer (on viewport; prefetch on idle) {
+    <div class="categories-section">
+      <div class="section-header">
+        <h3>Distribution des clubs par catégorie</h3>
+        <p>Répartition des {{ globalStats().totalClubs }} clubs enregistrés</p>
       </div>
-      @if (topClubsResource.isLoading()) {
-        <div class="card-loading">
+      @if (clubsByCategoryResource.isLoading()) {
+        <div class="section-loading">
           <div class="spinner"></div>
           <p>Chargement...</p>
         </div>
-      } @else if (topClubs().length === 0) {
-        <div class="card-empty">
-          <i class="bi bi-building"></i>
-          <p>Aucun club disponible</p>
+      } @else if (clubsByCategory().length === 0) {
+        <div class="section-empty">
+          <i class="bi bi-pie-chart"></i>
+          <p>Aucune donnée disponible</p>
         </div>
       } @else {
-        <div class="clubs-list">
-          @for (club of topClubs(); track club.id) {
-            <div class="club-item">
-              <img [src]="club.logo" [alt]="club.name" class="club-logo" />
-              <div class="club-info">
-                <h4>{{ club.name }}</h4>
-                <div class="club-stats">
-                  <span>
-                    <i class="bi bi-people"></i>
-                    {{ club.members }} membres
-                  </span>
-                  <span>
-                    <i class="bi bi-calendar-event"></i>
-                    {{ club.events }} événements
-                  </span>
-                </div>
+        <div class="categories-grid">
+          @for (category of clubsByCategory(); track trackByCategory($index, category)) {
+            <div class="category-card">
+              <div class="category-header">
+                <h4>{{ category.category }}</h4>
+                <span class="category-count">{{ category.count }} clubs</span>
               </div>
-              <div class="club-metrics">
-                <div class="club-revenue">{{ formatCurrency(club.revenue) }}</div>
-                <div class="club-growth positive">
-                  <i class="bi bi-arrow-up"></i>
-                  {{ club.growth }}
-                </div>
+              <div class="category-progress">
+                <div class="progress-bar" [style.width.%]="category.percentage"></div>
               </div>
+              <div class="category-percentage">{{ category.percentage }}%</div>
             </div>
           }
         </div>
       }
     </div>
-
-    <!-- Activités récentes -->
-    <div class="content-card">
-      <div class="card-header">
-        <h3>Activités récentes</h3>
-        <button class="card-action-btn" (click)="refreshData()">
-          <i class="bi bi-arrow-clockwise"></i>
-        </button>
-      </div>
-      @if (activitiesResource.isLoading()) {
-        <div class="card-loading">
-          <div class="spinner"></div>
-          <p>Chargement...</p>
-        </div>
-      } @else if (recentActivities().length === 0) {
-        <div class="card-empty">
-          <i class="bi bi-clock-history"></i>
-          <p>Aucune activité récente</p>
-        </div>
-      } @else {
-        <div class="activities-list">
-          @for (activity of recentActivities(); track activity.id) {
-            <div class="activity-item">
-              <div [class]="getActivityIconClass(activity.color)">
-                <i [class]="activity.icon"></i>
-              </div>
-              <div class="activity-content">
-                <h5>{{ activity.title }}</h5>
-                <p>{{ activity.description }}</p>
-                <div class="activity-meta">
-                  <span class="activity-user">
-                    <i class="bi bi-person"></i>
-                    {{ activity.user }}
-                  </span>
-                  <span class="activity-time">
-                    <i class="bi bi-clock"></i>
-                    {{ formatTimeAgo(activity.timestamp) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  </div>
-
-  <!-- Distribution des clubs par catégorie -->
-  <div class="categories-section">
-    <div class="section-header">
-      <h3>Distribution des clubs par catégorie</h3>
-      <p>Répartition des {{ globalStats().totalClubs }} clubs enregistrés</p>
-    </div>
-    @if (clubsByCategoryResource.isLoading()) {
-      <div class="section-loading">
-        <div class="spinner"></div>
+  } @placeholder {
+    <div class="categories-section">
+      <div class="section-header">
+        <h3>Distribution des clubs par catégorie</h3>
         <p>Chargement...</p>
       </div>
-    } @else if (clubsByCategory().length === 0) {
-      <div class="section-empty">
-        <i class="bi bi-pie-chart"></i>
-        <p>Aucune donnée disponible</p>
-      </div>
-    } @else {
-      <div class="categories-grid">
-        @for (category of clubsByCategory(); track category.category) {
-          <div class="category-card">
-            <div class="category-header">
-              <h4>{{ category.category }}</h4>
-              <span class="category-count">{{ category.count }} clubs</span>
-            </div>
-            <div class="category-progress">
-              <div
-                class="progress-bar"
-                [style.width.%]="category.percentage"
-              ></div>
-            </div>
-            <div class="category-percentage">{{ category.percentage }}%</div>
-          </div>
-        }
-      </div>
-    }
-  </div>
-
-  <!-- Actions rapides -->
-  <!--
-  <div class="quick-actions-section">
-    <h3>Actions rapides</h3>
-    <div class="quick-actions-grid">
-      <a routerLink="/admin/clubs/new" class="quick-action-card">
-        <div class="action-icon primary">
-          <i class="bi bi-plus-circle"></i>
-        </div>
-        <h4>Ajouter un club</h4>
-        <p>Créer un nouveau club</p>
-      </a>
-      <a routerLink="/admin/clubs?filter=pending" class="quick-action-card">
-        <div class="action-icon warning">
-          <i class="bi bi-hourglass-split"></i>
-        </div>
-        <h4>Validations en attente</h4>
-        <p>{{ globalStats().pendingApprovals }} demandes</p>
-      </a>
-
-
-      <a routerLink="/admin/users" class="quick-action-card">
-        <div class="action-icon info">
-          <i class="bi bi-people"></i>
-        </div>
-        <h4>Gérer les utilisateurs</h4>
-        <p>Administration des comptes</p>
-      </a>
-
-      <a routerLink="/admin/settings" class="quick-action-card">
-        <div class="action-icon secondary">
-          <i class="bi bi-gear"></i>
-        </div>
-        <h4>Paramètres</h4>
-        <p>Configuration système</p>
-      </a>
+      <div class="categories-grid-skeleton"></div>
     </div>
-  </div>
-  -->
+  } @loading (minimum 5000ms) {
+    <div class="categories-section">
+      <div class="section-header">
+        <h3>Distribution des clubs par catégorie</h3>
+        <p>Chargement...</p>
+      </div>
+      <div class="categories-grid-skeleton shimmer"></div>
+    </div>
+  }
 </div>
