@@ -11,40 +11,7 @@
 
 
     @if (user()) {
-    <!-- Notifications Dropdown -->
-    <div class="dropdown-wrapper">
-      <button class="btn-icon" (click)="toggleNotifications()" title="Notifications">
-        <i class="bi bi-bell"></i>
-        <span *ngIf="unreadCount() > 0" class="notification-badge">{{ unreadCount() }}</span>
-      </button>
 
-      <div class="dropdown-menu" [class.show]="showNotifications()">
-        <div class="dropdown-header">
-          <h6>Notifications</h6>
-          <button class="btn-text" (click)="markAllAsRead()">Mark all read</button>
-        </div>
-
-        <div class="notifications-list">
-          <div *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read"
-            (click)="markAsRead(notification)">
-            <div class="notification-icon" [ngClass]="'type-' + notification.type">
-              <i class="bi" [ngClass]="notification.icon"></i>
-            </div>
-            <div class="notification-content">
-              <h6>{{ notification.title }}</h6>
-              <p>{{ notification.message }}</p>
-              <span class="time">{{ notification.time }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="dropdown-footer">
-          <a href="#" class="view-all">View All Notifications →</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- User Profile Dropdown -->
     <div class="dropdown-wrapper">
       <button class="user-profile" (click)="toggleUserMenu()">
         <img [src]="user()?.image | defaultImage:'user'" alt="User" class="user-avatar">

@@ -83,6 +83,7 @@ export const routes: Routes = [
         path: 'admin/clubs',  // ← NOUVELLE ROUTE
         loadComponent: () => import('./features/admin/manage-club/manage-club').then(m => m.ManageClubsComponent),
         title: 'Gestion des clubs'
+
       },
       {
         path: 'join-club/:clubId',

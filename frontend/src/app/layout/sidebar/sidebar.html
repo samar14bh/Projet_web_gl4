@@ -24,7 +24,7 @@
       </li>
     </ul>
   </div>
-
+  @if (isLoggedIn() && !isAdmin()) {
   <div class="nav-section">
     <div class="nav-section-title">Mon Espace</div>
     <ul class="nav-list">
@@ -44,6 +44,12 @@
         <a routerLink="/my-applications" routerLinkActive="active" class="nav-link">
           <i class="bi bi-file-earmark-text"></i>
           <span class="nav-label">Mes candidatures</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/my-payments" routerLinkActive="active" class="nav-link">
+          <i class="bi bi-credit-card"></i>
+          <span class="nav-label">Mes paiements</span>
         </a>
       </li>
     </ul>
@@ -88,42 +94,8 @@
     </ul>
   </div>
 
-  <div class="nav-section">
-    <div class="nav-section-title">Gestion du Club</div>
-    <ul class="nav-list">
-      <li class="nav-item">
-        <a routerLink="/events" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-calendar-event"></i>
-          <span class="nav-label">Événements</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/finances" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-cash-coin"></i>
-          <span class="nav-label">Finances</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/my-payments" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-credit-card"></i>
-          <span class="nav-label">Mes paiements</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/members" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-people"></i>
-          <span class="nav-label">Membres</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a routerLink="/documents" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-folder"></i>
-          <span class="nav-label">Documents</span>
-        </a>
-      </li>
-    </ul>
-  </div>
-
+  }
+  @if(isAdmin() && isLoggedIn()){
   <div class="nav-section">
     <div class="nav-section-title">Administration</div>
     <ul class="nav-list">
@@ -139,16 +111,11 @@
           <span class="nav-label">Manage Clubs</span>
         </a>
       </li>
-      <li class="nav-item">
-        <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">
-          <i class="bi bi-person-gear"></i>
-          <span class="nav-label">Utilisateurs</span>
-        </a>
-      </li>
+
     </ul>
   </div>
 
-
+  }
   <div class="nav-section">
     <ul class="nav-list">
       @if (!isAdmin() && isLoggedIn()) {

@@ -27,6 +27,7 @@ export class SidebarComponent {
   private router = inject(Router);
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
+
   isAdmin = computed(() => this.authService.isAdmin());
   specialClubs = this.membershipService.specialMembershipsResource;
   onMenuItemClick(item: MenuItem): void {
