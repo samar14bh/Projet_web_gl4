@@ -39,7 +39,7 @@
 ### 🎯 Objectifs
 
 - **Centralisation** : Toutes les activités des clubs sur une seule plateforme
-- **Automatisation** : QR codes, notifications temps réel, rapports automatiques
+- **Automatisation** :  notifications temps réel, rapports automatiques
 - **Transparence** : Suivi financier et statistiques détaillées
 - **Engagement** : Interface moderne et intuitive pour les étudiants
 
@@ -99,15 +99,8 @@
 - Événements publics ou réservés aux membres
 - Suivi en temps réel des places disponibles
 
-**QR Code Automatique :**
-- Génération instantanée d'un QR code unique pour chaque événement
-- Scan du QR code pour validation de présence le jour J
-- Évite les listes papier et les erreurs manuelles
-- Statistiques de présence précises
-
 **Inscriptions :**
 - Inscription en ligne simple et rapide
-- Email de confirmation avec QR code personnel
 - Rappel automatique 24h avant l'événement
 - Liste des participants exportable (PDF/Excel)
 - Dashboard avec taux de présence et statistiques
@@ -203,7 +196,7 @@
 **Emails transactionnels avec templates professionnels :**
 - **Vérification de compte** : Lien de vérification unique (24h)
 - **Bienvenue** : Message de bienvenue personnalisé lors de l'approbation
-- **Confirmation d'événement** : Détails + QR code personnel
+- **Confirmation d'événement** : Détails 
 - **Rappels** : Notification 24h avant l'événement
 - **Candidatures** : Notification de décision (approuvée/rejetée)
 - **Paiements** : Confirmation de transaction
@@ -273,11 +266,7 @@
 
 ### Création d'Événement
 ![Create Event](docs/screenshots/create-event.png)
-*Formulaire d'événement avec génération automatique de QR code*
-
-### QR Code d'Événement
-![QR Code](docs/screenshots/qr-code.png)
-*QR code unique pour chaque événement*
+*Formulaire d'événement 
 
 ### Liste des Candidatures
 ![Applications](docs/screenshots/applications.png)
@@ -515,7 +504,6 @@ POST   /events                 # Créer un événement
 PATCH  /events/:id             # Modifier un événement
 DELETE /events/:id             # Supprimer un événement
 POST   /events/:id/register    # S'inscrire
-GET    /events/:id/qr-code     # QR code
 ```
 
 ### Memberships Endpoints
