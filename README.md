@@ -564,28 +564,24 @@ Authorization: Bearer <access_token>
       <br />
       <sub><b>Oussema Guerami</b></sub>
       <br />
-      <sub>Full Stack Developer</sub>
     </td>
     <td align="center">
       <img src="https://ui-avatars.com/api/?name=Hiba+Chabbouh&background=ef4444&color=fff&size=100" width="100px;" alt="Hiba Chabbouh"/>
       <br />
       <sub><b>Hiba Chabbouh</b></sub>
       <br />
-      <sub>Frontend Developer</sub>
     </td>
     <td align="center">
       <img src="https://ui-avatars.com/api/?name=Eya+Ben+Ameur&background=22c55e&color=fff&size=100" width="100px;" alt="Eya Ben Ameur"/>
       <br />
       <sub><b>Eya Ben Ameur</b></sub>
       <br />
-      <sub>Backend Developer</sub>
     </td>
     <td align="center">
       <img src="https://ui-avatars.com/api/?name=Samar+Benhouidi&background=f59e0b&color=fff&size=100" width="100px;" alt="Samar Benhouidi"/>
       <br />
       <sub><b>Samar Benhouidi</b></sub>
       <br />
-      <sub>Full Stack Developer</sub>
     </td>
   </tr>
 </table>
