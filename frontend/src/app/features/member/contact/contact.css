@@ -265,8 +265,26 @@
 
 .success-view p {
     margin: 0;
-    color: #64748b;
-    font-size: 1rem;
-    max-width: 300px;
     line-height: 1.6;
+}
+
+/* Error Field Styles */
+.field-error {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #dc3545;
+    margin-left: 0.5rem;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

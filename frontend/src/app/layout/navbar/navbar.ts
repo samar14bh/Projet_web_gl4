@@ -1,4 +1,4 @@
-import {Component, computed, effect, EventEmitter, inject, output, Output, signal} from '@angular/core';
+import { Component, computed, effect, EventEmitter, inject, output, Output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
@@ -19,7 +19,8 @@ interface Notification {
   standalone: true,
   imports: [CommonModule, DefaultImagePipe, RouterModule],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.css'
+  styleUrl: './navbar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent {
 

@@ -1,5 +1,4 @@
 <div class="application-list-container">
-  <!-- Header -->
   <div class="application-header">
     <span>Club</span>
     <span>Date</span>
@@ -7,7 +6,6 @@
     <span></span>
   </div>
 
-  <!-- List Content -->
   <div class="application-list-content">
     @for (app of applications(); track app.id) {
     <app-application-item [application]="app" (viewDetails)="onViewDetails($event)" />

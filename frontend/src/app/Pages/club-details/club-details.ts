@@ -1,4 +1,4 @@
-import { Component, inject, input, resource, signal } from '@angular/core';
+import { Component, inject, input, resource, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClubService } from '../../Core/services/club.service';
 import { EventService } from '../../Core/services/event.service';
@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { Contact } from '../../features/member/contact/contact';
 import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
 import { AuthService } from '../../Core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-club-details',
@@ -18,13 +19,14 @@ import { AuthService } from '../../Core/services/auth.service';
   imports: [CommonModule, RouterModule, Loader, AppError, DefaultImagePipe, UserEventsCard, FormsModule, Contact, ConfirmModal],
   templateUrl: './club-details.html',
   styleUrl: './club-details.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClubDetails {
 
   private readonly clubService = inject(ClubService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
-  private readonly USER_ID = inject(AuthService).currentUser()?.id ?? 0;
+  private readonly authService = inject(AuthService);
 
   errorMessage = signal<string>('');
 
@@ -39,11 +41,11 @@ export class ClubDetails {
 
   readonly membershipResource = resource({
     params: () => ({
-      userId: this.USER_ID,
+      userId: this.authService.currentUser()?.id ?? 0,
       clubId: this.clubId()
     }),
     loader: async ({ params }) => {
-      return (await this.clubService.getClubMembershipDetails(params.clubId, Number(params.userId)).toPromise());
+      return (await firstValueFrom(this.clubService.getClubMembershipDetails(params.clubId, Number(params.userId))));
     }
   });
 
@@ -52,7 +54,7 @@ export class ClubDetails {
       const id = this.clubId();
       if (!this.eventsVisible() || !id) return null;
       return {
-        userId: this.USER_ID,
+        userId: this.authService.currentUser()?.id ?? 0,
         clubId: id
       };
     },
@@ -64,7 +66,7 @@ export class ClubDetails {
         startDateFrom: new Date().toISOString()
       };
 
-      return (await this.eventService.getEventsDiscovery(Number(params.userId), filters).toPromise());
+      return (await firstValueFrom(this.eventService.getEventsDiscovery(Number(params.userId), filters)));
     }
   });
 
@@ -80,7 +82,7 @@ export class ClubDetails {
 
   confirmLeaveClub() {
     this.showLeaveModal.set(false);
-    this.clubService.leaveClub(this.clubId(), Number(this.USER_ID)).subscribe({
+    this.clubService.leaveClub(this.clubId(), Number(this.authService.currentUser()?.id)).subscribe({
       next: () => {
         this.router.navigate(['/my-clubs']);
       },

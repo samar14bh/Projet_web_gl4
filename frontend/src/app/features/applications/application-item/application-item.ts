@@ -1,4 +1,4 @@
-import { Component, Input, input, output, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ApplicationResponseDto } from '../../../Core/dtos/application/application-response.dto';
 import { DatePipe } from '@angular/common';
 
@@ -9,6 +9,7 @@ import { DatePipe } from '@angular/common';
   ],
   templateUrl: './application-item.html',
   styleUrl: './application-item.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ApplicationItem {
   application = input.required<ApplicationResponseDto>();

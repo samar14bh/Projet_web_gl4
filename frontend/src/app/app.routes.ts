@@ -227,20 +227,20 @@ export const routes: Routes = [
         data: { clubRoles: [UserRoleInClub.PRESIDENT, UserRoleInClub.SECRETARY] }
       }
       ,
-       {
-    path: 'profile',
-     loadComponent: () => import('./Pages/profile/profile').then(m => m.ProfileComponent),
-     canActivate: [roleGuard],
+      {
+        path: 'profile',
+        loadComponent: () => import('./Pages/profile/profile').then(m => m.ProfileComponent),
+        canActivate: [roleGuard],
         data: { role: 'USER' },
-         title: 'Profile'
-  },
-   {
-    path: 'settings',
-     loadComponent: () => import('./Pages/profile-settings/profile-settings').then(m => m.ProfileSettings),
-     canActivate: [roleGuard],
+        title: 'Profile'
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./Pages/profile-settings/profile-settings').then(m => m.ProfileSettings),
+        canActivate: [roleGuard],
         data: { role: 'USER' },
-         title: 'Paramètres'
-  },
+        title: 'Paramètres'
+      },
       {
         path: '**',
         component: PageNotFound,

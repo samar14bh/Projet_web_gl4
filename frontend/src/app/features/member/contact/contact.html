@@ -29,7 +29,10 @@
       <div class="input-wrapper">
         <i class="bi bi-card-text"></i>
         <input type="text" id="subject" ngModel name="subject" placeholder="L'objet de votre message" required
-          [disabled]="isSending()">
+          [disabled]="isSending()" #subject="ngModel">
+      </div>
+      <div *ngIf="subject.invalid && (subject.dirty || subject.touched)" class="field-error">
+        <small *ngIf="subject.errors?.['required']">Le sujet est requis.</small>
       </div>
     </div>
 
@@ -38,7 +41,13 @@
       <div class="input-wrapper textarea-wrapper">
         <i class="bi bi-envelope-open"></i>
         <textarea id="message" ngModel name="message" placeholder="Comment pouvons-nous vous aider ?" required
-          minlength="10" rows="5" [disabled]="isSending()"></textarea>
+          minlength="10" rows="5" [disabled]="isSending()" #message="ngModel"></textarea>
+      </div>
+      <div *ngIf="message.invalid && (message.dirty || message.touched)" class="field-error">
+        <small *ngIf="message.errors?.['required']">Le message est requis.</small>
+        <small *ngIf="message.errors?.['minlength']">
+          Le message doit contenir au moins 10 caractères.
+        </small>
       </div>
     </div>
 

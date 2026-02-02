@@ -1,4 +1,4 @@
-import {Component, inject, computed, signal, input} from '@angular/core';
+import { Component, inject, computed, signal, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
@@ -19,7 +19,8 @@ interface MenuItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css'
+  styleUrl: './sidebar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent {
 

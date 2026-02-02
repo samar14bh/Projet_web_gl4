@@ -1,13 +1,13 @@
 <div class="event-details-page">
-    <div *ngIf="isLoading()" class="d-flex justify-content-center align-items-center loading-container">
+    <div *ngIf="eventResource.isLoading()" class="d-flex justify-content-center align-items-center loading-container">
         <app-loader message="loading event information"></app-loader>
     </div>
 
-    <div *ngIf="error()" class="container pt-5">
+    <div *ngIf="eventResource.error" class="container pt-5">
         <app-error [errorMessage]="'error loading event details please try again later!'"></app-error>
     </div>
 
-    <ng-container *ngIf="event() as e">
+    <ng-container *ngIf="eventResource.value() as e">
         <div class="hero-section">
             <div class="hero-bg" [style.backgroundImage]="'url(' + (e.coverImage | defaultImage:'event') + ')'"></div>
             <div class="container hero-content">
@@ -133,10 +133,10 @@
         </div>
     </ng-container>
 
-    <app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()" (payOnline)="navigateToPayment()">
+    <app-payment-modal *ngIf="showPaymentModal()" (close)="closePaymentModal()" (payOnline)="navigateToPayment()">
     </app-payment-modal>
 
-    <app-confirm-modal *ngIf="showConfirmModal" title="Annuler l'inscription"
+    <app-confirm-modal *ngIf="showConfirmModal()" title="Annuler l'inscription"
         message="Êtes-vous sûr de vouloir annuler votre inscription à cet événement ?"
         (confirm)="onConfirmCancellation()" (cancel)="closeConfirmModal()">
     </app-confirm-modal>
