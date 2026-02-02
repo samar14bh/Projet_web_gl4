@@ -7,7 +7,12 @@ import {
   output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { EventService } from '../../../../Core/services/event.service';
 import { CreateEventDto, UpdateEventDto } from '../../../../Core/models/event.model';
@@ -35,6 +40,7 @@ export class EventFormComponent {
 
   // ========== INPUTS/OUTPUTS ==========
   event = input<any | null>(null); // Événement à éditer (null = création)
+  clubId = input.required<number>(); // ✅ ClubId passé par le parent
   onSuccess = output<any>(); // Événement créé/modifié
   onCancel = output<void>(); // Annulation
 
@@ -66,8 +72,10 @@ export class EventFormComponent {
 
   // ========== COMPUTED ==========
   isEditMode = computed(() => this.event() !== null);
-  formTitle = computed(() => this.isEditMode() ? 'Modifier l\'événement' : 'Créer un événement');
-  submitButtonLabel = computed(() => this.isEditMode() ? 'Enregistrer' : 'Créer');
+  formTitle = computed(() =>
+    this.isEditMode() ? "Modifier l'événement" : 'Créer un événement',
+  );
+  submitButtonLabel = computed(() => (this.isEditMode() ? 'Enregistrer' : 'Créer'));
 
   // Upload d'image
   selectedCoverImage = signal<File | null>(null);
@@ -75,7 +83,7 @@ export class EventFormComponent {
   imageError = signal<string | null>(null);
 
   constructor() {
-    // Initialiser le formulaire
+    // ✅ Initialiser le formulaire SANS le champ clubId (sera ajouté automatiquement)
     this.eventForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
@@ -87,7 +95,6 @@ export class EventFormComponent {
       status: [EventStatus.UPCOMING, Validators.required],
       sPaid: [EventType.OTHER, Validators.required],
       subscriptionFees: [0, [Validators.required, Validators.min(0)]],
-      clubId: [1, Validators.required], // TODO: Récupérer le club de l'utilisateur connecté
     });
 
     // Si mode édition, pré-remplir le formulaire
@@ -96,7 +103,6 @@ export class EventFormComponent {
       if (event) {
         this.patchFormValues();
       } else {
-        // Mode création → réinitialiser tout
         this.resetForm();
       }
     });
@@ -109,9 +115,6 @@ export class EventFormComponent {
     const event = this.event();
     if (!event) return;
 
-    // Déterminer le clubId
-    const clubId = event.club?.id || event.clubId || 1;
-
     this.eventForm.patchValue({
       title: event.title,
       description: event.description,
@@ -123,7 +126,6 @@ export class EventFormComponent {
       status: event.status,
       sPaid: event.sPaid,
       subscriptionFees: event.subscriptionFees,
-      clubId: clubId,  // ← Utilisez la variable
     });
 
     // Charger l'image existante
@@ -134,16 +136,11 @@ export class EventFormComponent {
       this.coverImagePreview.set(imageUrl);
     }
 
-    // Debug - À SUPPRIMER APRÈS
-    console.log('clubId assigné:', clubId);
-    console.log('event.club:', event.club);
-    console.log('event:', event);
-
-    // Marquer le formulaire comme valide et non modifié
     this.eventForm.markAsPristine();
     this.eventForm.markAsUntouched();
     this.eventForm.updateValueAndValidity();
   }
+
   /**
    * Gérer la sélection de l'image
    */
@@ -211,9 +208,6 @@ export class EventFormComponent {
   /**
    * Soumettre le formulaire
    */
-  /**
-   * Soumettre le formulaire
-   */
   async onSubmit() {
     if (this.eventForm.invalid) {
       this.eventForm.markAllAsTouched();
@@ -238,31 +232,35 @@ export class EventFormComponent {
       formData.append('status', formValue.status);
       formData.append('sPaid', formValue.sPaid);
       formData.append('subscriptionFees', formValue.subscriptionFees.toString());
-      formData.append('clubId', formValue.clubId.toString());
+      formData.append('clubId', this.clubId().toString()); // ✅ Utiliser le clubId passé en input
 
       // Ajouter l'image si sélectionnée
       if (this.selectedCoverImage()) {
-        formData.append('coverImage', this.selectedCoverImage()!, this.selectedCoverImage()!.name);
+        formData.append(
+          'coverImage',
+          this.selectedCoverImage()!,
+          this.selectedCoverImage()!.name,
+        );
       }
 
       let result;
       if (this.isEditMode()) {
         // Mode édition
         result = await lastValueFrom(
-          this.eventService.updateEventWithFile(this.event()!.id, formData)
+          this.eventService.updateEventWithFile(this.event()!.id, formData),
         );
       } else {
         // Mode création
-        result = await lastValueFrom(
-          this.eventService.createEventWithFile(formData)
-        );
+        result = await lastValueFrom(this.eventService.createEventWithFile(formData));
       }
 
       this.isSubmitting.set(false);
       this.onSuccess.emit(result);
     } catch (error: any) {
       this.isSubmitting.set(false);
-      this.submitError.set(error?.error?.message || 'Erreur lors de la sauvegarde');
+      this.submitError.set(
+        error?.error?.message || 'Erreur lors de la sauvegarde',
+      );
       console.error('Erreur:', error);
     }
   }
@@ -290,11 +288,13 @@ export class EventFormComponent {
     if (!field || !field.errors) return '';
 
     if (field.errors['required']) return 'Ce champ est requis';
-    if (field.errors['minlength']) return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
+    if (field.errors['minlength'])
+      return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
     if (field.errors['min']) return `Valeur minimum: ${field.errors['min'].min}`;
 
     return 'Erreur de validation';
   }
+
   /**
    * Obtenir l'URL complète d'une image
    */
@@ -302,15 +302,12 @@ export class EventFormComponent {
     if (!path) {
       return 'https://via.placeholder.com/400x200?text=No+Image';
     }
-
-    // Si le chemin commence déjà par http, le retourner tel quel
     if (path.startsWith('http')) {
       return path;
     }
-
-    // Sinon, ajouter l'URL du backend
     return `${environment.uploadsUrl}${path}`;
   }
+
   /**
    * Réinitialiser le formulaire
    */
@@ -326,10 +323,8 @@ export class EventFormComponent {
       status: EventStatus.UPCOMING,
       sPaid: EventType.OTHER,
       subscriptionFees: 0,
-      clubId: 1,
     });
 
-    // Réinitialiser les signals d'image
     this.selectedCoverImage.set(null);
     this.coverImagePreview.set(null);
     this.imageError.set(null);

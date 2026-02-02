@@ -1,14 +1,23 @@
-import { Component, signal, computed, OnInit, inject, effect, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  OnInit,
+  inject,
+  effect,
+  ChangeDetectionStrategy,
+  untracked
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { PaymentService } from '../../Core/services/payment.service';
 import { AuthService } from '../../Core/services/auth.service';
 import { PaymentStatsCardComponent } from '../../shared/components/payments/payment-stats/payment-stats-card';
-import { PaymentFilterTabsComponent } from '../../shared/components/payments/payment-filter-tabs/payment-filter-tabs';
 import { PaymentTableComponent } from '../../shared/components/payments/payment-table/payment-table';
 import { PaymentCardListComponent } from '../../shared/components/payments/payment-card-list/payment-card-list';
 import { CurrencyTndPipe } from '../../shared/pipes/currency-tnd.pipe';
 import { MyPaymentsState } from '../../shared/interfaces/payment.state';
+import { PaginationComponent } from '../../shared/components/pagination/pagination';
 
 
 /**
@@ -23,10 +32,10 @@ import { MyPaymentsState } from '../../shared/interfaces/payment.state';
     CommonModule,
     RouterModule,
     PaymentStatsCardComponent,
-    PaymentFilterTabsComponent,
     PaymentTableComponent,
     PaymentCardListComponent,
     CurrencyTndPipe,
+    PaginationComponent,
   ],
   templateUrl: './my-payments.html',
   styleUrl: './my-payments.css',
@@ -45,7 +54,10 @@ export class MyPaymentsComponent implements OnInit {
     downloading: false,
     payments: [],
     paymentStats: null,
-    filterStatus: null,
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: 10,
+    totalItems: 0
   });
 
   // COMPUTED - USER
@@ -56,18 +68,13 @@ export class MyPaymentsComponent implements OnInit {
   totalSpentThisYear = computed(() => this.state().paymentStats?.totalSpentThisYear || 0);
   stats = computed(() => this.state().paymentStats);
 
-  // COMPUTED - FILTERING
-  filteredPayments = computed(() => {
-    const { payments, filterStatus } = this.state();
-    if (!filterStatus) return payments;
-    return payments.filter(p => p.status === filterStatus);
-  });
+
 
   constructor() {
     effect(() => {
       const userId = this.currentUserId();
       if (userId) {
-        this.loadData();
+        untracked(() => this.loadData());
       }
     });
   }
@@ -80,27 +87,35 @@ export class MyPaymentsComponent implements OnInit {
   }
 
   /** Charger les données */
-  loadData() {
+  loadData(page = 1) {
     const userId = this.currentUserId();
     if (!userId) return;
 
     this.state.update(s => ({ ...s, loading: true, error: null }));
 
-    // Charger les statistiques
-    this.paymentService.getPaymentStats(userId).subscribe({
-      next: (stats) => {
-        this.state.update(s => ({ ...s, paymentStats: stats }));
-      },
-      error: (err) => {
-        console.error('Erreur chargement statistiques:', err);
-      }
-    });
+    // Charger les statistiques (on peut garder ça séparé ou le faire une seule fois)
+    if (page === 1) {
+      this.paymentService.getPaymentStats(userId).subscribe({
+        next: (stats) => {
+          this.state.update(s => ({ ...s, paymentStats: stats }));
+        },
+        error: (err) => {
+          console.error('Erreur chargement statistiques:', err);
+        }
+      });
+    }
 
-    // Charger l'historique
-    this.paymentService.getPaymentHistory(userId, { page: 1, limit: 50 }).subscribe({
-      next: (response) => {
-        const paymentsList = Array.isArray(response) ? response : (response.data || response);
-        this.state.update(s => ({ ...s, payments: paymentsList, loading: false }));
+    // Charger l'historique avec pagination
+    this.paymentService.getPaymentHistory(userId, { page, limit: this.state().pageSize }).subscribe({
+      next: (response: any) => {
+        this.state.update(s => ({
+          ...s,
+          payments: response.data || [],
+          currentPage: response.page || page,
+          totalPages: response.totalPages || 1,
+          totalItems: response.total || 0,
+          loading: false
+        }));
       },
       error: (err) => {
         console.error('Erreur chargement paiements:', err);
@@ -113,9 +128,11 @@ export class MyPaymentsComponent implements OnInit {
     });
   }
 
-  filterByStatus(status: string | null) {
-    this.state.update(s => ({ ...s, filterStatus: status }));
+  onPageChange(page: number) {
+    this.loadData(page);
   }
+
+
 
 
   downloadReceipt(paymentId: number) {

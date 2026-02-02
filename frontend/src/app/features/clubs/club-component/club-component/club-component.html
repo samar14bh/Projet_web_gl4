@@ -8,10 +8,7 @@
       <img [src]="club().logo" [alt]="club().name" class="club-logo" loading="lazy" />
       <div class="club-info">
         <h3 class="club-name">{{ club().name }}</h3>
-        <span class="club-category">
-          <i class="bi bi-tag"></i>
-          {{ club().categoryName }}
-        </span>
+        <span class="club-category"><i class="bi bi-tag"></i> {{ club().categoryName }}</span>
       </div>
     </div>
 
@@ -28,29 +25,24 @@
       </div>
       <div class="club-stat">
         <i class="bi bi-cash-coin"></i>
-        <span>{{ getMembershipLabel(club().membershipFeeAmount) }}</span>
+        <span>
+          @if (club().membershipFeeAmount === 0) { Gratuit } 
+          @else { {{ club().membershipFeeAmount | currencyTnd }} }
+        </span>
       </div>
     </div>
 
     <div class="club-meta">
       <span class="club-date">
         <i class="bi bi-calendar"></i>
-        Crée le {{ formatDate(club().creationDate) }}
+        Crée le {{ club().creationDate | formatDate }}
       </span>
     </div>
   </div>
 
   <div class="club-actions-user">
-    <app-button
-      label="Détails"
-      class="action-btn view"
-      (clicked)="onViewDetails()"
-      title="Voir les détails">
-    </app-button>
-
+    <app-button label="Détails" class="action-btn view" (clicked)="onViewDetails()" title="Voir les détails"></app-button>
     @if (showJoinButton()) {
-     
-    
         <app-button
           [label]="joinButtonLabel()"
           [variant]="joinButtonVariant()"
@@ -59,7 +51,6 @@
           (clicked)="onJoin()"
           [title]="joinButtonLabel()">
         </app-button>
-      
     }
   </div>
 </div>

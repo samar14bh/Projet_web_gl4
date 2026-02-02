@@ -11,6 +11,7 @@ import { DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { Error } from '../../../shared/components/error/error';
+import { NotificationService } from '../../../Core/services/notification.service';
 import { Loader } from '../../../shared/components/loader/loader';
 import { AuthService } from '../../../Core/services/auth.service';
 

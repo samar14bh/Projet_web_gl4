@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   ChangeDetectionStrategy,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +18,6 @@ import { EventFormComponent } from '../events/event-form/event-form';
 import { RegistrationsModalComponent } from '../events/registrations-modal/registrations-modal';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../Core/services/toast.service';
-
 
 @Component({
   selector: 'app-events-manager',
@@ -38,6 +38,11 @@ export class EventsManagerComponent {
   private readonly eventService = inject(EventService);
   private readonly toastService = inject(ToastService);
 
+  // ✅ CORRIGÉ : Utiliser input() avec transform
+  clubId = input<number, string | number>(0, {
+    transform: (val: string | number) => Number(val),
+  });
+
   readonly activeTab = signal<'upcoming' | 'past' | 'drafts'>('upcoming');
   readonly searchQuery = signal('');
   readonly selectedStatus = signal<EventStatus | 'all'>('all');
@@ -51,8 +56,7 @@ export class EventsManagerComponent {
   readonly isRegistrationsModalOpen = signal(false);
   readonly selectedEventForRegistrations = signal<Event | null>(null);
 
-
-  // Filtres combinés pour l'API
+  // Filtres combinés pour l'API (avec clubId)
   readonly filters = computed<EventFilters>(() => {
     const tab = this.activeTab();
     const filters: EventFilters = {
@@ -61,6 +65,7 @@ export class EventsManagerComponent {
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       order: this.sortOrder(),
+      clubId: this.clubId(),
     };
 
     // Filtrer par statut selon l'onglet
@@ -92,14 +97,10 @@ export class EventsManagerComponent {
 
   readonly EventStatus = EventStatus;
 
-
   readonly trackByEventId = (_index: number, event: Event) => event.id;
 
   // ========== MÉTHODES UTILITAIRES (PURES) ==========
 
-  /**
-   * Obtenir l'URL complète d'une image
-   */
   getImageUrl(path: string | null | undefined): string {
     if (!path) {
       return 'https://via.placeholder.com/400x200?text=No+Image';
@@ -107,12 +108,9 @@ export class EventsManagerComponent {
     if (path.startsWith('http')) {
       return path;
     }
-    return `${environment.apiUrl}${path}`;
+    return `${environment.uploadsUrl}${path}`;
   }
 
-  /**
-   * Formater une date
-   */
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -121,9 +119,6 @@ export class EventsManagerComponent {
     });
   }
 
-  /**
-   * Formater l'heure
-   */
   formatTime(date: Date): string {
     return new Date(date).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
@@ -131,9 +126,6 @@ export class EventsManagerComponent {
     });
   }
 
-  /**
-   * Obtenir le badge de statut
-   */
   getStatusBadgeClass(status: EventStatus): string {
     const classes: Record<EventStatus, string> = {
       [EventStatus.UPCOMING]: 'badge-info',
@@ -144,9 +136,6 @@ export class EventsManagerComponent {
     return classes[status] || 'badge-secondary';
   }
 
-  /**
-   * Obtenir le label du statut
-   */
   getStatusLabel(status: EventStatus): string {
     const labels: Record<EventStatus, string> = {
       [EventStatus.UPCOMING]: 'À venir',
@@ -157,33 +146,22 @@ export class EventsManagerComponent {
     return labels[status] || status;
   }
 
+  // ========== ACTIONS ==========
 
-  /**
-   * Recharger les événements manuellement
-   */
   reloadEvents(): void {
     this.eventsResource.reload();
   }
 
-  /**
-   * Changer d'onglet
-   */
   setActiveTab(tab: 'upcoming' | 'past' | 'drafts'): void {
     this.activeTab.set(tab);
     this.currentPage.set(1);
   }
 
-  /**
-   * Rechercher des événements
-   */
   onSearch(query: string): void {
     this.searchQuery.set(query);
     this.currentPage.set(1);
   }
 
-  /**
-   * Changer le tri
-   */
   changeSortBy(field: 'date' | 'title' | 'registrations'): void {
     if (this.sortBy() === field) {
       this.sortOrder.update((order) => (order === 'asc' ? 'desc' : 'asc'));
@@ -193,49 +171,31 @@ export class EventsManagerComponent {
     }
   }
 
-  /**
-   * Changer de page
-   */
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
     }
   }
 
-  /**
-   * Ouvrir le modal de création
-   */
   openCreateModal(): void {
     this.selectedEvent.set(null);
     this.isFormModalOpen.set(true);
   }
 
-  /**
-   * Ouvrir le modal d'édition
-   */
   openEditModal(event: Event): void {
     this.selectedEvent.set(event);
     this.isFormModalOpen.set(true);
   }
 
-  /**
-   * Fermer le modal de formulaire
-   */
   closeFormModal(): void {
     this.isFormModalOpen.set(false);
     this.selectedEvent.set(null);
   }
 
-  /**
-   * Annulation du formulaire
-   */
   onFormCancel(): void {
     this.closeFormModal();
   }
 
-  /**
-   * Succès de création/modification
-   */
   onFormSuccess(event: Event): void {
     const isEditMode = this.selectedEvent() !== null;
     this.closeFormModal();
@@ -247,9 +207,6 @@ export class EventsManagerComponent {
     this.toastService.success(message);
   }
 
-  /**
-   * Supprimer un événement
-   */
   deleteEvent(event: Event): void {
     const confirmed = confirm(
       `Êtes-vous sûr de vouloir supprimer l'événement "${event.title}" ?`,
@@ -273,9 +230,6 @@ export class EventsManagerComponent {
     });
   }
 
-  /**
-   * Dupliquer un événement
-   */
   duplicateEvent(event: Event): void {
     this.eventService.duplicateEvent(event.id).subscribe({
       next: (duplicatedEvent) => {
@@ -289,21 +243,13 @@ export class EventsManagerComponent {
     });
   }
 
-  /**
-   * Voir les inscrits
-   */
   viewRegistrations(event: Event): void {
     this.selectedEventForRegistrations.set(event);
     this.isRegistrationsModalOpen.set(true);
   }
 
-  /**
-   * Fermer le modal des inscriptions
-   */
   closeRegistrationsModal(): void {
     this.isRegistrationsModalOpen.set(false);
     this.selectedEventForRegistrations.set(null);
   }
-
-
 }

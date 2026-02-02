@@ -10,10 +10,13 @@ import { Event } from '../events/entities/event.entity';
 import { Registration } from '../events/entities/registration.entity';
 import { Application } from '../memberships/entities/application.entity';
 import { Payment } from './entities/payment.entity';
+import { User } from '../users/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment, Membership, Club, Event, Registration, Application]),
+    TypeOrmModule.forFeature([Payment, Membership, Club, Event, Registration, Application, User]),
+    NotificationsModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, ReceiptService, StripeService],

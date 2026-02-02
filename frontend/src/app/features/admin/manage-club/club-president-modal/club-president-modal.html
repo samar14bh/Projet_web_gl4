@@ -89,15 +89,15 @@
         </div>
       </div>
     </div>
-
-    <!-- Actions -->
-    <div class="modal-actions">
-      <app-button
-        label="Fermer"
-        variant="ghost"
-        (clicked)="close()"
-        [disabled]="isSubmitting()"
-      />
-    </div>
   }
+
+  <!-- Actions dans le footer du modal parent -->
+  <div modal-footer>
+    <app-button
+      label="Fermer"
+      variant="ghost"
+      (clicked)="close()"
+      [disabled]="isSubmitting()"
+    />
+  </div>
 </div>
