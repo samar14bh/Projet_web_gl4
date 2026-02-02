@@ -615,34 +615,7 @@ This project is licensed under the **MIT License**.
 
 **Repository:** [GitHub - ClubHub](https://github.com/your-username/clubhub)
 
----
 
-## 📝 How to Add Your Screenshots
-
-To add your screenshots, follow these simple steps:
-
-### Option 1: Using Imgur (Recommended)
-1. Go to https://imgur.com
-2. Click **"New post"**
-3. Upload your screenshot
-4. Right-click on the uploaded image → **"Copy image address"**
-5. Replace the example URL in the README
-
-### Option 2: Using GitHub Issues
-1. Go to your repository on GitHub
-2. Create a new Issue (you can close it later)
-3. Drag and drop your image into the comment box
-4. GitHub will generate a URL automatically
-5. Copy the URL and paste it in the README
-
-### Example:
-```markdown
-![Dashboard](https://i.imgur.com/abc123.png)
-```
-
-Replace `abc123` with your actual image ID from Imgur or the full GitHub URL.
-
----
 
 <div align="center">
 
