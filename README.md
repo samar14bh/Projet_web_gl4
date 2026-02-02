@@ -9,9 +9,9 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**La plateforme complète pour la gestion des clubs universitaires**
+**The Complete Platform for University Club Management**
 
-*Développé par une équipe de 4 développeurs passionnés* 🚀
+*Developed by a team of 4 passionate developers* 🚀
 
 [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Team](#-team)
 
@@ -34,255 +34,257 @@
 
 ## 🌟 Overview
 
-**ClubHub** est une plateforme web moderne qui centralise la gestion des clubs universitaires. Elle permet aux administrateurs de créer et gérer des clubs, aux présidents d'organiser des événements et de gérer leurs membres, et aux étudiants de découvrir et rejoindre facilement les clubs qui les intéressent.
+**ClubHub** is a modern web platform that centralizes university club management. It enables administrators to create and manage clubs, presidents to organize events and manage their members, and students to easily discover and join clubs that interest them.
 
-### 🎯 Objectifs
+### 🎯 Objectives
 
-- **Centralisation** : Toutes les activités des clubs sur une seule plateforme
-- **Automatisation** :  notifications temps réel, rapports automatiques
-- **Transparence** : Suivi financier et statistiques détaillées
-- **Engagement** : Interface moderne et intuitive pour les étudiants
+- **Centralization**: All club activities on a single platform
+- **Automation**: Real-time notifications, automatic reports
+- **Transparency**: Financial tracking and detailed statistics
+- **Engagement**: Modern and intuitive interface for students
 
 ---
 
 ## ✨ Features
 
-### 🔐 1. Authentification & Sécurité
+### 🔐 1. Authentication & Security
 
-**Système d'authentification robuste basé sur JWT :**
-- Inscription avec vérification email obligatoire
-- Connexion sécurisée avec tokens (Access Token 1h, Refresh Token 7j)
-- Mots de passe hashés avec bcrypt (10 salt rounds)
-- Système de rôles : Admin, President, RH, Member
-- Protection des routes selon les rôles
+**Robust JWT-based authentication system:**
+- Registration with mandatory email verification
+- Secure login with tokens (Access Token 1h, Refresh Token 7d)
+- Passwords hashed with bcrypt (10 salt rounds)
+- Role system: Admin, President, HR, Member
+- Route protection based on roles
 
-**Sécurité renforcée :**
-- Protection CSRF et XSS
-- Validation stricte des entrées (frontend + backend)
-- SQL Injection prevention avec TypeORM
-- Upload de fichiers sécurisé avec validation de type et taille
-
----
-
-### 🏢 2. Gestion des Clubs
-
-**Pour les Administrateurs :**
-- Création de clubs avec formulaire complet (nom, description, catégorie, cotisation)
-- Upload de logo et image de couverture (max 5MB)
-- Modification et suppression de clubs
-- Activation/Désactivation de clubs
-- Tableau de bord avec statistiques globales (total clubs, actifs, membres)
-- Filtres avancés par statut, catégorie, recherche textuelle
-- Tri personnalisable et pagination
-
-**Gestion des Présidents :**
-- Interface dédiée pour assigner un président à chaque club
-- Sélection parmi tous les utilisateurs de la plateforme
-- Changement de président en un clic
-- Suppression du président actuel possible
-- Mise à jour automatique des rôles dans la base de données
-
-**Catégories de Clubs :**
-- Technologie, Sport, Culture, Environnement, Social
-- Chaque catégorie avec icône et couleur distinctive
-- Filtrage rapide par catégorie
+**Enhanced Security:**
+- CSRF and XSS protection
+- Strict input validation (frontend + backend)
+- SQL Injection prevention with TypeORM
+- Secure file upload with type and size validation
 
 ---
 
-### 📅 3. Gestion des Événements
+### 🏢 2. Club Management
 
-**Création d'événements complète :**
-- Informations détaillées (titre, description, lieu, dates)
-- Définition de la capacité maximale
-- Date limite d'inscription
-- Upload d'image de couverture
-- Événements publics ou réservés aux membres
-- Suivi en temps réel des places disponibles
+**For Administrators:**
+- Club creation with complete form (name, description, category, membership fee)
+- Logo and cover image upload (max 5MB)
+- Club modification and deletion
+- Club activation/deactivation
+- Dashboard with global statistics (total clubs, active, members)
+- Advanced filters by status, category, text search
+- Customizable sorting and pagination
 
-**Inscriptions :**
-- Inscription en ligne simple et rapide
-- Rappel automatique 24h avant l'événement
-- Liste des participants exportable (PDF/Excel)
-- Dashboard avec taux de présence et statistiques
+**President Management:**
+- Dedicated interface to assign a president to each club
+- Selection from all platform users
+- One-click president change
+- Current president removal possible
+- Automatic role updates in the database
 
----
-
-### 💰 4. Gestion Financière
-
-**Enregistrement des Transactions :**
-- Deux types : Revenus (cotisations, sponsors, subventions) et Dépenses (équipement, location, déplacements)
-- Formulaire avec montant, description, catégorie, date
-- Upload de pièces justificatives (reçus, factures)
-- Historique complet de toutes les transactions
-
-**Rapports Financiers Automatiques :**
-- **Export PDF professionnel** avec :
-  - Résumé financier (revenus totaux, dépenses totales, solde)
-  - Graphiques (camembert revenus vs dépenses)
-  - Tableau détaillé des transactions
-  - Logo du club et période sélectionnée
-- **Export Excel** pour analyse approfondie
-- Graphiques interactifs avec Chart.js
-- Calcul automatique des totaux et moyennes
-
-**Tableaux de bord financiers :**
-- Vue d'ensemble des finances du club
-- Évolution du solde dans le temps
-- Répartition des dépenses par catégorie
-- KPI (Key Performance Indicators) visuels
+**Club Categories:**
+- Technology, Sport, Culture, Environment, Social
+- Each category with distinctive icon and color
+- Quick filtering by category
 
 ---
 
-### 🔔 5. Notifications en Temps Réel
+### 📅 3. Event Management
 
-**Système SSE (Server-Sent Events) :**
-- Notifications instantanées sans rechargement de page
-- Plus léger que WebSocket, reconnexion automatique
-- Badge avec nombre de notifications non lues
+**Complete Event Creation:**
+- Detailed information (title, description, location, dates)
+- Maximum capacity definition
+- Registration deadline
+- Cover image upload
+- Public or member-only events
+- Real-time tracking of available spots
 
-**Types de Notifications :**
-- **Événements** : Nouvel événement, rappel 24h avant, annulation
-- **Candidatures** : Nouvelle candidature (pour Président/RH), statut de candidature (pour étudiant)
-- **Paiements** : Confirmation de paiement, cotisation expirée
-- **Système** : Nouveau membre, changement de rôle, annonces importantes
-
-**Interface intuitive :**
-- Centre de notifications avec liste chronologique
-- Marquer comme lu individuellement ou tout d'un coup
-- Clic sur notification → redirection vers la page concernée
-- Son de notification (optionnel)
+**Registrations:**
+- Simple and fast online registration
+- Automatic reminder 24h before the event
+- Exportable participant list (PDF/Excel)
+- Dashboard with attendance rate and statistics
 
 ---
 
-### 📝 6. Système de Candidatures
+### 💰 4. Financial Management
 
-**Pour les Étudiants :**
-- Formulaire de candidature détaillé pour postuler à un club
-- Questions sur motivations, expériences, compétences, disponibilité
-- Suivi du statut de candidature (en attente, approuvée, rejetée)
-- Notifications automatiques des décisions
+**Transaction Recording:**
+- Two types: Revenue (fees, sponsors, grants) and Expenses (equipment, rental, travel)
+- Form with amount, description, category, date
+- Upload supporting documents (receipts, invoices)
+- Complete history of all transactions
 
-**Pour les Présidents/RH :**
-- Dashboard des candidatures en attente
-- Consultation détaillée de chaque candidature
-- Approbation ou rejet en un clic
-- Message personnalisé lors du rejet
-- Création automatique du membership lors de l'approbation
-- Historique de toutes les candidatures
+**Automatic Financial Reports:**
+- **Professional PDF Export** with:
+  - Financial summary (total revenue, total expenses, balance)
+  - Charts (pie chart revenue vs expenses)
+  - Detailed transaction table
+  - Club logo and selected period
+- **Excel Export** for in-depth analysis
+- Interactive charts with Chart.js
+- Automatic calculation of totals and averages
 
----
-
-### 💳 7. Paiements en Ligne (Stripe)
-
-**Intégration complète de Stripe :**
-- Paiement sécurisé des cotisations annuelles
-- Paiement des billets d'événements payants
-- Interface Stripe.js (PCI-DSS compliant)
-- Webhooks pour confirmation automatique des paiements
-- Support des remboursements
-
-**Flux de Paiement :**
-1. Étudiant sélectionne un club/événement payant
-2. Redirection vers la page de paiement Stripe
-3. Saisie sécurisée des informations de carte
-4. Traitement par Stripe
-5. Confirmation et activation automatique du membership/inscription
-6. Email de confirmation envoyé
+**Financial Dashboards:**
+- Club finances overview
+- Balance evolution over time
+- Expense breakdown by category
+- Visual KPIs (Key Performance Indicators)
 
 ---
 
-### 📧 8. Système d'Emails Automatiques
+### 🔔 5. Real-Time Notifications
 
-**Emails transactionnels avec templates professionnels :**
-- **Vérification de compte** : Lien de vérification unique (24h)
-- **Bienvenue** : Message de bienvenue personnalisé lors de l'approbation
-- **Confirmation d'événement** : Détails 
-- **Rappels** : Notification 24h avant l'événement
-- **Candidatures** : Notification de décision (approuvée/rejetée)
-- **Paiements** : Confirmation de transaction
+**SSE (Server-Sent Events) System:**
+- Instant notifications without page reload
+- Lighter than WebSocket, automatic reconnection
+- Badge with number of unread notifications
 
-**Configuration SMTP :**
-- Support Gmail, Outlook, serveurs SMTP personnalisés
-- Templates HTML responsive (mobile-friendly)
-- Variables personnalisables (nom, club, date, etc.)
+**Notification Types:**
+- **Events**: New event, 24h reminder, cancellation
+- **Applications**: New application (for President/HR), application status (for student)
+- **Payments**: Payment confirmation, expired membership
+- **System**: New member, role change, important announcements
 
----
-
-### 📊 9. Statistiques et Analytics
-
-**Dashboard Administrateur :**
-- Vue d'ensemble globale (total clubs, membres, événements)
-- Statistiques par club (membres actifs, événements organisés, revenus)
-- Graphiques d'évolution dans le temps
-- Clubs les plus populaires (top 5)
-- Taux de participation aux événements
-
-**Dashboard Président :**
-- Statistiques détaillées de son club
-- Nombre de membres actifs
-- Taux d'approbation des candidatures
-- Revenus et dépenses
-- Événements à venir et passés
-- Performance des événements (taux de présence)
+**Intuitive Interface:**
+- Notification center with chronological list
+- Mark as read individually or all at once
+- Click on notification → redirect to related page
+- Notification sound (optional)
 
 ---
 
-### 🎨 10. Interface Utilisateur Moderne
+### 📝 6. Application System
 
-**Design professionnel et intuitif :**
-- Design system cohérent (couleurs, typographie, spacing)
-- Interface responsive (mobile, tablette, desktop)
-- Animations fluides et micro-interactions
-- Composants réutilisables (boutons, modals, cards, forms)
-- Accessibilité WCAG 2.1 Level AA
-- Navigation au clavier complète
-- Dark mode support (optionnel)
+**For Students:**
+- Detailed application form to apply to a club
+- Questions about motivations, experiences, skills, availability
+- Application status tracking (pending, approved, rejected)
+- Automatic decision notifications
 
-**Technologies UI :**
-- TailwindCSS pour le styling utility-first
-- Bootstrap Icons pour les icônes
-- Angular Signals pour la réactivité
-- RxJS pour la programmation réactive
+**For Presidents/HR:**
+- Pending applications dashboard
+- Detailed consultation of each application
+- One-click approval or rejection
+- Personalized message upon rejection
+- Automatic membership creation upon approval
+- History of all applications
+
+---
+
+### 💳 7. Online Payments (Stripe)
+
+**Complete Stripe Integration:**
+- Secure payment of annual membership fees
+- Payment for paid event tickets
+- Stripe.js interface (PCI-DSS compliant)
+- Webhooks for automatic payment confirmation
+- Refund support
+
+**Payment Flow:**
+1. Student selects a paid club/event
+2. Redirect to Stripe payment page
+3. Secure card information entry
+4. Stripe processing
+5. Automatic confirmation and membership/registration activation
+6. Confirmation email sent
+
+---
+
+### 📧 8. Automated Email System
+
+**Transactional emails with professional templates:**
+- **Account Verification**: Unique verification link (24h)
+- **Welcome**: Personalized welcome message upon approval
+- **Event Confirmation**: Details
+- **Reminders**: 24h notification before the event
+- **Applications**: Decision notification (approved/rejected)
+- **Payments**: Transaction confirmation
+
+**SMTP Configuration:**
+- Support for Gmail, Outlook, custom SMTP servers
+- Responsive HTML templates (mobile-friendly)
+- Customizable variables (name, club, date, etc.)
+
+---
+
+### 📊 9. Statistics and Analytics
+
+**Administrator Dashboard:**
+- Global overview (total clubs, members, events)
+- Statistics per club (active members, organized events, revenue)
+- Evolution charts over time
+- Most popular clubs (top 5)
+- Event participation rate
+
+**President Dashboard:**
+- Detailed statistics of their club
+- Number of active members
+- Application approval rate
+- Revenue and expenses
+- Upcoming and past events
+- Event performance (attendance rate)
+
+---
+
+### 🎨 10. Modern User Interface
+
+**Professional and intuitive design:**
+- Consistent design system (colors, typography, spacing)
+- Responsive interface (mobile, tablet, desktop)
+- Smooth animations and micro-interactions
+- Reusable components (buttons, modals, cards, forms)
+- WCAG 2.1 Level AA accessibility
+- Complete keyboard navigation
+- Dark mode support (optional)
+
+**UI Technologies:**
+- TailwindCSS for utility-first styling
+- Bootstrap Icons for icons
+- Angular Signals for reactivity
+- RxJS for reactive programming
 
 ---
 
 ## 📸 Screenshots
 
-### Dashboard Administrateur
-![Dashboard](docs/screenshots/dashboard.png)
-*Vue d'ensemble avec statistiques globales et graphiques*
+### Administrator Dashboard
+![Dashboard](https://i.imgur.com/XXXXXXX.png)
+*Overview with global statistics and charts*
 
-### Gestion des Clubs
-![Club Management](docs/screenshots/clubs-list.png)
-*Liste des clubs avec filtres, recherche et actions rapides*
+> 📝 **Note**: Replace `https://i.imgur.com/XXXXXXX.png` with your actual screenshot URL
 
-### Formulaire de Création de Club
-![Create Club](docs/screenshots/create-club.png)
-*Formulaire complet avec upload de logo et image de couverture*
+### Club Management
+![Club Management](https://i.imgur.com/YYYYYYY.png)
+*Club list with filters, search and quick actions*
 
-### Gestion du Président
-![President Management](docs/screenshots/president-modal.png)
-*Interface d'assignation du président avec liste des utilisateurs*
+### Club Creation Form
+![Create Club](https://i.imgur.com/ZZZZZZZ.png)
+*Complete form with logo and cover image upload*
 
-### Création d'Événement
-![Create Event](docs/screenshots/create-event.png)
-*Formulaire d'événement 
+### President Management
+![President Management](https://i.imgur.com/AAAAAAA.png)
+*President assignment interface with user list*
 
-### Liste des Candidatures
-![Applications](docs/screenshots/applications.png)
-*Dashboard des candidatures avec actions d'approbation/rejet*
+### Event Creation
+![Create Event](https://i.imgur.com/BBBBBBB.png)
+*Event form*
 
-### Rapport Financier PDF
-![Financial Report](docs/screenshots/financial-pdf.png)
-*Rapport PDF professionnel avec graphiques et tableaux*
+### Applications List
+![Applications](https://i.imgur.com/CCCCCCC.png)
+*Applications dashboard with approval/rejection actions*
 
-### Notifications en Temps Réel
-![Notifications](docs/screenshots/notifications.png)
-*Centre de notifications avec badge en temps réel*
+### Financial PDF Report
+![Financial Report](https://i.imgur.com/DDDDDDD.png)
+*Professional PDF report with charts and tables*
 
-### Profil de Club
-![Club Profile](docs/screenshots/club-profile.png)
-*Page détaillée d'un club avec statistiques*
+### Real-Time Notifications
+![Notifications](https://i.imgur.com/EEEEEEE.png)
+*Notification center with real-time badge*
+
+### Club Profile
+![Club Profile](https://i.imgur.com/FFFFFFF.png)
+*Detailed club page with statistics*
 
 ---
 
@@ -290,60 +292,60 @@
 
 ### Frontend
 
-| Technologie | Version | Usage |
-|-------------|---------|-------|
-| **Angular** | 20 | Framework principal |
-| **TypeScript** | 5.0 | Langage de programmation |
-| **RxJS** | 7.x | Programmation réactive |
-| **Signals** | - | Gestion d'état moderne |
+| Technology | Version | Usage |
+|------------|---------|-------|
+| **Angular** | 20 | Main framework |
+| **TypeScript** | 5.0 | Programming language |
+| **RxJS** | 7.x | Reactive programming |
+| **Signals** | - | Modern state management |
 | **TailwindCSS** | 3.x | Styling |
-| **Bootstrap Icons** | 1.x | Icônes |
-| **jsPDF** | 2.x | Génération PDF |
-| **jsPDF-AutoTable** | 3.x | Tableaux PDF |
-| **xlsx** | 0.18 | Export Excel |
-| **Chart.js** | 4.x | Graphiques |
+| **Bootstrap Icons** | 1.x | Icons |
+| **jsPDF** | 2.x | PDF generation |
+| **jsPDF-AutoTable** | 3.x | PDF tables |
+| **xlsx** | 0.18 | Excel export |
+| **Chart.js** | 4.x | Charts |
 
 ### Backend
 
-| Technologie | Version | Usage |
-|-------------|---------|-------|
-| **NestJS** | 11 | Framework backend |
-| **TypeScript** | 5.0 | Langage |
+| Technology | Version | Usage |
+|------------|---------|-------|
+| **NestJS** | 11 | Backend framework |
+| **TypeScript** | 5.0 | Language |
 | **TypeORM** | 0.3 | ORM |
-| **MySQL** | 8.0 | Base de données |
-| **Passport** | 0.7 | Authentification |
+| **MySQL** | 8.0 | Database |
+| **Passport** | 0.7 | Authentication |
 | **JWT** | 9.x | Tokens |
-| **bcrypt** | 5.x | Hashage |
+| **bcrypt** | 5.x | Hashing |
 | **class-validator** | 0.14 | Validation |
-| **Multer** | 1.x | Upload fichiers |
+| **Multer** | 1.x | File upload |
 | **Nodemailer** | 6.x | Emails |
-| **Stripe** | 14.x | Paiements |
+| **Stripe** | 14.x | Payments |
 
 ---
 
 ## 🚀 Installation
 
-### Prérequis
+### Prerequisites
 
 - **Node.js** >= 18.x
 - **npm** >= 9.x
 - **MySQL** >= 8.x
 
-### Cloner le Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/clubhub.git
 cd clubhub
 ```
 
-### Installation Backend
+### Backend Installation
 
 ```bash
 cd backend
 npm install
 ```
 
-### Installation Frontend
+### Frontend Installation
 
 ```bash
 cd frontend
@@ -354,111 +356,111 @@ npm install
 
 ## ⚙️ Configuration
 
-### Backend - Fichier `.env`
+### Backend - `.env` File
 
-Créez un fichier `.env` dans le dossier `backend` :
+Create a `.env` file in the `backend` folder:
 
 ```env
 # ===========================================
 # DATABASE CONFIGURATION
 # ===========================================
-DB_HOST=localhost                    # Hôte MySQL
-DB_PORT=3306                         # Port MySQL
-DB_USERNAME=root                     # Utilisateur MySQL
-DB_PASSWORD=your_password            # ⚠️ CHANGEZ : Mot de passe MySQL
-DB_DATABASE=club_management          # Nom de la base de données
+DB_HOST=localhost                    # MySQL host
+DB_PORT=3306                         # MySQL port
+DB_USERNAME=root                     # MySQL username
+DB_PASSWORD=your_password            # ⚠️ CHANGE: MySQL password
+DB_DATABASE=club_management          # Database name
 
 # ===========================================
 # APPLICATION
 # ===========================================
-PORT=3000                            # Port du serveur backend
-NODE_ENV=development                 # Environnement
-FRONTEND_URL=http://localhost:4200   # URL du frontend
+PORT=3000                            # Backend server port
+NODE_ENV=development                 # Environment
+FRONTEND_URL=http://localhost:4200   # Frontend URL
 
 # ===========================================
 # JWT (JSON WEB TOKENS)
 # ===========================================
-# ⚠️ CHANGEZ CES VALEURS EN PRODUCTION !
+# ⚠️ CHANGE THESE VALUES IN PRODUCTION!
 JWT_SECRET=your-secret-key-here
-JWT_EXPIRES_IN=3600                  # 1 heure en secondes
+JWT_EXPIRES_IN=3600                  # 1 hour in seconds
 JWT_REFRESH_SECRET=your-refresh-secret-here
-JWT_REFRESH_EXPIRES_IN=604800        # 7 jours en secondes
+JWT_REFRESH_EXPIRES_IN=604800        # 7 days in seconds
 
 # ===========================================
 # EMAIL CONFIGURATION
 # ===========================================
-MAIL_HOST=smtp.gmail.com             # Serveur SMTP
-MAIL_PORT=587                        # Port SMTP
-MAIL_USER=your_email@gmail.com       # ⚠️ CHANGEZ : Email expéditeur
-MAIL_PASSWORD=your_app_password      # ⚠️ CHANGEZ : Mot de passe application Gmail
+MAIL_HOST=smtp.gmail.com             # SMTP server
+MAIL_PORT=587                        # SMTP port
+MAIL_USER=your_email@gmail.com       # ⚠️ CHANGE: Sender email
+MAIL_PASSWORD=your_app_password      # ⚠️ CHANGE: Gmail app password
 MAIL_FROM=ClubHub <your_email@gmail.com>
 
-# Comment obtenir un mot de passe d'application Gmail :
-# 1. Activez la validation en 2 étapes
-# 2. Allez sur : https://myaccount.google.com/apppasswords
-# 3. Générez un mot de passe pour "Application"
-# 4. Copiez le mot de passe (16 caractères)
+# How to get a Gmail app password:
+# 1. Enable 2-step verification
+# 2. Go to: https://myaccount.google.com/apppasswords
+# 3. Generate a password for "Application"
+# 4. Copy the password (16 characters)
 
 # ===========================================
-# STRIPE (PAIEMENTS)
+# STRIPE (PAYMENTS)
 # ===========================================
-# Obtenez vos clés sur : https://dashboard.stripe.com/test/apikeys
-STRIPE_PUBLISHABLE_KEY=pk_test_...   # ⚠️ CHANGEZ : Clé publique
-STRIPE_SECRET_KEY=sk_test_...        # ⚠️ CHANGEZ : Clé secrète
-STRIPE_WEBHOOK_SECRET=whsec_...      # ⚠️ CHANGEZ : Secret webhook
+# Get your keys at: https://dashboard.stripe.com/test/apikeys
+STRIPE_PUBLISHABLE_KEY=pk_test_...   # ⚠️ CHANGE: Publishable key
+STRIPE_SECRET_KEY=sk_test_...        # ⚠️ CHANGE: Secret key
+STRIPE_WEBHOOK_SECRET=whsec_...      # ⚠️ CHANGE: Webhook secret
 ```
 
-### Frontend - Fichier `environment.ts`
+### Frontend - `environment.ts` File
 
-Créez/modifiez `frontend/src/environments/environment.ts` :
+Create/modify `frontend/src/environments/environment.ts`:
 
 ```typescript
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:3000/api',
   uploadUrl: 'http://localhost:3000/uploads',
-  stripePublishableKey: 'pk_test_...', // ⚠️ CHANGEZ
+  stripePublishableKey: 'pk_test_...', // ⚠️ CHANGE
 };
 ```
 
 ---
 
-## 🏃 Démarrage
+## 🏃 Getting Started
 
 ### Backend
 
 ```bash
 cd backend
 
-# Créer la base de données
+# Create the database
 mysql -u root -p
 CREATE DATABASE club_management;
 exit;
 
-# Lancer les migrations
+# Run migrations
 npm run migration:run
 
-# Démarrer le serveur
+# Start the server
 npm run start:dev
 ```
 
-Backend accessible sur : `http://localhost:3000`
+Backend accessible at: `http://localhost:3000`
 
 ### Frontend
 
 ```bash
 cd frontend
 
-# Démarrer le serveur
+# Start the server
 npm start
 ```
 
-Frontend accessible sur : `http://localhost:4200`
+Frontend accessible at: `http://localhost:4200`
 
-### Compte Admin par défaut
+### Default Admin Account
 
-- **Email** : `admin@example.com`
-- **Mot de passe** : `admin123`
+- **Email**: `admin@example.com`
+- **Password**: `admin123`
 
 ---
 
@@ -473,75 +475,75 @@ http://localhost:3000/api
 ### Authentication Endpoints
 
 ```http
-POST   /auth/register          # Inscription
-POST   /auth/login             # Connexion
-POST   /auth/refresh           # Rafraîchir token
-POST   /auth/logout            # Déconnexion
-POST   /auth/verify-email      # Vérifier email
+POST   /auth/register          # Registration
+POST   /auth/login             # Login
+POST   /auth/refresh           # Refresh token
+POST   /auth/logout            # Logout
+POST   /auth/verify-email      # Verify email
 ```
 
 ### Clubs Endpoints
 
 ```http
-GET    /clubs                  # Liste des clubs (avec filtres)
-GET    /clubs/:id              # Détails d'un club
-POST   /clubs                  # Créer un club (Admin)
-PATCH  /clubs/:id              # Modifier un club (Admin)
-DELETE /clubs/:id              # Supprimer un club (Admin)
-GET    /clubs/stats            # Statistiques globales
-GET    /clubs/:id/president    # Obtenir le président
-POST   /clubs/:id/president    # Assigner un président
-DELETE /clubs/:id/president    # Retirer le président
-GET    /clubs/all-users        # Liste des utilisateurs
+GET    /clubs                  # List clubs (with filters)
+GET    /clubs/:id              # Club details
+POST   /clubs                  # Create club (Admin)
+PATCH  /clubs/:id              # Update club (Admin)
+DELETE /clubs/:id              # Delete club (Admin)
+GET    /clubs/stats            # Global statistics
+GET    /clubs/:id/president    # Get president
+POST   /clubs/:id/president    # Assign president
+DELETE /clubs/:id/president    # Remove president
+GET    /clubs/all-users        # User list
 ```
 
 ### Events Endpoints
 
 ```http
-GET    /events                 # Liste des événements
-GET    /events/:id             # Détails d'un événement
-POST   /events                 # Créer un événement
-PATCH  /events/:id             # Modifier un événement
-DELETE /events/:id             # Supprimer un événement
-POST   /events/:id/register    # S'inscrire
+GET    /events                 # Event list
+GET    /events/:id             # Event details
+POST   /events                 # Create event
+PATCH  /events/:id             # Update event
+DELETE /events/:id             # Delete event
+POST   /events/:id/register    # Register
 ```
 
 ### Memberships Endpoints
 
 ```http
-POST   /memberships/create-application  # Postuler
-GET    /memberships/users/:userId/applications  # Candidatures
-GET    /memberships/clubs/:clubId/members  # Membres
-PATCH  /memberships/:id/role    # Changer rôle
-DELETE /memberships/:id         # Retirer membre
+POST   /memberships/create-application  # Apply
+GET    /memberships/users/:userId/applications  # Applications
+GET    /memberships/clubs/:clubId/members  # Members
+PATCH  /memberships/:id/role    # Change role
+DELETE /memberships/:id         # Remove member
 ```
 
 ### Transactions Endpoints
 
 ```http
-GET    /transactions           # Liste des transactions
-POST   /transactions           # Créer une transaction
-GET    /transactions/export/pdf   # Export PDF
-GET    /transactions/export/excel # Export Excel
+GET    /transactions           # Transaction list
+POST   /transactions           # Create transaction
+GET    /transactions/export/pdf   # PDF export
+GET    /transactions/export/excel # Excel export
 ```
 
 ### Notifications Endpoints
 
 ```http
 GET    /notifications          # Notifications
-PATCH  /notifications/:id/read # Marquer comme lue
-GET    /notifications/sse      # Stream temps réel
+PATCH  /notifications/:id/read # Mark as read
+GET    /notifications/sse      # Real-time stream
 ```
 
 ### Payments Endpoints
 
 ```http
-POST   /payments/create-intent # Créer PaymentIntent
-POST   /payments/webhook       # Webhook Stripe
-GET    /payments/:id           # Détails paiement
+POST   /payments/create-intent # Create PaymentIntent
+POST   /payments/webhook       # Stripe webhook
+GET    /payments/:id           # Payment details
 ```
 
-**Note** : Les routes protégées nécessitent un token JWT :
+**Note**: Protected routes require a JWT token:
 
 ```http
 Authorization: Bearer <access_token>
@@ -553,7 +555,7 @@ Authorization: Bearer <access_token>
 
 <div align="center">
 
-### 🌟 Développé par une équipe de 4 développeurs passionnés
+### 🌟 Developed by a team of 4 passionate developers
 
 <table>
   <tr>
@@ -594,33 +596,60 @@ Authorization: Bearer <access_token>
 
 ## 📄 License
 
-Ce projet est sous licence **MIT**.
+This project is licensed under the **MIT License**.
 
 ---
 
-## 🙏 Remerciements
+## 🙏 Acknowledgments
 
-- **Angular Team** pour le framework exceptionnel
-- **NestJS Team** pour l'architecture backend robuste
-- **Stripe** pour la solution de paiement sécurisée
-- **Tous les contributeurs** open-source
+- **Angular Team** for the exceptional framework
+- **NestJS Team** for the robust backend architecture
+- **Stripe** for the secure payment solution
+- **All open-source contributors**
 
 ---
 
 ## 📞 Contact
 
-**Email :** clubmanagement25@gmail.com
+**Email:** clubmanagement25@gmail.com
 
-**Repository :** [GitHub - ClubHub](https://github.com/your-username/clubhub)
+**Repository:** [GitHub - ClubHub](https://github.com/your-username/clubhub)
+
+---
+
+## 📝 How to Add Your Screenshots
+
+To add your screenshots, follow these simple steps:
+
+### Option 1: Using Imgur (Recommended)
+1. Go to https://imgur.com
+2. Click **"New post"**
+3. Upload your screenshot
+4. Right-click on the uploaded image → **"Copy image address"**
+5. Replace the example URL in the README
+
+### Option 2: Using GitHub Issues
+1. Go to your repository on GitHub
+2. Create a new Issue (you can close it later)
+3. Drag and drop your image into the comment box
+4. GitHub will generate a URL automatically
+5. Copy the URL and paste it in the README
+
+### Example:
+```markdown
+![Dashboard](https://i.imgur.com/abc123.png)
+```
+
+Replace `abc123` with your actual image ID from Imgur or the full GitHub URL.
 
 ---
 
 <div align="center">
 
-### ⭐ Si ce projet vous plaît, donnez-lui une étoile ! ⭐
+### ⭐ If you like this project, give it a star! ⭐
 
-**Fait avec ❤️ par l'équipe ClubHub**
+**Made with ❤️ by the ClubHub Team**
 
-*ClubHub - Simplifier la gestion des clubs universitaires* 🎓
+*ClubHub - Simplifying University Club Management* 🎓
 
 </div>
