@@ -30,7 +30,10 @@ export class CreateApplicationDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(50, { message: 'Veuillez expliquer en au moins 50 caractères pourquoi vous souhaitez rejoindre ce club' })
+  @MinLength(50, {
+    message:
+      'Veuillez expliquer en au moins 50 caractères pourquoi vous souhaitez rejoindre ce club',
+  })
   @MaxLength(1000)
   whyJoin: string;
 

@@ -88,11 +88,11 @@ export class UserEventsCard {
   }
 
   redirectToPayment() {
-    this.showPaymentModal = false;
+    this.showPaymentModal.set(false) ;
     this.router.navigate(['/payment'], {
       queryParams: {
         type: 'event',
-        eventId: this.event.id
+        eventId: this.event().id
       }
     });
   }
