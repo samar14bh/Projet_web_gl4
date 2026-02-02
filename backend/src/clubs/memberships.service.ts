@@ -68,9 +68,7 @@ export class MembershipsService {
         const existingApplication = await this.applicationRepository.findOne({
             where: {
                 user: { id: userId },
-                membership: {
-                    club: { id: clubId },
-                },
+                club: { id: clubId },
                 status: Status.PENDING,
             },
         });
@@ -355,7 +353,7 @@ export class MembershipsService {
         }));
     }
 
-    
+
 
 
     toResponseDto(application: Application): ApplicationResponseDto {

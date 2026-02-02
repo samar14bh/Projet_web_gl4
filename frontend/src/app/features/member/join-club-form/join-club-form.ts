@@ -135,12 +135,13 @@ export class JoinClubForm implements OnInit {
 
     const dto: CreateApplicationDto = {
       ...this.joinClubForm.value,
-      userId: this.userId,
-      clubId: this.clubId()
+      userId: Number(this.userId),
+      clubId: Number(this.clubId())
     };
 
+
     this.membershipService.createApplication(dto)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           console.log('Application submitted successfully', res);
