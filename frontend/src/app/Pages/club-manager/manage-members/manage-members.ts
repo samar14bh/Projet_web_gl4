@@ -5,6 +5,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ClubManagerService } from '../../../Core/services/club-manager.service';
+import { NotificationService } from '../../../Core/services/notification.service';
 import {
   Member,
   MembersStats,
@@ -57,6 +58,7 @@ export class ManageMembersComponent implements OnInit {
   private router = inject(Router);
   private clubContext = inject(ClubContextService);
   public clubManagerService = inject(ClubManagerService);
+  private notificationService = inject(NotificationService);
   private destroyRef = inject(DestroyRef);
   private location = inject(Location);
   private searchSubject = new Subject<string>();
@@ -446,7 +448,7 @@ export class ManageMembersComponent implements OnInit {
     this.clubManagerService
       .updateApplicationStatus(applicationId, 'APPROVED')
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.closeApplicationDetailsModal();
           this.loadApplications();
           this.loadMembersStats();

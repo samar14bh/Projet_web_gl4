@@ -21,7 +21,7 @@ export class StripeService {
 
     if (!secretKey) {
       throw new Error(
-          'STRIPE_SECRET_KEY is not defined in environment variables',
+        'STRIPE_SECRET_KEY is not defined in environment variables',
       );
     }
 
@@ -44,10 +44,13 @@ export class StripeService {
    */
   async createPaymentIntent(options: {
     amount: number; // Montant en TND
-    currency?: string; // Ignoré - on utilise toujours USD
+    currency?: string;
     metadata?: Record<string, string | number>;
     description?: string;
     receipt_email?: string;
+    customer?: string;
+    setup_future_usage?: Stripe.PaymentIntentCreateParams.SetupFutureUsage; // 'off_session' | 'on_session'
+    payment_method?: string;
   }): Promise<Stripe.PaymentIntent> {
     try {
       // Convertir TND en USD (Stripe n'accepte que USD pour ce compte)
@@ -58,7 +61,7 @@ export class StripeService {
 
       console.log(`💱 Conversion: ${options.amount} TND = ${amountInUsd} USD = ${amountInCents} cents`);
 
-      const paymentIntent = await this.stripe.paymentIntents.create({
+      const params: Stripe.PaymentIntentCreateParams = {
         amount: amountInCents,
         currency: this.SUPPORTED_CURRENCY, // ✅ USD au lieu de TND
         metadata: {
@@ -73,7 +76,21 @@ export class StripeService {
         automatic_payment_methods: {
           enabled: true,
         },
-      });
+      };
+
+      if (options.customer) {
+        params.customer = options.customer;
+      }
+
+      if (options.setup_future_usage) {
+        params.setup_future_usage = options.setup_future_usage;
+      }
+
+      if (options.payment_method) {
+        params.payment_method = options.payment_method;
+      }
+
+      const paymentIntent = await this.stripe.paymentIntents.create(params);
 
       console.log(`✅ PaymentIntent created: ${paymentIntent.id}`);
       return paymentIntent;
@@ -87,7 +104,7 @@ export class StripeService {
    * Récupérer un PaymentIntent
    */
   async retrievePaymentIntent(
-      paymentIntentId: string,
+    paymentIntentId: string,
   ): Promise<Stripe.PaymentIntent> {
     return this.stripe.paymentIntents.retrieve(paymentIntentId);
   }
@@ -96,8 +113,8 @@ export class StripeService {
    * Confirmer un PaymentIntent avec la méthode de paiement
    */
   async confirmPaymentIntent(
-      paymentIntentId: string,
-      paymentMethodId: string,
+    paymentIntentId: string,
+    paymentMethodId: string,
   ): Promise<Stripe.PaymentIntent> {
     return this.stripe.paymentIntents.confirm(paymentIntentId, {
       payment_method: paymentMethodId,
@@ -147,5 +164,33 @@ export class StripeService {
    */
   getExchangeRate(): number {
     return this.TND_TO_USD_RATE;
+  }
+
+  /**
+   * ✅ Créer un client Stripe
+   */
+  async createCustomer(email: string, name: string): Promise<Stripe.Customer> {
+    return this.stripe.customers.create({
+      email,
+      name,
+    });
+  }
+
+  /**
+   * ✅ Récupérer un client Stripe
+   */
+  async getCustomer(customerId: string): Promise<Stripe.Customer | Stripe.DeletedCustomer> {
+    return this.stripe.customers.retrieve(customerId);
+  }
+
+  /**
+   * ✅ Lister les méthodes de paiement sauvegardées d'un client
+   */
+  async listPaymentMethods(customerId: string): Promise<Stripe.PaymentMethod[]> {
+    const paymentMethods = await this.stripe.paymentMethods.list({
+      customer: customerId,
+      type: 'card',
+    });
+    return paymentMethods.data;
   }
 }

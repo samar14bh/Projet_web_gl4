@@ -20,11 +20,11 @@ import {
   PaymentMethod,
   PaymentStatus,
   Status,
+  MemberRole,
 } from '../common/enums';
+import { User } from '../users/entities/user.entity';
+import { NotificationService } from '../notifications/notification.service';
 
-/**
- * Service pour gérer les paiements (adhésion & événements) avec Stripe
- */
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -40,13 +40,51 @@ export class PaymentsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
 
     private readonly receiptService: ReceiptService,
     private readonly stripeService: StripeService,
+    private readonly notificationService: NotificationService,
   ) { }
 
   /**
-   * ✅ NOUVELLE MÉTHODE: Vérifier que le paiement appartient à l'utilisateur
+   * ✅ Helper: Get or create Stripe Customer
+   */
+  private async getOrCreateStripeCustomer(userId: number, email: string, name: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.stripeCustomerId) {
+      return user.stripeCustomerId;
+    }
+
+    // Create new customer in Stripe
+    const customer = await this.stripeService.createCustomer(email, name);
+
+    // Save to DB
+    user.stripeCustomerId = customer.id;
+    await this.userRepository.save(user);
+
+    return customer.id;
+  }
+
+  /**
+   * ✅ Get saved payment methods
+   */
+  async getSavedPaymentMethods(userId: number) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user || !user.stripeCustomerId) {
+      return [];
+    }
+    return this.stripeService.listPaymentMethods(user.stripeCustomerId);
+  }
+
+  /**
+   *  NOUVELLE MÉTHODE: Vérifier que le paiement appartient à l'utilisateur
    */
   async verifyPaymentOwnership(paymentId: number): Promise<Payment> {
     const payment = await this.paymentRepository.findOne({
@@ -94,6 +132,14 @@ export class PaymentsService {
     }
 
     const amount = membership.club.membershipFeeAmount;
+    const user = membership.user;
+
+    // ✅ Get or create Stripe Customer
+    const customerId = await this.getOrCreateStripeCustomer(
+      user.id,
+      user.email,
+      `${user.name} ${user.lastName}`
+    );
 
     // Créer un enregistrement de paiement temporaire
     const payment = this.paymentRepository.create({
@@ -110,9 +156,9 @@ export class PaymentsService {
     console.log('✅ Payment record created:', savedPayment.id);
 
     try {
-      // ✅ Créer un PaymentIntent avec conversion TND → USD
-      const paymentIntent = await this.stripeService.createPaymentIntent({
-        amount: amount, // Montant en TND (le service le convertira)
+      // ✅ Options pour PaymentIntent
+      const intentOptions: any = {
+        amount: amount,
         metadata: {
           paymentId: String(savedPayment.id),
           userId: String(dto.userId),
@@ -121,7 +167,22 @@ export class PaymentsService {
         },
         description: `Club Membership - ${club.name}`,
         receipt_email: membership.user.email,
-      });
+        customer: customerId, // Attach to customer
+      };
+
+      if (dto.saveCard) {
+        intentOptions.setup_future_usage = 'off_session';
+      }
+
+      if (dto.paymentMethodId) {
+        intentOptions.payment_method = dto.paymentMethodId;
+        // Optionally confirm immediately if using saved card, but usually client handles confirmation
+        // intentOptions.confirm = true; 
+        // intentOptions.off_session = true; // If purely backend, but here we return clientSecret
+      }
+
+      // ✅ Créer un PaymentIntent avec conversion TND → USD
+      const paymentIntent = await this.stripeService.createPaymentIntent(intentOptions);
 
       // Enregistrer l'ID de transaction Stripe
       savedPayment.transactionId = paymentIntent.id;
@@ -168,12 +229,31 @@ export class PaymentsService {
         user: { id: dto.userId },
         club: { id: event.club.id },
       },
+      relations: ['user'] // Ensure user is loaded
     });
 
     const isMember = !!membership;
     const basePrice = Number(event.subscriptionFees);
     const discount = isMember ? basePrice * 0.2 : 0;
     const finalPrice = basePrice - discount;
+
+    // Need user info for customer creation. If membership exists, use that user.
+    // If not, fetch user directly.
+    let user: User | undefined | null = membership?.user;
+    if (!user) {
+      user = await this.userRepository.findOne({ where: { id: dto.userId } });
+    }
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // ✅ Get or create Stripe Customer
+    const customerId = await this.getOrCreateStripeCustomer(
+      user.id,
+      user.email,
+      `${user.name} ${user.lastName}`
+    );
 
     // Créer un enregistrement de paiement temporaire
     const payment = this.paymentRepository.create({
@@ -190,9 +270,9 @@ export class PaymentsService {
     console.log('✅ Payment record created:', savedPayment.id);
 
     try {
-      // ✅ Créer un PaymentIntent avec conversion TND → USD
-      const paymentIntent = await this.stripeService.createPaymentIntent({
-        amount: finalPrice, // Montant en TND (le service le convertira)
+      // ✅ Options pour PaymentIntent
+      const intentOptions: any = {
+        amount: finalPrice,
         metadata: {
           paymentId: String(savedPayment.id),
           userId: String(dto.userId),
@@ -202,7 +282,19 @@ export class PaymentsService {
           discount: String(discount),
         },
         description: `Event Registration - ${event.title}`,
-      });
+        customer: customerId, // Attach to customer
+      };
+
+      if (dto.saveCard) {
+        intentOptions.setup_future_usage = 'off_session';
+      }
+
+      if (dto.paymentMethodId) {
+        intentOptions.payment_method = dto.paymentMethodId;
+      }
+
+      // ✅ Créer un PaymentIntent avec conversion TND → USD
+      const paymentIntent = await this.stripeService.createPaymentIntent(intentOptions);
 
       savedPayment.transactionId = paymentIntent.id;
       await this.paymentRepository.save(savedPayment);
@@ -279,6 +371,35 @@ export class PaymentsService {
 
       console.log('✅ Membership activated until:', oneYearLater);
 
+      // ✅ Notifier l'utilisateur et les admins
+      try {
+        await this.notificationService.createNotification({
+          userId: payment.user.id,
+          type: 'PAYMENT_SUCCESS',
+          description: `Votre adhésion au club ${membership.club.name} est maintenant active !`,
+          iconName: 'check-circle',
+          priority: 'high',
+          actionUrl: '/my-payments',
+          actionLabel: 'Voir mes paiements',
+        });
+
+        await this.notificationService.notifyClubAdmins(
+          membership.club.id,
+          [MemberRole.PRESIDENT, MemberRole.TREASURER],
+          {
+            type: 'PAYMENT_SUCCESS',
+            description: `${payment.user.name} ${payment.user.lastName} a payé sa cotisation pour le club ${membership.club.name} (${payment.amount} TND)`,
+            shortDescription: `Paiement adhésion : ${payment.user.name}`,
+            iconName: 'credit-card',
+            priority: 'medium',
+            actionUrl: `/club-manager/${membership.club.id}/dashboard`,
+            actionLabel: 'Voir les stats',
+          }
+        );
+      } catch (err) {
+        console.error('Erreur notifications paiement adhésion:', err);
+      }
+
       return payment;
     } catch (error) {
       console.error('❌ Error confirming payment:', error);
@@ -319,19 +440,61 @@ export class PaymentsService {
       payment.status = PaymentStatus.CONFIRMED;
       await this.paymentRepository.save(payment);
 
-      // Créer l'enregistrement à l'événement
-      const registration = this.registrationRepository.create({
-        user: { id: payment.user.id },
-        event: { id: payment.event.id },
-        status: RegistrationStatus.PAID, // ✅ Statut PAID au lieu de REGISTERED
-        qrCode: `EVT-${payment.event.id}-USR-${payment.user.id}-${Date.now()}`, // ✅ Génération du QR Code
-        date: new Date(),
-        isPresent: false,
+      // Mettre à jour ou créer l'enregistrement à l'événement
+      let registration = await this.registrationRepository.findOne({
+        where: {
+          user: { id: payment.user.id },
+          event: { id: payment.event.id },
+        },
       });
+
+      if (registration) {
+        registration.status = RegistrationStatus.PAID;
+        registration.qrCode = registration.qrCode || `EVT-${payment.event.id}-USR-${payment.user.id}-${Date.now()}`;
+        registration.date = new Date();
+      } else {
+        registration = this.registrationRepository.create({
+          user: { id: payment.user.id },
+          event: { id: payment.event.id },
+          status: RegistrationStatus.PAID,
+          qrCode: `EVT-${payment.event.id}-USR-${payment.user.id}-${Date.now()}`,
+          date: new Date(),
+          isPresent: false,
+        });
+      }
 
       await this.registrationRepository.save(registration);
 
-      console.log('✅ Event registration created');
+      console.log('✅ Event registration updated to PAID');
+
+      // ✅ Notifier l'utilisateur et les admins
+      try {
+        await this.notificationService.createNotification({
+          userId: payment.user.id,
+          type: 'PAYMENT_SUCCESS',
+          description: `Votre inscription à l'événement "${payment.event.title}" est confirmée !`,
+          iconName: 'calendar-check',
+          priority: 'high',
+          actionUrl: '/my-payments',
+          actionLabel: 'Voir mes paiements',
+        });
+
+        await this.notificationService.notifyClubAdmins(
+          payment.event.club.id,
+          [MemberRole.PRESIDENT, MemberRole.TREASURER],
+          {
+            type: 'PAYMENT_SUCCESS',
+            description: `${payment.user.name} ${payment.user.lastName} a payé son inscription pour l'événement "${payment.event.title}" (${payment.amount} TND)`,
+            shortDescription: `Paiement événement : ${payment.user.name}`,
+            iconName: 'ticket',
+            priority: 'medium',
+            actionUrl: `/club-manager/${payment.event.club.id}/dashboard`,
+            actionLabel: 'Voir les stats',
+          }
+        );
+      } catch (err) {
+        console.error('Erreur notifications paiement événement:', err);
+      }
 
       return { payment, registration };
     } catch (error) {

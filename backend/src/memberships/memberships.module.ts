@@ -4,6 +4,7 @@ import { MembershipsService } from './memberships.service';
 import { MembershipsController } from './memberships.controller';
 import { Membership } from './entities/membership.entity';
 import { Application } from './entities/application.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 /**
  * Module de Gestion des Adhésions
@@ -19,9 +20,12 @@ import { Application } from './entities/application.entity';
  * - Une membership est supprimée quand une application est REJECTED
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Membership, Application])],
+  imports: [
+    TypeOrmModule.forFeature([Membership, Application]),
+    NotificationsModule,
+  ],
   controllers: [MembershipsController],
   providers: [MembershipsService],
   exports: [MembershipsService],
 })
-export class MembershipsModule {}
+export class MembershipsModule { }

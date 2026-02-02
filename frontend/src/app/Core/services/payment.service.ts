@@ -49,15 +49,28 @@ export class PaymentService {
   }
 
   /**
+   * ✅ Obtenir les méthodes de paiement sauvegardées
+   */
+  getSavedPaymentMethods(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/saved-methods/${userId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Initier un paiement d'adhésion
    */
-  initiateMembershipPayment(userId: number, membershipId: number): Observable<{
+  initiateMembershipPayment(
+    userId: number,
+    membershipId: number,
+    options?: { paymentMethodId?: string, saveCard?: boolean }
+  ): Observable<{
     clientSecret: string;
     paymentId: number;
   }> {
     return this.http.post<{ clientSecret: string; paymentId: number }>(
       `${this.apiUrl}/membership/initiate`,
-      { userId, membershipId }
+      { userId, membershipId, ...options }
     ).pipe(
       catchError(this.handleError)
     );
@@ -78,13 +91,17 @@ export class PaymentService {
   /**
    * Initier un paiement d'événement
    */
-  initiateEventPayment(userId: number, eventId: number): Observable<{
+  initiateEventPayment(
+    userId: number,
+    eventId: number,
+    options?: { paymentMethodId?: string, saveCard?: boolean }
+  ): Observable<{
     clientSecret: string;
     paymentId: number;
   }> {
     return this.http.post<{ clientSecret: string; paymentId: number }>(
       `${this.apiUrl}/event/initiate`,
-      { userId, eventId }
+      { userId, eventId, ...options }
     ).pipe(
       catchError(this.handleError)
     );

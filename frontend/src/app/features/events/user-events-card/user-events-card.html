@@ -83,7 +83,7 @@
     </ng-template>
   </div>
 </div>
-<app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()">
+<app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()" (payOnline)="redirectToPayment()">
 </app-payment-modal>
 
 <app-confirm-modal *ngIf="showConfirmModal" title="Quitter l'événement"

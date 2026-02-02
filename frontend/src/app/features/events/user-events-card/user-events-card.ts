@@ -76,4 +76,14 @@ export class UserEventsCard {
   closePaymentModal() {
     this.showPaymentModal = false;
   }
+
+  redirectToPayment() {
+    this.showPaymentModal = false;
+    this.router.navigate(['/payment'], {
+      queryParams: {
+        type: 'event',
+        eventId: this.event.id
+      }
+    });
+  }
 }

@@ -4,11 +4,12 @@ import { MembershipService } from '../../../Core/services/membership.service';
 import { ClubService } from '../../../Core/services/club.service';
 import { CreateApplicationDto } from '../../../Core/dtos/application/create-application.dto';
 import { ActivatedRoute } from '@angular/router';
-import { debounceTime } from 'rxjs';
+import { debounceTime, switchMap, of, filter, tap } from 'rxjs';
 import { takeUntilDestroyed, rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { Error } from '../../../shared/components/error/error';
+import { NotificationService } from '../../../Core/services/notification.service';
 import { Loader } from '../../../shared/components/loader/loader';
 
 @Component({
@@ -22,6 +23,7 @@ export class JoinClubForm {
   private fb = inject(FormBuilder);
   private membershipService = inject(MembershipService);
   private clubService = inject(ClubService);
+  private notificationService = inject(NotificationService);
   private route = inject(ActivatedRoute);
   protected location = inject(Location);
 
@@ -124,24 +126,31 @@ export class JoinClubForm {
       clubId: this.clubId
     };
 
-    this.membershipService.createApplication(dto)
-      .subscribe({
-        next: (res) => {
-          console.log('Application submitted successfully', res);
-
-          this.success.set(true);
-
-          this.clearSavedForm();
-
-          setTimeout(() => {
-            this.location.back();
-          }, 2000);
-        },
-        error: (err) => {
-          console.error('Error submitting application', err);
-          this.errorMessage.set('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
-        },
-      });
+    this.membershipService.createApplication(dto).pipe(
+      tap(() => console.log('Application submitted successfully')),
+      switchMap(() => this.clubService.getClubPresident(this.clubId)),
+      filter((president) => !!president && !!president.id),
+      switchMap((president) => this.notificationService.sendToUser(president.id, {
+        type: 'NEW_APPLICATION',
+        description: `Nouvelle candidature reçue pour votre club`,
+        iconName: 'person-plus',
+        priority: 'medium',
+        actionUrl: '/club-manager/dashboard',
+        actionLabel: 'Voir le dashboard'
+      }))
+    ).subscribe({
+      next: () => {
+        this.success.set(true);
+        this.clearSavedForm();
+        setTimeout(() => {
+          this.location.back();
+        }, 2000);
+      },
+      error: (err) => {
+        console.error('Error submitting application', err);
+        this.errorMessage.set('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
+      }
+    });
   }
 
   getLength(controlName: string): number {

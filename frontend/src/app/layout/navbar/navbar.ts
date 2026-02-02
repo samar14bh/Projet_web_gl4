@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
+import { NotificationService } from '../../Core/services/notification.service';
 import { DefaultImagePipe } from '../../shared/pipes/default-image.pipe';
 
 interface Notification {
@@ -24,42 +25,17 @@ interface Notification {
 export class NavbarComponent {
   showNotifications = signal(false);
   showUserMenu = signal(false);
-   authService = inject(AuthService);
+  authService = inject(AuthService);
+  notificationService = inject(NotificationService);
+
   user = this.authService.currentUser;
-  admin= computed(() => this.authService.isAdmin());
-   private router = inject(Router);
+  admin = computed(() => this.authService.isAdmin());
+  notifications = this.notificationService.notifications;
+  unreadCount = this.notificationService.unreadCount;
 
-  notifications: Notification[] = [
-    {
-      id: 1,
-      title: 'New message',
-      message: 'You have a new message from John',
-      time: '2m ago',
-      read: false,
-      icon: 'bi-chat-dots',
-      type: 'info'
-    },
-    {
-      id: 2,
-      title: 'Task completed',
-      message: 'Your report has been generated',
-      time: '1h ago',
-      read: false,
-      icon: 'bi-check-circle',
-      type: 'success'
-    },
-    {
-      id: 3,
-      title: 'System update',
-      message: 'System maintenance scheduled',
-      time: '3h ago',
-      read: true,
-      icon: 'bi-exclamation-triangle',
-      type: 'warning'
-    }
-  ];
+  private router = inject(Router);
 
-  unreadCount = computed(() => this.notifications.filter(n => !n.read).length);
+
 
   toggleNotifications(): void {
     this.showNotifications.update(s => !s);
@@ -71,14 +47,18 @@ export class NavbarComponent {
     this.showNotifications.set(false);
   }
 
-  markAsRead(notification: Notification): void {
-    notification.read = true;
+  markAsRead(id: number): void {
+    this.notificationService.markAsRead(id).subscribe();
   }
 
   markAllAsRead(): void {
-    this.notifications.forEach(n => n.read = true);
+    this.notificationService.markAllAsRead().subscribe();
   }
-   onLogout(): void {
+
+  getIconClass(type: string): string {
+    return this.notificationService.getIconClass(type);
+  }
+  onLogout(): void {
 
     if (this.authService.logout) {
       this.authService.logout().subscribe({

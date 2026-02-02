@@ -16,6 +16,7 @@ import { Status } from '../common/enums/status.enum';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { ApplicationResponseDto } from "../memberships/dto/application-response.dto";
 import { MembershipClubDto } from '../memberships/dto/membership-club.dto';
+import { NotificationService } from '../notifications/notification.service';
 
 /**
  * Service pour gérer les adhésions (memberships) et les candidatures (applications)
@@ -31,6 +32,7 @@ export class MembershipsService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Club)
         private readonly clubRepository: Repository<Club>,
+        private readonly notificationService: NotificationService,
     ) { }
 
     /**
@@ -90,6 +92,26 @@ export class MembershipsService {
         });
 
         const app = await this.applicationRepository.save(application)
+
+        // ✅ Notifier Président et RH
+        try {
+            await this.notificationService.notifyClubAdmins(
+                club.id,
+                [MemberRole.PRESIDENT, MemberRole.RH],
+                {
+                    type: 'NEW_APPLICATION',
+                    description: `Nouvelle demande d'adhésion de ${user.name} ${user.lastName} pour le club ${club.name}`,
+                    shortDescription: `Demande d'adhésion : ${user.name}`,
+                    iconName: 'person-plus',
+                    priority: 'medium',
+                    actionUrl: `/club-manager/${club.id}/dashboard`,
+                    actionLabel: 'Gérer les demandes',
+                }
+            );
+        } catch (err) {
+            console.error('Erreur lors de la notification des admins:', err);
+        }
+
         return this.toResponseDto(app)
     }
     /**
@@ -355,7 +377,7 @@ export class MembershipsService {
         }));
     }
 
-    
+
 
 
     toResponseDto(application: Application): ApplicationResponseDto {

@@ -9,7 +9,11 @@ export interface MyPaymentsState {
     downloading: boolean;
     payments: any[];
     paymentStats: any;
-    filterStatus: string | null;
+    // Pagination
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    totalItems: number;
 }
 
 export interface PaymentPageState {

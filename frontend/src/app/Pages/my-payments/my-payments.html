@@ -27,11 +27,6 @@
         [variant]="'accent'" />
     </div>
 
-    <!-- Filters - Using dumb component -->
-    <div class="filters-section">
-      <app-payment-filter-tabs [activeFilter]="state().filterStatus" (filterChange)="filterByStatus($event)" />
-    </div>
-
     <!-- Content Card -->
     <div class="content-card">
       <!-- Loading State -->
@@ -43,7 +38,7 @@
       }
 
       <!-- Empty State -->
-      @if (!state().loading && filteredPayments().length === 0) {
+      @if (!state().loading && state().payments.length === 0) {
       <div class="empty-state">
         <i class="bi bi-inbox"></i>
         <h3>Aucun paiement</h3>
@@ -52,21 +47,29 @@
       }
 
       <!-- Payments Table/Grid View -->
-      @if (!state().loading && filteredPayments().length > 0) {
+      @if (!state().loading && state().payments.length > 0) {
       <div class="payments-container">
         <!-- Desktop: Table View - Using dumb component -->
         <div class="payments-table-wrapper">
-          <app-payment-table [payments]="filteredPayments()" [downloading]="state().downloading"
+          <app-payment-table [payments]="state().payments" [downloading]="state().downloading"
             (downloadReceipt)="downloadReceipt($event)" />
         </div>
 
         <!-- Mobile: Card View - Using dumb component -->
         <div class="payments-cards-wrapper">
-          <app-payment-card-list [payments]="filteredPayments()" [downloading]="state().downloading"
+          <app-payment-card-list [payments]="state().payments" [downloading]="state().downloading"
             (downloadReceipt)="downloadReceipt($event)" />
         </div>
       </div>
       }
     </div>
+
+    <!-- Pagination Support - Outside content-card -->
+    @if (state().totalPages > 1) {
+    <div class="pagination-section">
+      <app-pagination [currentPage]="state().currentPage" [totalPages]="state().totalPages"
+        (pageChange)="onPageChange($event)" />
+    </div>
+    }
   </div>
 </div>

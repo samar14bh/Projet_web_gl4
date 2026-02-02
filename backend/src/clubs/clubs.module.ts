@@ -13,6 +13,7 @@ import { MembershipsService } from './memberships.service';
 import { User } from '../users/entities/user.entity';
 import { Application } from 'src/memberships/entities/application.entity';
 import { Document as ClubDocument } from '../documents/entities/document.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 /**
  * Module pour la gestion des clubs et catégories
@@ -29,9 +30,10 @@ import { Document as ClubDocument } from '../documents/entities/document.entity'
       User,
       ClubDocument,
     ]),
+    NotificationsModule,
   ],
   controllers: [ClubsController, CategoriesController, MembershipsController],
   providers: [ClubsService, MembershipsService],
   exports: [ClubsService],
 })
-export class ClubsModule {}
+export class ClubsModule { }
