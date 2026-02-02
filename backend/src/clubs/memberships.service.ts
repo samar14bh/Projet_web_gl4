@@ -68,13 +68,11 @@ export class MembershipsService {
         }
 
         const existingApplication = await this.applicationRepository.findOne({
-            where: {
-                user: { id: userId },
-                membership: {
-                    club: { id: clubId },
-                },
-                status: Status.PENDING,
-            },
+          where: {
+            user: { id: userId },
+            club: { id: clubId },
+            status: Status.PENDING,
+          },
         });
 
         if (existingApplication) {
