@@ -1,12 +1,14 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CashPaymentInfo } from './cash-payment-info/cash-payment-info';
 
 @Component({
   selector: 'app-payment-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CashPaymentInfo],
   templateUrl: './payment-modal.html',
   styleUrl: './payment-modal.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PaymentModal {
   @Output() close = new EventEmitter<void>();

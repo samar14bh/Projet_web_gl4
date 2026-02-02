@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserEventDto } from '../../../Core/dtos/user-events/user-event.dto';
 import { EventService } from '../../../Core/services/event.service';
@@ -8,6 +8,7 @@ import { PaymentModal } from '../../payment-modal/payment-modal';
 import { ToastService } from '../../../Core/services/toast.service';
 import { ConfirmModal } from '../../../shared/components/confirm-modal/confirm-modal';
 import { AuthService } from '../../../Core/services/auth.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-user-events-card',
@@ -15,66 +16,75 @@ import { AuthService } from '../../../Core/services/auth.service';
   imports: [CommonModule, DatePipe, PaymentModal, ConfirmModal],
   templateUrl: './user-events-card.html',
   styleUrls: ['./user-events-card.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserEventsCard {
-  @Input() event!: UserEventDto;
-  @Output() onCancelled = new EventEmitter<void>();
-  showPaymentModal: boolean = false;
-  showConfirmModal: boolean = false;
+  event = input.required<UserEventDto>();
+  onCancelled = output<void>();
+
+  showPaymentModal = signal(false);
+  showConfirmModal = signal(false);
 
   private readonly authService = inject(AuthService);
   private readonly eventService = inject(EventService);
   private readonly paymentService = inject(PaymentService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+
+
   private readonly USER_ID = Number(this.authService.currentUser()?.id ?? 0);
+
   viewEventDetails() {
-    this.router.navigate(['/user-event-details', this.USER_ID, this.event.id]);
+    this.router.navigate(['/user-event-details', this.USER_ID, this.event().id]);
   }
 
   cancelRegistration() {
-    if (!this.event.canCancel) return;
-    this.showConfirmModal = true;
+    if (!this.event().canCancel) return;
+    this.showConfirmModal.set(true);
   }
 
   onConfirmCancellation() {
-    this.showConfirmModal = false;
-    this.eventService.cancelRegistration(this.event.id, this.USER_ID).subscribe({
-      next: () => {
-        this.toastService.success('Inscription annulée avec succès');
-        this.onCancelled.emit();
-      },
-      error: () => {
-        this.toastService.error('Erreur lors de l’annulation');
-      }
-    });
+    this.showConfirmModal.set(false);
+    this.eventService.cancelRegistration(this.event().id, this.USER_ID)
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: () => {
+          this.toastService.success('Inscription annulée avec succès');
+          this.onCancelled.emit();
+        },
+        error: () => {
+          this.toastService.error('Erreur lors de l\'annulation');
+        }
+      });
   }
 
   closeConfirmModal() {
-    this.showConfirmModal = false;
+    this.showConfirmModal.set(false);
   }
 
   viewReceipt() {
-    if (!this.event.paymentId) return;
+    const paymentId = this.event().paymentId;
+    if (!paymentId) return;
 
-    this.paymentService.downloadReceipt(this.event.paymentId).subscribe({
-      next: (blob: Blob) => {
-        this.paymentService.handleBlobDownload(blob, `recu-event-${this.event.id}.pdf`);
-      },
-      error: (err: any) => {
-        console.error('Erreur téléchargement reçu:', err);
-        alert('Erreur lors du téléchargement du reçu.');
-      }
-    });
+    this.paymentService.downloadReceipt(paymentId)
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (blob: Blob) => {
+          this.paymentService.handleBlobDownload(blob, `recu-event-${this.event().id}.pdf`);
+        },
+        error: (err: any) => {
+          console.error('Erreur téléchargement reçu:', err);
+          alert('Erreur lors du téléchargement du reçu.');
+        }
+      });
   }
 
-
   openPaymentModal() {
-    this.showPaymentModal = true;
+    this.showPaymentModal.set(true);
   }
 
   closePaymentModal() {
-    this.showPaymentModal = false;
+    this.showPaymentModal.set(false);
   }
 
   redirectToPayment() {

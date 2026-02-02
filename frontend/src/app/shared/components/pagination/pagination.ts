@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './pagination.html',
   styleUrl: './pagination.css',
+
 })
 export class PaginationComponent {
   readonly currentPage = input.required<number>();

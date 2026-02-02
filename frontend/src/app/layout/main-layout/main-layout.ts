@@ -1,8 +1,8 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
-import {NavbarComponent} from '../navbar/navbar';
+import { NavbarComponent } from '../navbar/navbar';
 
 @Component({
   selector: 'app-main-layout',
@@ -10,33 +10,19 @@ import {NavbarComponent} from '../navbar/navbar';
   imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainLayout {
-  // Signal pour contrôler la sidebar sur mobile
-  isSidebarOpen = signal(false);
+  isSidebarOpen = signal(true);
 
-  /**
-   * Toggle sidebar sur mobile
-   */
+
+
   toggleSidebar() {
     this.isSidebarOpen.update((state) => !state);
   }
 
-  /**
-   * Fermer la sidebar
-   */
   closeSidebar() {
     this.isSidebarOpen.set(false);
   }
 
-  /**
-   * Fermer la sidebar quand on change de route
-   */
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
-    // Fermer automatiquement la sidebar si on revient sur desktop
-    if (event.target.innerWidth > 768 && this.isSidebarOpen()) {
-      this.closeSidebar();
-    }
-  }
 }

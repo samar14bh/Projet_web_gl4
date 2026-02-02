@@ -3,8 +3,8 @@
 .topbar {
   height: var(--topbar-height);
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.95) 0%,
-  rgba(248, 250, 252, 0.97) 100%);
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(248, 250, 252, 0.97) 100%);
   backdrop-filter: blur(24px) saturate(200%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow:
@@ -16,12 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: fixed;
-  top: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  z-index: 999;
-  animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
 }
 
 /* Animated gradient border at the bottom */
@@ -33,11 +28,11 @@
   right: 0;
   height: 1px;
   background: linear-gradient(90deg,
-  transparent 0%,
-  var(--primary-300) 20%,
-  var(--primary-500) 50%,
-  var(--primary-300) 80%,
-  transparent 100%);
+      transparent 0%,
+      var(--primary-300) 20%,
+      var(--primary-500) 50%,
+      var(--primary-300) 80%,
+      transparent 100%);
   animation: shimmer 3s infinite linear;
 }
 
@@ -45,6 +40,7 @@
   0% {
     background-position: -200% center;
   }
+
   100% {
     background-position: 200% center;
   }
@@ -136,6 +132,7 @@
   position: relative;
   overflow: hidden;
 }
+
 .login-btn {
   display: inline-flex;
   align-items: center;
@@ -258,7 +255,7 @@
   transform: translateY(-2px);
 }
 
-.search-input:focus + i {
+.search-input:focus+i {
   color: var(--primary-500);
   transform: translateY(-50%) scale(1.15);
   filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
@@ -293,7 +290,7 @@
   gap: 0.75rem;
 }
 
-.search-input:focus ~ .search-suggestions {
+.search-input:focus~.search-suggestions {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -349,8 +346,8 @@
   width: 44px;
   height: 44px;
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.9),
-  rgba(248, 250, 252, 0.9));
+      rgba(255, 255, 255, 0.9),
+      rgba(248, 250, 252, 0.9));
   border: 1.5px solid var(--gray-200);
   border-radius: var(--border-radius-lg);
   color: var(--gray-700);
@@ -422,8 +419,8 @@
   width: 44px;
   height: 44px;
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.9),
-  rgba(248, 250, 252, 0.9));
+      rgba(255, 255, 255, 0.9),
+      rgba(248, 250, 252, 0.9));
   border: 1.5px solid var(--gray-200);
   border-radius: var(--border-radius-lg);
   color: var(--gray-700);
@@ -547,8 +544,8 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.8),
-  rgba(248, 250, 252, 0.9));
+      rgba(255, 255, 255, 0.8),
+      rgba(248, 250, 252, 0.9));
   z-index: -1;
 }
 
@@ -564,6 +561,7 @@
     opacity: 0;
     transform: translateY(-15px) scale(0.95);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -577,8 +575,8 @@
   align-items: center;
   justify-content: space-between;
   background: linear-gradient(to bottom,
-  rgba(255, 255, 255, 0.95),
-  rgba(248, 250, 252, 0.95));
+      rgba(255, 255, 255, 0.95),
+      rgba(248, 250, 252, 0.95));
 }
 
 .dropdown-header h6 {
@@ -652,8 +650,8 @@
   position: relative;
   overflow: hidden;
   background: linear-gradient(to right,
-  rgba(255, 255, 255, 0.9),
-  rgba(248, 250, 252, 0.9));
+      rgba(255, 255, 255, 0.9),
+      rgba(248, 250, 252, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
@@ -684,8 +682,8 @@
 
 .notification-item.unread {
   background: linear-gradient(to right,
-  rgba(59, 130, 246, 0.04),
-  rgba(255, 255, 255, 0.9));
+      rgba(59, 130, 246, 0.04),
+      rgba(255, 255, 255, 0.9));
 }
 
 .notification-item.unread::after {
@@ -720,22 +718,22 @@
 
 .notification-icon.type-info {
   background: linear-gradient(135deg,
-  rgba(59, 130, 246, 0.15),
-  rgba(59, 130, 246, 0.25));
+      rgba(59, 130, 246, 0.15),
+      rgba(59, 130, 246, 0.25));
   color: var(--info);
 }
 
 .notification-icon.type-success {
   background: linear-gradient(135deg,
-  rgba(16, 185, 129, 0.15),
-  rgba(16, 185, 129, 0.25));
+      rgba(16, 185, 129, 0.15),
+      rgba(16, 185, 129, 0.25));
   color: var(--success);
 }
 
 .notification-icon.type-warning {
   background: linear-gradient(135deg,
-  rgba(245, 158, 11, 0.15),
-  rgba(245, 158, 11, 0.25));
+      rgba(245, 158, 11, 0.15),
+      rgba(245, 158, 11, 0.25));
   color: var(--warning);
 }
 
@@ -774,8 +772,8 @@
   padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.9);
   background: linear-gradient(to bottom,
-  rgba(248, 250, 252, 0.95),
-  rgba(255, 255, 255, 0.95));
+      rgba(248, 250, 252, 0.95),
+      rgba(255, 255, 255, 0.95));
 }
 
 .view-all {
@@ -792,16 +790,16 @@
   width: 100%;
   justify-content: center;
   background: linear-gradient(135deg,
-  rgba(59, 130, 246, 0.1),
-  rgba(59, 130, 246, 0.05));
+      rgba(59, 130, 246, 0.1),
+      rgba(59, 130, 246, 0.05));
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .view-all:hover {
   color: var(--primary-700);
   background: linear-gradient(135deg,
-  rgba(59, 130, 246, 0.15),
-  rgba(59, 130, 246, 0.1));
+      rgba(59, 130, 246, 0.15),
+      rgba(59, 130, 246, 0.1));
   border-color: var(--primary-300);
   transform: translateY(-2px);
   box-shadow:
@@ -824,8 +822,8 @@
   align-items: center;
   gap: 1rem;
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.95),
-  rgba(248, 250, 252, 0.95));
+      rgba(255, 255, 255, 0.95),
+      rgba(248, 250, 252, 0.95));
   border: 1.5px solid var(--gray-200);
   border-radius: var(--border-radius-xl);
   padding: 0.5rem 1.25rem 0.5rem 0.75rem;
@@ -925,8 +923,8 @@
   padding: 2.5rem 2rem 2rem;
   text-align: center;
   background: linear-gradient(135deg,
-  var(--primary-50),
-  rgba(248, 250, 252, 0.9));
+      var(--primary-50),
+      rgba(248, 250, 252, 0.9));
   border-bottom: 1px solid rgba(255, 255, 255, 0.95);
   position: relative;
 }
@@ -1025,9 +1023,9 @@
 .menu-divider {
   height: 1px;
   background: linear-gradient(to right,
-  transparent,
-  var(--gray-200),
-  transparent);
+      transparent,
+      var(--gray-200),
+      transparent);
   margin: 1rem 1.25rem;
 }
 
@@ -1066,6 +1064,7 @@
 }
 
 @media (max-width: 768px) {
+
   .search-box,
   .quick-actions,
   .theme-toggle {
@@ -1107,8 +1106,8 @@
 /* Add hover effect to entire topbar */
 .topbar:hover {
   background: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.98) 0%,
-  rgba(248, 250, 252, 0.99) 100%);
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(248, 250, 252, 0.99) 100%);
 }
 
 /* Add background pattern */

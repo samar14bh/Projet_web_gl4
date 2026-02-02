@@ -1,8 +1,7 @@
-import { Component, inject, computed, input } from '@angular/core';
+import { Component, inject, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { UserRoleInClub, MembershipClubDto } from '../../Core/dtos/application/membership-club.dto';
-import { ClubService } from '../../Core/services/club.service';
+import { UserRoleInClub } from '../../Core/dtos/application/membership-club.dto';
 import { MembershipService } from '../../Core/services/membership.service';
 
 @Component({
@@ -11,6 +10,7 @@ import { MembershipService } from '../../Core/services/membership.service';
   imports: [CommonModule, RouterModule],
   templateUrl: './club-responsability.html',
   styleUrl: './club-responsability.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClubResponsability {
   private readonly membershipService = inject(MembershipService);

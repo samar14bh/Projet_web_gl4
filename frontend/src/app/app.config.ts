@@ -6,6 +6,8 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { routes } from './app.routes';
 import { authInterceptor } from './Core/interceptors/auth.interceptor'; // Notez le nom en minuscule
+import { provideToastr } from 'ngx-toastr';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 // Enregistrer la locale française
 registerLocaleData(localeFr, 'fr-FR');
@@ -23,6 +25,11 @@ export const appConfig: ApplicationConfig = {
       withFetch(), // Nécessaire pour EventService
       withInterceptors([authInterceptor])
     ),
-    { provide: LOCALE_ID, useValue: 'fr-FR' }, // Définir la locale par défaut
+    { provide: LOCALE_ID, useValue: 'fr-FR' },
+    provideToastr({
+      timeOut: 3000,
+      positionClass: 'toast-bottom-right',
+      preventDuplicates: true,
+    }),
   ]
 };

@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { MailService } from '../../../Core/services/mail.service';
@@ -9,6 +9,7 @@ import { MailService } from '../../../Core/services/mail.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './contact.html',
   styleUrl: './contact.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Contact {
   private readonly mailService = inject(MailService);

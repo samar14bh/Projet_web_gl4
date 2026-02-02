@@ -1,4 +1,4 @@
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClubService } from '../../Core/services/club.service';
@@ -9,7 +9,8 @@ import { Club } from '../../Core/models/club.model';
 import { DefaultImagePipe } from "../../shared/pipes/default-image.pipe";
 
 import { Router, RouterModule } from '@angular/router';
-import {AuthService} from '../../Core/services/auth.service';
+import { AuthService } from '../../Core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-user-clubs',
@@ -17,12 +18,12 @@ import {AuthService} from '../../Core/services/auth.service';
   imports: [CommonModule, FormsModule, PaginationComponent, Loader, AppError, DefaultImagePipe, RouterModule],
   templateUrl: './user-clubs.html',
   styleUrl: './user-clubs.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserClubs {
   private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
-  private readonly authService=inject(AuthService);
-  private readonly USER_ID = Number(this.authService.currentUser()?.id ?? 0);
+  private readonly authService = inject(AuthService);
   readonly pageSize = 3;
   readonly Math = Math;
 
@@ -31,18 +32,18 @@ export class UserClubs {
 
   readonly clubsResource = resource({
     params: () => ({
-      userId: this.USER_ID,
+      userId: Number(this.authService.currentUser()?.id ?? 0),
       page: this.currentPage(),
       limit: this.pageSize,
       search: this.searchQuery(),
     }),
     loader: async ({ params }) => {
       try {
-        return (await this.clubService.getUserClubs(params.userId, {
+        return (await firstValueFrom(this.clubService.getUserClubs(params.userId, {
           page: params.page,
           limit: params.limit,
           search: params.search,
-        }).toPromise()) ?? this.emptyResult();
+        }))) ?? this.emptyResult();
       } catch {
         return this.emptyResult();
       }

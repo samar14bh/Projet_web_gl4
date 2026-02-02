@@ -7,8 +7,11 @@
   min-height: 100vh;
   background: var(--bg-secondary, #f9fafb);
   position: relative;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll during transitions */
 }
 
+/* Sidebar Defaults (Hidden on Desktop & Mobile unless open) */
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
@@ -16,26 +19,61 @@
   border-right: 1px solid var(--gray-200);
   position: fixed;
   top: 0;
-  left: 0;
+  left: calc(var(--sidebar-width) * -1);
+  /* Start hidden */
   z-index: 1000;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Open State */
+.layout-container.sidebar-open .sidebar {
+  left: 0;
+}
 
-/* ========== MAIN CONTENT ========== */
-
+/* Main Content */
 .main-content {
   flex: 1;
-  margin-left: var(--sidebar-width);
+  margin-left: 0;
+  /* Default closed margin */
   min-height: 100vh;
-  width: calc(100% - var(--sidebar-width));
-  padding-top: 60px; /* <-- Push content below navbar */
+  width: 100%;
+  padding-top: 60px;
   transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
+/* Desktop Open State for Content */
+@media (min-width: 769px) {
+  .layout-container.sidebar-open .main-content {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+}
 
-/* ========== BOUTON HAMBURGER ========== */
+/* Navbar Positioning */
+app-navbar {
+  display: block;
+  width: 100%;
+  /* Initially full width */
+  height: 60px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Default closed position */
+  z-index: 1002;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
+}
 
+/* Desktop Open State for Navbar */
+@media (min-width: 769px) {
+  .layout-container.sidebar-open app-navbar {
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+}
+
+/* Hamburger Button */
 .hamburger-btn {
   position: fixed;
   top: 1rem;
@@ -52,6 +90,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
   display: none;
+  /* Hidden on Desktop */
   align-items: center;
   justify-content: center;
 }
@@ -67,9 +106,10 @@
   transform: scale(0.95);
 }
 
-/* ========== SIDEBAR OVERLAY ========== */
 
 .sidebar-overlay {
+  display: none;
+  /* Hidden by default on all screens */
   position: fixed;
   top: 0;
   left: 0;
@@ -82,55 +122,39 @@
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.sidebar-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ========== RESPONSIVE ========== */
-
-@media (max-width: 1024px) {
-  .main-content {
-    margin-left: 260px;
-    width: calc(100% - 260px);
-  }
-}
-
 @media (max-width: 768px) {
-  .sidebar {
-    left: -280px; /* Cache la sidebar */
+  .sidebar-overlay {
+    display: block;
+    /* Restore display on mobile */
   }
 
-  .sidebar.open {
-    left: 0; /* Affiche la sidebar */
-    box-shadow: var(--shadow-xl);
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
   }
+}
 
-  .main-content {
+/* RESPONSIVE OVERRIDES */
+@media (max-width: 768px) {
+
+  /* On Mobile, Content margins stay 0 even if sidebar open */
+  .layout-container.sidebar-open .main-content {
     margin-left: 0;
     width: 100%;
+  }
+
+  /* Navbar stays full width on mobile */
+  .layout-container.sidebar-open app-navbar {
+    left: 0;
+    width: 100%;
+  }
+
+  .main-content {
     padding-top: 80px;
   }
 
   .hamburger-btn {
     display: flex !important;
-  }
-}
-app-navbar {
-  display: block;
-  width: 100%;
-  height: 60px; /* adjust as needed */
-  background: white; /* or your navbar background */
-  border-bottom: 1px solid var(--gray-200);
-  position: fixed; /* stays on top */
-  top: 0;
-  left: var(--sidebar-width); /* shift right if sidebar is open on desktop */
-  z-index: 1002;
-}
-
-@media (max-width: 768px) {
-  app-navbar {
-    left: 0;
   }
 }
 

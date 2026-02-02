@@ -1,73 +1,73 @@
 <div class="event-card">
-  <img *ngIf="event.coverImage" [src]="event.coverImage" alt="{{ event.title }}" class="event-cover"
+  <img *ngIf="event().coverImage" [src]="event().coverImage" alt="{{ event().title }}" class="event-cover"
     (click)="viewEventDetails()" style="cursor: pointer;" />
 
   <div class="event-header">
     <div class="event-badges">
-      <span class="status-badge">{{ event.status }}</span>
-      <span *ngIf="event.memberOnly" class="member-badge">👥 Membres</span>
+      <span class="status-badge">{{ event().status }}</span>
+      <span *ngIf="event().memberOnly" class="member-badge">👥 Membres</span>
     </div>
   </div>
 
   <div class="event-content">
-    <h3 class="event-title" (click)="viewEventDetails()" style="cursor: pointer;">{{ event.title }}</h3>
-    <p class="event-description">{{ event.description || 'Aucune description disponible' }}</p>
+    <h3 class="event-title" (click)="viewEventDetails()" style="cursor: pointer;">{{ event().title }}</h3>
+    <p class="event-description">{{ event().description || 'Aucune description disponible' }}</p>
 
     <div class="event-meta">
       <div class="meta-item">
         <span class="meta-icon">📅</span>
-        <span class="meta-text">{{ event.startDate | date:'dd MMM yyyy, HH:mm' }}</span>
+        <span class="meta-text">{{ event().startDate | date:'dd MMM yyyy, HH:mm' }}</span>
       </div>
 
-      <div class="meta-item" *ngIf="event.address">
+      <div class="meta-item" *ngIf="event().address">
         <span class="meta-icon">📍</span>
-        <span class="meta-text">{{ event.address }}</span>
+        <span class="meta-text">{{ event().address }}</span>
       </div>
 
       <div class="meta-item">
         <span class="meta-icon">🏢</span>
-        <span class="meta-text">{{ event.club.name }}</span>
+        <span class="meta-text">{{ event().club.name }}</span>
       </div>
 
-      <div class="meta-item" *ngIf="event.subscriptionFees > 0">
+      <div class="meta-item" *ngIf="event().subscriptionFees > 0">
         <span class="meta-icon">💳</span>
         <span class="meta-text">
-          {{ event.subscriptionFees }}€
-          <ng-container *ngIf="event.userRegistration">
+          {{ event().subscriptionFees }}€
+          <ng-container *ngIf="event().userRegistration">
             <span [ngClass]="{
-              'paid-status': event.paymentStatus === 'paid',
-              'pending-status': event.paymentStatus !== 'paid'
+              'paid-status': event().paymentStatus === 'paid',
+              'pending-status': event().paymentStatus !== 'paid'
             }">
-              - {{ event.paymentStatus === 'paid' ? 'Payé ✅' : 'Non payé ❌' }}
+              - {{ event().paymentStatus === 'paid' ? 'Payé ✅' : 'Non payé ❌' }}
             </span>
           </ng-container>
         </span>
       </div>
 
-      <div class="meta-item" *ngIf="event.subscriptionFees === 0">
+      <div class="meta-item" *ngIf="event().subscriptionFees === 0">
         <span class="meta-icon">🎉</span>
         <span class="meta-text meta-free">Gratuit</span>
       </div>
 
-      <div class="meta-item" *ngIf="event.userRegistration">
+      <div class="meta-item" *ngIf="event().userRegistration">
         <span class="meta-icon">📝</span>
         <span class="meta-text">
-          Statut: {{ event.userRegistration.status }}
-          - {{ event.userRegistration.registeredAt | date:'dd/MM/yyyy' }}
+          Statut: {{ event().userRegistration?.status }}
+          - {{ event().userRegistration?.registeredAt | date:'dd/MM/yyyy' }}
         </span>
       </div>
 
-      <div class="meta-item" *ngIf="event.userRegistration && event.attendanceStatus">
+      <div class="meta-item" *ngIf="event().userRegistration && event().attendanceStatus">
         <span class="meta-icon">✓</span>
         <span class="meta-text">
-          {{ event.attendanceStatus === 'present' ? 'Présent' : 'Absent' }}
+          {{ event().attendanceStatus === 'present' ? 'Présent' : 'Absent' }}
         </span>
       </div>
     </div>
   </div>
 
   <div class="event-actions">
-    <ng-container *ngIf="!event.userRegistration; else registeredActions">
+    <ng-container *ngIf="!event().userRegistration; else registeredActions">
       <button class="action-btn register-btn w-100" (click)="viewEventDetails()">
         <i class="fas fa-plus-circle me-1"></i> S'inscrire
       </button>
@@ -75,18 +75,18 @@
 
     <ng-template #registeredActions>
       <button class="action-btn view-btn" (click)="viewEventDetails()">👁️ Gérer</button>
-      <button *ngIf="event.subscriptionFees > 0 && event.paymentStatus !== 'paid'" class="action-btn pay-btn"
+      <button *ngIf="event().subscriptionFees > 0 && event().paymentStatus !== 'paid'" class="action-btn pay-btn"
         (click)="openPaymentModal()">💳 Payer</button>
-      <button *ngIf="event.subscriptionFees > 0 && event.paymentStatus === 'paid'" class="action-btn receipt-btn"
+      <button *ngIf="event().subscriptionFees > 0 && event().paymentStatus === 'paid'" class="action-btn receipt-btn"
         (click)="viewReceipt()">📄 Reçu</button>
-      <button *ngIf="event.canCancel" class="action-btn cancel-btn" (click)="cancelRegistration()">✕ Quitter</button>
+      <button *ngIf="event().canCancel" class="action-btn cancel-btn" (click)="cancelRegistration()">✕ Quitter</button>
     </ng-template>
   </div>
 </div>
-<app-payment-modal *ngIf="showPaymentModal" (close)="closePaymentModal()" (payOnline)="redirectToPayment()">
+<app-payment-modal *ngIf="showPaymentModal()" (close)="closePaymentModal()" (payOnline)="redirectToPayment()">
 </app-payment-modal>
 
-<app-confirm-modal *ngIf="showConfirmModal" title="Quitter l'événement"
+<app-confirm-modal *ngIf="showConfirmModal()" title="Quitter l'événement"
   message="Êtes-vous sûr de vouloir annuler votre inscription à cet événement ?" (confirm)="onConfirmCancellation()"
   (cancel)="closeConfirmModal()">
 </app-confirm-modal>

@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { MembershipService } from '../../../Core/services/membership.service';
 import { Observable } from 'rxjs';
 import { ApplicationResponseDto } from '../../../Core/dtos/application/application-response.dto';
@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
   ],
   templateUrl: './application-list.html',
   styleUrl: './application-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ApplicationList {
   applications = input.required<ApplicationResponseDto[]>();

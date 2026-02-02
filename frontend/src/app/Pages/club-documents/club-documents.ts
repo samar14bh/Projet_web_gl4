@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, input, resource } from '@angular/core';
+import { Component, inject, signal, computed, input, resource, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -9,20 +9,21 @@ import { Loader } from '../../shared/components/loader/loader';
 import { PaginationComponent } from '../../shared/components/pagination/pagination';
 import { DocumentDto } from '../../Core/dtos/documents/document.dto';
 import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
-import { Error as ErrorComponent } from '../../shared/components/error/error';
-import { MembershipClubDto } from '../../Core/dtos/application/membership-club.dto';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-club-documents',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, Loader, PaginationComponent, ConfirmModal, ErrorComponent],
+    imports: [CommonModule, RouterModule, FormsModule, Loader, PaginationComponent, ConfirmModal],
     templateUrl: './club-documents.html',
-    styleUrl: './club-documents.css'
+    styleUrl: './club-documents.css',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClubDocuments {
     private documentService = inject(DocumentService);
     private authService = inject(AuthService);
     private membershipService = inject(MembershipService);
+    private toastr = inject(ToastrService);
 
     membershipId = input.required({
         alias: 'membershipId',
@@ -34,10 +35,8 @@ export class ClubDocuments {
     isUploading = signal(false);
     showConfirmModal = signal(false);
     selectedDoc = signal<DocumentDto | null>(null);
-    showError = signal(false);
-    errorMessage = signal<string>('');
 
-    // Derive membership details declaratively from the shared resource
+
     membership = this.membershipService.getMembership(this.membershipId);
 
     documentsResource = this.documentService.getDocumentsResource(() => ({
@@ -81,10 +80,10 @@ export class ClubDocuments {
             next: () => {
                 this.isUploading.set(false);
                 this.documentsResource.reload();
+                this.toastr.success('Success', 'File uploaded successfully');
             },
             error: (err) => {
-                this.errorMessage.set('Le téléversement a échoué. Veuillez réessayer.');
-                this.showError.set(true);
+                this.toastr.error('Error', 'File upload failed. Please try again.');
                 this.isUploading.set(false);
             }
         });
@@ -106,11 +105,11 @@ export class ClubDocuments {
         this.documentService.delete(doc.id).subscribe({
             next: () => {
                 this.documentsResource.reload();
+                this.toastr.success('Success', 'Document deleted successfully');
                 this.closeConfirmModal();
             },
             error: (err) => {
-                this.errorMessage.set('La suppression a échoué.');
-                this.showError.set(true);
+                this.toastr.error('Error', 'Validation failed');
                 this.closeConfirmModal();
             }
         });

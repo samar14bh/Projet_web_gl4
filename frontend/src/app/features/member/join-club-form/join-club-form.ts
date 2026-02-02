@@ -1,16 +1,23 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, input, numberAttribute, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { MembershipService } from '../../../Core/services/membership.service';
 import { ClubService } from '../../../Core/services/club.service';
 import { CreateApplicationDto } from '../../../Core/dtos/application/create-application.dto';
-import { ActivatedRoute } from '@angular/router';
-import { debounceTime, switchMap, of, filter, tap } from 'rxjs';
+import { debounceTime, EMPTY } from 'rxjs';
+import { Router } from '@angular/router';
 import { takeUntilDestroyed, rxResource } from '@angular/core/rxjs-interop';
+import { DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { Error } from '../../../shared/components/error/error';
 import { NotificationService } from '../../../Core/services/notification.service';
 import { Loader } from '../../../shared/components/loader/loader';
+import { AuthService } from '../../../Core/services/auth.service';
+
+const FORM_EXPIRATION_DAYS = 7;
+const SUCCESS_REDIRECT_DELAY_MS = 2000;
+const FORM_SAVE_DEBOUNCE_MS = 1000;
 
 @Component({
   selector: 'app-join-club-form',
@@ -18,55 +25,62 @@ import { Loader } from '../../../shared/components/loader/loader';
   imports: [ReactiveFormsModule, CommonModule, Error, Loader],
   templateUrl: './join-club-form.html',
   styleUrls: ['./join-club-form.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class JoinClubForm {
-  private fb = inject(FormBuilder);
-  private membershipService = inject(MembershipService);
-  private clubService = inject(ClubService);
-  private notificationService = inject(NotificationService);
-  private route = inject(ActivatedRoute);
-  protected location = inject(Location);
+export class JoinClubForm implements OnInit {
+  private readonly membershipService = inject(MembershipService);
+  private readonly authService = inject(AuthService);
+  private readonly clubService = inject(ClubService);
 
-  private storageKey = '';
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  protected readonly location = inject(Location);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
-  joinClubForm: FormGroup;
-  private clubId: number;
-  private userId: number;
-  success = signal(false);
-  errorMessage = signal('');
 
-  statusResource = rxResource({
-    stream: () =>
-      this.clubService.getUserClubStatus(this.clubId, this.userId)
+  readonly clubId = input.required<number>();
+
+  private readonly userId = this.authService.currentUser()?.id;
+  private storageKey!: string;
+
+  readonly joinClubForm: FormGroup;
+  readonly success = signal(false);
+  readonly errorMessage = signal('');
+
+  readonly statusResource = rxResource({
+    params: () => ({ clubId: this.clubId(), userId: this.userId }),
+    stream: ({ params }) => {
+      if (params.userId === undefined) {
+        this.router.navigate(['/login']);
+        return EMPTY;
+      }
+      return this.clubService.getUserClubStatus(params.clubId, Number(params.userId));
+    }
   });
 
   constructor() {
-    this.clubId = Number(this.route.snapshot.paramMap.get('clubId'));
-    this.userId = 17;
-    this.storageKey = `join-club-form-${this.userId}-${this.clubId}`;
-
     this.joinClubForm = this.fb.group({
-      whyJoin: [null, [Validators.required, Validators.minLength(50), Validators.maxLength(1000)]],
-      previousClub: [null, [Validators.required, Validators.maxLength(255)]],
-      goalsInClub: [null, [Validators.required, Validators.minLength(30), Validators.maxLength(1000)]],
-      phoneNumber: [null, [Validators.required, Validators.pattern(/^[0-9]{8,20}$/)]],
-      skills: [null, [Validators.required, Validators.maxLength(500)]],
-      expectations: [null, [Validators.required, Validators.maxLength(500)]],
-      availability: [null, [Validators.required, Validators.maxLength(100)]],
-      additionalComments: [null, [Validators.required, Validators.maxLength(500)]],
+      whyJoin: [null, [Validators.required, Validators.minLength(50), Validators.maxLength(1000), CustomValidators.noWhitespace()]],
+      previousClub: [null, [Validators.required, Validators.maxLength(255), CustomValidators.noWhitespace()]],
+      goalsInClub: [null, [Validators.required, Validators.minLength(30), Validators.maxLength(1000), CustomValidators.noWhitespace()]],
+      phoneNumber: [null, [Validators.required, CustomValidators.phoneNumber()]],
+      skills: [null, [Validators.required, Validators.maxLength(500), CustomValidators.noWhitespace()]],
+      expectations: [null, [Validators.required, Validators.maxLength(500), CustomValidators.noWhitespace()]],
+      availability: [null, [Validators.required, Validators.maxLength(100), CustomValidators.noWhitespace()]],
+      additionalComments: [null, [Validators.required, Validators.maxLength(500), CustomValidators.noWhitespace()]],
       isMemberOfOtherClub: [null, [Validators.required]],
     });
-    effect(() => {
-      const status = this.statusResource.value(); // get the value
-      console.log("Club status:", status);
-    });
+  }
 
+  ngOnInit() {
+    this.storageKey = `join-club-form-${this.userId}-${this.clubId()}`;
     this.loadSavedForm();
 
     this.joinClubForm.valueChanges
       .pipe(
-        debounceTime(1000),
-        takeUntilDestroyed()
+        debounceTime(FORM_SAVE_DEBOUNCE_MS),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
         this.saveFormToStorage();
@@ -74,15 +88,15 @@ export class JoinClubForm {
   }
 
 
-  private loadSavedForm() {
+  private loadSavedForm(): void {
     try {
       const savedData = localStorage.getItem(this.storageKey);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         const savedTimestamp = parsedData.timestamp;
-        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        const expirationTime = Date.now() - (FORM_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
 
-        if (savedTimestamp && savedTimestamp > sevenDaysAgo) {
+        if (savedTimestamp && savedTimestamp > expirationTime) {
           this.joinClubForm.patchValue(parsedData.formData);
           console.log('Données du formulaire restaurées');
         } else {
@@ -94,7 +108,7 @@ export class JoinClubForm {
     }
   }
 
-  private saveFormToStorage() {
+  private saveFormToStorage(): void {
     try {
       const dataToSave = {
         formData: this.joinClubForm.value,
@@ -106,7 +120,7 @@ export class JoinClubForm {
     }
   }
 
-  private clearSavedForm() {
+  private clearSavedForm(): void {
     try {
       localStorage.removeItem(this.storageKey);
     } catch (error) {
@@ -114,7 +128,7 @@ export class JoinClubForm {
     }
   }
 
-  submitForm() {
+  submitForm(): void {
     if (this.joinClubForm.invalid) {
       this.joinClubForm.markAllAsTouched();
       return;
@@ -123,34 +137,28 @@ export class JoinClubForm {
     const dto: CreateApplicationDto = {
       ...this.joinClubForm.value,
       userId: this.userId,
-      clubId: this.clubId
+      clubId: this.clubId()
     };
 
-    this.membershipService.createApplication(dto).pipe(
-      tap(() => console.log('Application submitted successfully')),
-      switchMap(() => this.clubService.getClubPresident(this.clubId)),
-      filter((president) => !!president && !!president.id),
-      switchMap((president) => this.notificationService.sendToUser(president.id, {
-        type: 'NEW_APPLICATION',
-        description: `Nouvelle candidature reçue pour votre club`,
-        iconName: 'person-plus',
-        priority: 'medium',
-        actionUrl: '/club-manager/dashboard',
-        actionLabel: 'Voir le dashboard'
-      }))
-    ).subscribe({
-      next: () => {
-        this.success.set(true);
-        this.clearSavedForm();
-        setTimeout(() => {
-          this.location.back();
-        }, 2000);
-      },
-      error: (err) => {
-        console.error('Error submitting application', err);
-        this.errorMessage.set('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
-      }
-    });
+    this.membershipService.createApplication(dto)
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (res) => {
+          console.log('Application submitted successfully', res);
+
+          this.success.set(true);
+          this.clearSavedForm();
+
+          setTimeout(() => {
+            this.location.back();
+            this.cdr.markForCheck(); // Ensure change detection with OnPush
+          }, SUCCESS_REDIRECT_DELAY_MS);
+        },
+        error: (err) => {
+          console.error('Error submitting application', err);
+          this.errorMessage.set('Une erreur est survenue lors de l\'envoi du formulaire. Vos données sont sauvegardées.');
+        },
+      });
   }
 
   getLength(controlName: string): number {

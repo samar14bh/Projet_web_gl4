@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -16,8 +17,8 @@ import { EventStatus, EventType } from '../../Core/models/event.model';
 import { UserEventsCard } from '../../features/events/user-events-card/user-events-card';
 import { PaginationComponent } from '../../shared/components/pagination/pagination';
 import { Error } from '../../shared/components/error/error';
-import {AuthService} from '../../Core/services/auth.service';
-import {UserEventDto} from '../../Core/dtos/user-events/user-event.dto';
+import { AuthService } from '../../Core/services/auth.service';
+import { UserEventDto } from '../../Core/dtos/user-events/user-event.dto';
 
 type FilterType = 'all' | 'upcoming' | 'past';
 
@@ -32,9 +33,10 @@ interface FilterState {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule,Loader, UserEventsCard, PaginationComponent, Error],
+  imports: [CommonModule, FormsModule, Loader, UserEventsCard, PaginationComponent, Error],
   templateUrl: './user-events.html',
   styleUrl: './user-events.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserEvents {
   private readonly eventService = inject(EventService);
