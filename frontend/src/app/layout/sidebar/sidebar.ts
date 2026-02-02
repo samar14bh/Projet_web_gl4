@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import {Component, inject, computed, signal, input} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
@@ -22,6 +22,9 @@ interface MenuItem {
   styleUrl: './sidebar.css'
 })
 export class SidebarComponent {
+
+  isSidebarOpen = input<boolean>(true);
+
   private authService = inject(AuthService);
   private membershipService = inject(MembershipService);
   private router = inject(Router);

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import {Component, computed, effect, EventEmitter, inject, output, Output, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
@@ -22,63 +22,28 @@ interface Notification {
   styleUrl: './navbar.css'
 })
 export class NavbarComponent {
+
+
+  toggleSidebar = output<void>();
+
   showNotifications = signal(false);
   showUserMenu = signal(false);
-   authService = inject(AuthService);
+  authService = inject(AuthService);
   user = this.authService.currentUser;
-  admin= computed(() => this.authService.isAdmin());
-   private router = inject(Router);
+  admin = computed(() => this.authService.isAdmin());
+  private router = inject(Router);
 
-  notifications: Notification[] = [
-    {
-      id: 1,
-      title: 'New message',
-      message: 'You have a new message from John',
-      time: '2m ago',
-      read: false,
-      icon: 'bi-chat-dots',
-      type: 'info'
-    },
-    {
-      id: 2,
-      title: 'Task completed',
-      message: 'Your report has been generated',
-      time: '1h ago',
-      read: false,
-      icon: 'bi-check-circle',
-      type: 'success'
-    },
-    {
-      id: 3,
-      title: 'System update',
-      message: 'System maintenance scheduled',
-      time: '3h ago',
-      read: true,
-      icon: 'bi-exclamation-triangle',
-      type: 'warning'
-    }
-  ];
 
-  unreadCount = computed(() => this.notifications.filter(n => !n.read).length);
 
-  toggleNotifications(): void {
-    this.showNotifications.update(s => !s);
-    this.showUserMenu.set(false);
-  }
 
   toggleUserMenu(): void {
     this.showUserMenu.update(s => !s);
     this.showNotifications.set(false);
   }
 
-  markAsRead(notification: Notification): void {
-    notification.read = true;
-  }
 
-  markAllAsRead(): void {
-    this.notifications.forEach(n => n.read = true);
-  }
-   onLogout(): void {
+
+  onLogout(): void {
 
     if (this.authService.logout) {
       this.authService.logout().subscribe({

@@ -1,6 +1,6 @@
 <header class="topbar">
   <div class="topbar-left">
-    <button class="btn-icon menu-toggle">
+    <button class="btn-icon menu-toggle" (click)="toggleSidebar.emit()">
       <i class="bi bi-list"></i>
     </button>
 
@@ -15,10 +15,10 @@
     <div class="dropdown-wrapper">
       <button class="user-profile" (click)="toggleUserMenu()">
         <img [src]="user()?.image | defaultImage:'user'" alt="User" class="user-avatar">
-         <div class="user-info">
-           <span *ngIf="admin()" class="admin-label">Admin</span>
-           <span *ngIf="!admin()">{{ user()?.name || 'Guest' }}</span>
-          </div>
+        <div class="user-info">
+          <span *ngIf="admin()" class="admin-label">Admin</span>
+          <span *ngIf="!admin()">{{ user()?.name || 'Guest' }}</span>
+        </div>
         <i class="bi bi-chevron-down"></i>
       </button>
 
@@ -41,15 +41,15 @@
 
           <div class="menu-divider"></div>
           <button type="button" class="menu-item text-danger" (click)="onLogout()">
-          <i class="bi bi-box-arrow-right"></i>
-           <span>Sign Out</span>
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
     </div>
     } @else {
     <div class="header-actions">
-      <button class="login-btn" routerLink="/login" >
+      <button class="login-btn" routerLink="/login">
         <i class="bi bi-box-arrow-in-right"></i>
         <span>Se connecter</span>
       </button>
