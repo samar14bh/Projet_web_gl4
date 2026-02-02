@@ -122,8 +122,7 @@ export const routes: Routes = [
         path: 'clubs',
         loadComponent: () => import('./features/clubs/explore-clubs/explore-clubs/explore-clubs').then(m => m.ExploreClubsComponent),
         title: 'Explorer les clubs',
-        canActivate: [roleGuard],
-        data: { role: 'USER' }
+        
       },
       {
         path: 'home',

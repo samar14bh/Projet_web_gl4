@@ -1,7 +1,8 @@
 <div class="event-card-grid">
   <div class="event-card-header">
     <div class="event-price-badge" [class.free]="event().isFree">
-      {{ formattedPrice() }}
+      @if (event().isFree) { Gratuit }
+      @else { {{ event().subscriptionFees | currencyTnd }} }
     </div>
   </div>
 
@@ -15,25 +16,16 @@
   </div>
 
   <div class="event-info-grid">
-    <div class="info-item">
-      <i class="fas fa-clock"></i> 
-      <span>{{ event().formattedTime }}</span>
-    </div>
+    <div class="info-item"><i class="fas fa-clock"></i> <span>{{ event().formattedTime }}</span></div>
     @if (event().address) {
-      <div class="info-item">
-        <i class="fas fa-location-dot"></i> 
-        <span class="event-address">{{ event().address }}</span>
-      </div>
+      <div class="info-item"><i class="fas fa-location-dot"></i> <span class="event-address">{{ event().address }}</span></div>
     }
   </div>
 
   <div class="event-footer-grid">
-  <div class="payment-status" [class]="statusClass()">
-    <i class="fas" [ngClass]="statusIcon()"></i> 
-    {{ event().paymentStatus }}
+    <div class="payment-status" [class]="statusClass()">
+      <i class="fas" [ngClass]="statusIcon()"></i> {{ event().paymentStatus }}
+    </div>
+    <a [routerLink]="['/user-event-details', userId(), event().id]" class="btn-details">Détails</a>
   </div>
-  <a [routerLink]="['/user-event-details', userId(), event().id]" class="btn-details">
-    Détails
-  </a>
-</div>
 </div>
