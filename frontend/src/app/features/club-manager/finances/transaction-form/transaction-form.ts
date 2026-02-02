@@ -3,12 +3,17 @@ import {
   signal,
   inject,
   output,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FinanceService } from '../../../../Core/services/finance.service';
-import { CreateTransactionDto, TransactionCategory, TransactionType } from '../../../../Core/models/finance.model';
+import {
+  CreateTransactionDto,
+  TransactionCategory,
+  TransactionType,
+} from '../../../../Core/models/finance.model';
 
 /**
  * Composant formulaire pour ajouter une transaction (revenu ou dépense)
@@ -23,6 +28,9 @@ import { CreateTransactionDto, TransactionCategory, TransactionType } from '../.
 export class TransactionForm {
   private readonly fb = inject(FormBuilder);
   private readonly financeService = inject(FinanceService);
+
+  // ✅ Inputs
+  clubId = input.required<number>(); // ✅ ClubId passé par le parent
 
   // Outputs
   onSuccess = output<void>();
@@ -50,14 +58,13 @@ export class TransactionForm {
     { value: TransactionCategory.EXPENSE, label: 'Dépense générale' },
   ];
 
-  // Formulaire
+  // ✅ Formulaire SANS clubId (sera ajouté automatiquement)
   transactionForm = this.fb.group({
     type: [TransactionType.EXPENSE, Validators.required],
     description: ['', [Validators.required, Validators.minLength(3)]],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     category: [TransactionCategory.EXPENSE, Validators.required],
     date: [this.formatDateForInput(new Date()), Validators.required],
-    clubId: [1, Validators.required], // TODO: Récupérer le club de l'utilisateur connecté
   });
 
   /**
@@ -90,7 +97,7 @@ export class TransactionForm {
       amount: formValue.amount!,
       category: formValue.category!,
       date: formValue.date!,
-      clubId: formValue.clubId!,
+      clubId: this.clubId(), // ✅ Utiliser le clubId passé en input
     };
 
     this.financeService.createTransaction(createDto).subscribe({
@@ -100,13 +107,14 @@ export class TransactionForm {
           type: TransactionType.EXPENSE,
           category: TransactionCategory.EXPENSE,
           date: this.formatDateForInput(new Date()),
-          clubId: 1,
         });
         this.onSuccess.emit();
       },
       error: (error: any) => {
         this.isSubmitting.set(false);
-        this.submitError.set(error.error?.message || 'Erreur lors de l\'ajout de la transaction');
+        this.submitError.set(
+          error.error?.message || "Erreur lors de l'ajout de la transaction",
+        );
         console.error('Erreur ajout transaction:', error);
       },
     });
@@ -135,8 +143,10 @@ export class TransactionForm {
     if (!field || !field.errors) return '';
 
     if (field.errors['required']) return 'Ce champ est requis';
-    if (field.errors['minlength']) return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
-    if (field.errors['min']) return `Montant minimum: ${field.errors['min'].min} TND`;
+    if (field.errors['minlength'])
+      return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
+    if (field.errors['min'])
+      return `Montant minimum: ${field.errors['min'].min} TND`;
 
     return 'Erreur de validation';
   }

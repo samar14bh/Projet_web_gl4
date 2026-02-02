@@ -1,7 +1,72 @@
 /* ============================================
    PAGE FINANCES - STYLES
    ============================================ */
+/* ========== WRAPPER GLOBAL AVEC SCROLL ========== */
+.finances-page-wrapper {
+  height: calc(100vh - 80px); /* Ajustez selon la hauteur de votre header */
+  overflow-y: auto;
+  padding: 2rem;
+}
 
+/* Scrollbar personnalisée pour le wrapper */
+.finances-page-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.finances-page-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.finances-page-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.finances-page-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.finances-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ========== SECTIONS SPACING ========== */
+.stats-section,
+.chart-section,
+.transactions-section {
+  margin-bottom: 3rem;
+}
+
+/* ========== SKELETON SECTIONS ========== */
+.stats-section-skeleton,
+.chart-section-skeleton,
+.transactions-section-skeleton {
+  margin-bottom: 3rem;
+}
+
+.skeleton-header {
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-chart {
+  height: 400px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-table {
+  height: 500px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .finances-page-wrapper {
+    padding: 1rem;
+  }
+}
 .finances-container {
   padding: 2rem;
   max-width: 1400px;
@@ -83,6 +148,102 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+/* ========== CONTAINER AVEC SCROLL POUR STATS ========== */
+.stats-container {
+  max-height: 550px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 2rem;
+}
+
+/* Scrollbar personnalisée */
+.stats-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.stats-container::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.stats-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.stats-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ========== SKELETON LOADING ========== */
+.stat-card-skeleton {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  min-height: 140px;
+  display: flex;
+  gap: 1.25rem;
+}
+
+.stat-card-skeleton.shimmer {
+  animation: none;
+}
+
+.skeleton-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+}
+
+.skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-line {
+  height: 14px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-line-value {
+  height: 28px;
+}
+
+/* Animation shimmer */
+.shimmer-item {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 40%,
+    var(--bg-secondary) 80%,
+    var(--bg-secondary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .stats-container {
+    max-height: 450px;
+  }
 }
 
 .stat-card {

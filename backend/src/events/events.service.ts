@@ -16,6 +16,7 @@ import { UserEventDto } from './dto/user-event.dto';
 import { EventMapper } from './mapper/event.mapper';
 import { DashboardEventDto } from '../club-manager/dto/dashboard-event.dto';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { Club } from '../clubs/entities/club.entity';
 
 /**
  * Service pour la gestion des événements
@@ -29,6 +30,8 @@ export class EventsService {
     private readonly registrationRepository: Repository<Registration>,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    @InjectRepository(Club)
+    private readonly clubRepository: Repository<Club>,
   ) {}
 
   /**
@@ -45,10 +48,31 @@ export class EventsService {
       );
     }
 
+    // ✅ Vérifier que le club existe
+    const club = await this.clubRepository.findOne({
+      where: { id: createEventDto.clubId },
+    });
+
+    if (!club) {
+      throw new NotFoundException(
+        `Club avec l'ID ${createEventDto.clubId} introuvable`,
+      );
+    }
+
+    // ✅ Créer l'événement avec la relation club
     const event = this.eventRepository.create({
-      ...createEventDto,
+      title: createEventDto.title,
+      description: createEventDto.description,
+      coverImage: createEventDto.coverImage,
       startDate,
       endDate,
+      address: createEventDto.address,
+      capacity: createEventDto.capacity,
+      memberOnly: createEventDto.memberOnly,
+      status: createEventDto.status,
+      sPaid: createEventDto.sPaid,
+      subscriptionFees: createEventDto.subscriptionFees,
+      club, // ✅ Assigner l'entité club complète
     });
 
     return await this.eventRepository.save(event);
