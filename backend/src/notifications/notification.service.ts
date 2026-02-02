@@ -1,16 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { SseService } from '../sse/sse.service';
+import { Membership } from '../memberships/entities/membership.entity';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+    @InjectRepository(Membership)
+    private membershipRepository: Repository<Membership>,
     private sseService: SseService,
-  ) {}
+  ) { }
 
   async createNotification(data: any): Promise<Notification> {
     if (!data.userId) {
@@ -64,9 +67,25 @@ export class NotificationService {
     return savedNotification;
   }
 
+  /**
+   * Créer des notifications pour plusieurs utilisateurs à la fois
+   */
+  async createNotifications(userIds: number[], data: any): Promise<Notification[]> {
+    const results = await Promise.all(
+      userIds.map(userId =>
+        this.createNotification({ ...data, userId })
+          .catch(err => {
+            console.error(`[NotificationService] Error for user ${userId}:`, err);
+            return null;
+          })
+      )
+    );
+    return results.filter(n => n !== null) as Notification[];
+  }
+
   async sendClubNotification(userId: number, clubName: string, action: string) {
     console.log(`[NotificationService] sendClubNotification - userId: ${userId}, club: ${clubName}`);
-    
+
     return this.createNotification({
       userId,
       type: 'CLUB_ACTION',
@@ -78,19 +97,22 @@ export class NotificationService {
 
   async sendPaymentNotification(userId: number, data: any) {
     console.log(`[NotificationService] sendPaymentNotification - userId: ${userId}`);
-    
+
     return this.createNotification({
       userId,
       type: 'PAYMENT_SUCCESS',
-      description: `Paiement de ${data.amount}€ réussi pour : ${data.item}`,
+      description: data.description || `Paiement de ${data.amount}€ réussi pour : ${data.item}`,
+      shortDescription: data.shortDescription,
       iconName: 'credit-card',
       priority: 'high',
+      actionUrl: data.actionUrl,
+      actionLabel: data.actionLabel,
     });
   }
 
   async sendEventNotification(userId: number, eventName: string) {
     console.log(`[NotificationService] sendEventNotification - userId: ${userId}`);
-    
+
     return this.createNotification({
       userId,
       type: 'EVENT_REMINDER',
@@ -98,6 +120,37 @@ export class NotificationService {
       iconName: 'calendar',
       priority: 'medium',
     });
+  }
+
+  /**
+   * Notifier les administrateurs d'un club (Président, Trésorier, RH, etc.)
+   */
+  async notifyClubAdmins(clubId: number, roles: string[], data: any) {
+    console.log(`[NotificationService] notifyClubAdmins - Club: ${clubId}, Roles: ${roles.join(', ')}`);
+
+    const admins = await this.membershipRepository.find({
+      where: {
+        club: { id: clubId },
+        role: In(roles),
+      },
+      relations: ['user'],
+    });
+
+    console.log(`[NotificationService] Found ${admins.length} admins to notify`);
+
+    const notifications: Promise<Notification>[] = [];
+    for (const admin of admins) {
+      if (admin.user) {
+        notifications.push(
+          this.createNotification({
+            ...data,
+            userId: admin.user.id,
+          })
+        );
+      }
+    }
+
+    return Promise.all(notifications);
   }
 
   async markAsUnread(notificationId: number, userId: number): Promise<Notification> {

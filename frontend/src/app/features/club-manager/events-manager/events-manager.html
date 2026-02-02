@@ -267,6 +267,7 @@
   >
     <app-event-form
       [event]="selectedEvent()"
+      [clubId]="clubId()"
       (onSuccess)="onFormSuccess($event)"
       (onCancel)="onFormCancel()"
     />

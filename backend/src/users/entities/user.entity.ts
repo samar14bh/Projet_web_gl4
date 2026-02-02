@@ -52,6 +52,9 @@ export class User extends GeneralUser {
   @Column({ type: 'timestamp', nullable: true, name: 'email_verification_expires' })
   emailVerificationExpires: Date | null;
 
+  @Column({ type: 'varchar', nullable: true, name: 'stripe_customer_id' })
+  stripeCustomerId: string | null;
+
 
 
 

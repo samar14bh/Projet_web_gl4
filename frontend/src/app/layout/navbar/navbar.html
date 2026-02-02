@@ -12,6 +12,60 @@
 
     @if (user()) {
 
+    <!-- Notification Dropdown -->
+    <div class="dropdown-wrapper">
+      <button class="btn-icon notification-btn" (click)="toggleNotifications()">
+        <i class="bi bi-bell"></i>
+        @if (unreadCount() > 0) {
+        <span class="badge">{{ unreadCount() }}</span>
+        }
+      </button>
+
+      <div class="dropdown-menu notification-menu" [class.show]="showNotifications()">
+        <div class="dropdown-header">
+          <h6>Notifications</h6>
+          @if (unreadCount() > 0) {
+          <button class="btn-text" (click)="markAllAsRead(); $event.stopPropagation()">
+            Tout marquer comme lu
+          </button>
+          }
+        </div>
+
+        <div class="notifications-list">
+          @if (notifications().length === 0) {
+          <div class="empty-state" style="padding: 2rem; text-align: center; color: var(--gray-500);">
+            <i class="bi bi-bell-slash" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+            <p>Aucune notification</p>
+          </div>
+          } @else {
+          @for (notification of notifications(); track notification.id) {
+          <div class="notification-item" [class.unread]="!notification.isRead" (click)="markAsRead(notification.id)">
+            <div class="notification-icon" [ngClass]="getIconClass(notification.iconName || 'bell')">
+              <i [class]="getIconClass(notification.iconName || 'bell')"></i>
+            </div>
+            <div class="notification-content">
+              <p class="description">{{ notification.description }}</p>
+              <span class="time">{{ notification.createdAt | date:'short' }}</span>
+              @if (notification.actionUrl) {
+              <a [routerLink]="notification.actionUrl" class="action-link" (click)="$event.stopPropagation()">
+                {{ notification.actionLabel || 'Voir' }}
+              </a>
+              }
+            </div>
+            @if (!notification.isRead) {
+            <span class="unread-dot"></span>
+            }
+          </div>
+          }
+          }
+        </div>
+
+        <div class="dropdown-footer">
+          <a routerLink="/notifications" (click)="showNotifications.set(false)" class="view-all">Voir tout</a>
+        </div>
+      </div>
+    </div>
+
     <div class="dropdown-wrapper">
       <button class="user-profile" (click)="toggleUserMenu()">
         <img [src]="user()?.image | defaultImage:'user'" alt="User" class="user-avatar">

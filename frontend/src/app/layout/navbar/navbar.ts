@@ -2,6 +2,7 @@ import { Component, computed, effect, EventEmitter, inject, output, Output, sign
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Core/services/auth.service';
+import { NotificationService } from '../../Core/services/notification.service';
 import { DefaultImagePipe } from '../../shared/pipes/default-image.pipe';
 
 interface Notification {
@@ -30,8 +31,13 @@ export class NavbarComponent {
   showNotifications = signal(false);
   showUserMenu = signal(false);
   authService = inject(AuthService);
+  notificationService = inject(NotificationService);
+
   user = this.authService.currentUser;
   admin = computed(() => this.authService.isAdmin());
+  notifications = this.notificationService.notifications;
+  unreadCount = this.notificationService.unreadCount;
+
   private router = inject(Router);
 
 
@@ -42,8 +48,17 @@ export class NavbarComponent {
     this.showNotifications.set(false);
   }
 
+  markAsRead(id: number): void {
+    this.notificationService.markAsRead(id).subscribe();
+  }
 
+  markAllAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe();
+  }
 
+  getIconClass(type: string): string {
+    return this.notificationService.getIconClass(type);
+  }
   onLogout(): void {
 
     if (this.authService.logout) {

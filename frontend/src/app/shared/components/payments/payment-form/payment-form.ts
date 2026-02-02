@@ -21,6 +21,8 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PaymentService } from '../../../../Core/services/payment.service';
 import { PaymentFormState } from '../../../../shared/interfaces/payment.state';
+import { ClubService } from '../../../../Core/services/club.service';
+import { NotificationService } from '../../../../Core/services/notification.service';
 
 declare var Stripe: any;
 
@@ -36,6 +38,8 @@ declare var Stripe: any;
 export class PaymentFormComponent implements AfterViewInit, OnDestroy {
     // Services
     private paymentService = inject(PaymentService);
+    private clubService = inject(ClubService);
+    private notificationService = inject(NotificationService);
     private router = inject(Router);
     private ngZone = inject(NgZone);
     private cdr = inject(ChangeDetectorRef);
@@ -71,6 +75,10 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
     private expiryElement: any;
     private cvcElement: any;
 
+    // Saved Cards State
+    savedCards = signal<any[]>([]);
+    selectedCardId = signal<string | null>(null);
+
     constructor() {
         effect(() => {
             const stripe = this.stripe();
@@ -83,6 +91,17 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
                 });
             }
         });
+
+        // Load saved cards when userId is available
+        effect(() => {
+            const uid = this.userId();
+            if (uid) {
+                this.paymentService.getSavedPaymentMethods(uid).subscribe({
+                    next: (cards) => this.savedCards.set(cards),
+                    error: (err) => console.error('Error fetching saved cards', err)
+                });
+            }
+        }, { allowSignalWrites: true });
     }
 
     async ngAfterViewInit() {
@@ -171,12 +190,17 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
         this.state.update(s => ({ ...s, formError: null }));
         const form = this.paymentForm();
 
+        // If using a saved card, we don't need the Stripe Elements to be populated/valid
+        // But we still need the form (email, name) to be valid?
+        // Actually name/email might be auto-filled or not needed for saved card?
+        // Let's assume we still want the contact info.
         if (!form.valid) {
             this.state.update(s => ({ ...s, formError: 'Veuillez remplir correctement tous les champs' }));
             return;
         }
 
-        if (!this.state().elementsReady) {
+        // If NEW card selected (selectedCardId is null), check elements
+        if (!this.selectedCardId() && !this.state().elementsReady) {
             this.state.update(s => ({ ...s, formError: 'Les champs de paiement ne sont pas prêts' }));
             return;
         }
@@ -199,11 +223,17 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
         const userId = this.userId();
         const clubId = this.clubId();
         const membershipId = this.membershipId();
+        const saveCard = this.paymentForm().get('saveCard')?.value;
 
         if (!userId || !clubId) throw new Error('Données manquantes');
 
+        const options: any = { saveCard };
+        if (this.selectedCardId()) {
+            options.paymentMethodId = this.selectedCardId();
+        }
+
         const response = (await firstValueFrom(
-            this.paymentService.initiateMembershipPayment(userId, membershipId || clubId!)
+            this.paymentService.initiateMembershipPayment(userId, membershipId || clubId!, options)
         )) as any;
 
         await this.confirmPayment(response.clientSecret, response.paymentId, 'membership');
@@ -212,11 +242,17 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
     private async processEventPayment() {
         const userId = this.userId();
         const eventId = this.eventId();
+        const saveCard = this.paymentForm().get('saveCard')?.value;
 
         if (!userId || !eventId) throw new Error('Données manquantes');
 
+        const options: any = { saveCard };
+        if (this.selectedCardId()) {
+            options.paymentMethodId = this.selectedCardId();
+        }
+
         const response = (await firstValueFrom(
-            this.paymentService.initiateEventPayment(userId, eventId)
+            this.paymentService.initiateEventPayment(userId, eventId, options)
         )) as any;
 
         await this.confirmPayment(response.clientSecret, response.paymentId, 'event');
@@ -226,28 +262,38 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
         const form = this.paymentForm();
         const cardName = form.get('cardName')?.value;
         const email = form.get('email')?.value;
+        const savedCardId = this.selectedCardId();
 
         // Run Stripe operations outside Angular to avoid change detection on internal events
         await this.ngZone.runOutsideAngular(async () => {
             try {
-                const pmResult = await this.stripe().createPaymentMethod({
-                    type: 'card',
-                    card: this.cardElement,
-                    billing_details: {
-                        name: cardName,
-                        email: email,
-                    },
-                });
+                let paymentMethodId: string;
 
-                if (pmResult.error) {
-                    this.ngZone.run(() => {
-                        throw new Error(pmResult.error.message);
+                if (savedCardId) {
+                    // Use saved card
+                    paymentMethodId = savedCardId;
+                } else {
+                    // Create new payment method
+                    const pmResult = await this.stripe().createPaymentMethod({
+                        type: 'card',
+                        card: this.cardElement,
+                        billing_details: {
+                            name: cardName,
+                            email: email,
+                        },
                     });
-                    return;
+
+                    if (pmResult.error) {
+                        this.ngZone.run(() => {
+                            throw new Error(pmResult.error.message);
+                        });
+                        return;
+                    }
+                    paymentMethodId = pmResult.paymentMethod.id;
                 }
 
                 const confirmResult = await this.stripe().confirmCardPayment(clientSecret, {
-                    payment_method: pmResult.paymentMethod.id,
+                    payment_method: paymentMethodId,
                 });
 
                 if (confirmResult.error) {
@@ -258,18 +304,8 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
                 }
 
                 if (confirmResult.paymentIntent?.status === 'succeeded') {
-
-                    let confirmation$ = (type === 'membership')
-                        ? this.paymentService.confirmMembershipPayment(paymentId, confirmResult.paymentIntent.id)
-                        : this.paymentService.confirmEventPayment(paymentId, confirmResult.paymentIntent.id);
-
-                    await firstValueFrom(confirmation$);
-
-                    this.ngZone.run(() => {
-                        this.router.navigate(['/payment/success'], {
-                            queryParams: { paymentId, type },
-                        });
-                    });
+                    // ... success handling matches existing code ...
+                    this.handlePaymentSuccess(paymentId, type, confirmResult.paymentIntent.id);
                 }
             } catch (error: any) {
                 this.ngZone.run(() => {
@@ -277,6 +313,20 @@ export class PaymentFormComponent implements AfterViewInit, OnDestroy {
                     throw error;
                 });
             }
+        });
+    }
+
+    private async handlePaymentSuccess(paymentId: number, type: 'membership' | 'event', paymentIntentId: string) {
+        let confirmation$ = (type === 'membership')
+            ? this.paymentService.confirmMembershipPayment(paymentId, paymentIntentId)
+            : this.paymentService.confirmEventPayment(paymentId, paymentIntentId);
+
+        await firstValueFrom(confirmation$);
+
+        this.ngZone.run(() => {
+            this.router.navigate(['/payment/success'], {
+                queryParams: { paymentId, type },
+            });
         });
     }
 

@@ -9,6 +9,7 @@ import { DashboardMemberDto } from '../club-manager/dto/dashboard-member.dto';
 import { MemberResponseDto } from '../club-manager/dto/member-response.dto';
 import { GetMembersQueryDto } from '../club-manager/dto/get-members-query.dto';
 import { GetApplicationsQueryDto } from '../club-manager/dto/get-applications-query.dto';
+import { NotificationService } from '../notifications/notification.service';
 
 /**
  * Service de Gestion des Adhésions
@@ -26,6 +27,7 @@ export class MembershipsService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(Application)
     private readonly applicationRepository: Repository<Application>,
+    private readonly notificationService: NotificationService,
   ) { }
 
   /**
@@ -164,7 +166,25 @@ export class MembershipsService {
     }
 
     // Sauvegarder les changements
-    return await this.applicationRepository.save(application);
+    const updatedApp = await this.applicationRepository.save(application);
+
+    // ✅ Notifier l'utilisateur de la décision
+    try {
+      const actionLabel = status === Status.APPROVED ? 'approuvée' : 'rejetée';
+      await this.notificationService.createNotification({
+        userId: updatedApp.user.id,
+        type: 'CLUB_ACTION',
+        description: `Votre demande pour le club ${updatedApp.club.name} a été ${actionLabel}`,
+        iconName: status === Status.APPROVED ? 'check-circle' : 'x-circle',
+        priority: 'medium',
+        actionUrl: '/my-clubs',
+        actionLabel: 'Mes clubs',
+      });
+    } catch (err) {
+      console.error('Erreur lors de la notification de l\'utilisateur:', err);
+    }
+
+    return updatedApp;
   }
 
   /**

@@ -1,441 +1,429 @@
-<div class="finances-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Finances du club</h1>
-    </div>
-    <div class="header-actions">
-      <app-button
-        label="Exporter PDF"
-        variant="ghost"
-        icon="file-earmark-pdf"
-        (clicked)="exportData('pdf')"
-      />
-      <app-button
-        label="Exporter Excel"
-        variant="ghost"
-        icon="file-earmark-excel"
-        (clicked)="exportData('excel')"
-      />
-      <app-button
-        label="Ajouter une transaction"
-        variant="primary"
-        icon="plus-lg"
-        (clicked)="openExpenseModal()"
-      />
-    </div>
-  </div>
-
-  <!-- Filtres de période -->
-  <div class="period-filters">
-    <button
-      class="period-btn"
-      [class.active]="selectedPeriod() === 'month'"
-      (click)="changePeriod('month')"
-    >
-      Ce mois
-    </button>
-    <button
-      class="period-btn"
-      [class.active]="selectedPeriod() === 'quarter'"
-      (click)="changePeriod('quarter')"
-    >
-      Ce trimestre
-    </button>
-    <button
-      class="period-btn"
-      [class.active]="selectedPeriod() === 'year'"
-      (click)="changePeriod('year')"
-    >
-      Cette année
-    </button>
-    <button
-      class="period-btn"
-      [class.active]="selectedPeriod() === 'all'"
-      (click)="changePeriod('all')"
-    >
-      Tout
-    </button>
-  </div>
-
-  <!-- Container avec scroll pour les statistiques -->
-  <div class="stats-container">
-    @if (isStatsLoading()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Chargement des statistiques...</p>
+<!-- ✅ Container global avec scroll pour toute la page -->
+<div class="finances-page-wrapper">
+  <div class="finances-container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Finances du club</h1>
+        <p class="page-subtitle">Gérez et visualisez les finances de votre club</p>
       </div>
-    } @else {
-      <div class="stats-grid">
-        <!-- Revenus totaux -->
-        @defer (on viewport) {
-          <div class="stat-card revenue-card">
-            <div class="stat-icon">
-              <i class="bi bi-arrow-up-circle"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Revenus totaux</span>
-              <h2 class="stat-value">
-                {{ financialStats().totalRevenue | number: '1.2-2' }} TND
-              </h2>
-              <div class="stat-breakdown">
-                <span>
-                  <i class="bi bi-people"></i> Cotisations:
-                  {{ financialStats().membershipRevenue | number: '1.2-2' }} TND
-                </span>
-                <span>
-                  <i class="bi bi-calendar-event"></i> Événements:
-                  {{ financialStats().eventRevenue | number: '1.2-2' }} TND
-                </span>
-              </div>
-            </div>
-          </div>
-        } @placeholder {
-          <div class="stat-card-skeleton">
-            <div class="skeleton-icon"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value"></div>
-              <div class="skeleton-line" style="width: 70%;"></div>
-              <div class="skeleton-line" style="width: 70%;"></div>
-            </div>
-          </div>
-        } @loading (minimum 300ms) {
-          <div class="stat-card-skeleton shimmer">
-            <div class="skeleton-icon shimmer-item"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line shimmer-item" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value shimmer-item"></div>
-              <div class="skeleton-line shimmer-item" style="width: 70%;"></div>
-              <div class="skeleton-line shimmer-item" style="width: 70%;"></div>
-            </div>
-          </div>
-        }
-
-        <!-- Dépenses totales -->
-        @defer (on viewport) {
-          <div class="stat-card expense-card">
-            <div class="stat-icon">
-              <i class="bi bi-arrow-down-circle"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Dépenses totales</span>
-              <h2 class="stat-value">
-                {{ financialStats().totalExpenses | number: '1.2-2' }} TND
-              </h2>
-              <span class="stat-detail">Sorties d'argent du club</span>
-            </div>
-          </div>
-        } @placeholder {
-          <div class="stat-card-skeleton">
-            <div class="skeleton-icon"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value"></div>
-              <div class="skeleton-line" style="width: 60%;"></div>
-            </div>
-          </div>
-        } @loading (minimum 300ms) {
-          <div class="stat-card-skeleton shimmer">
-            <div class="skeleton-icon shimmer-item"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line shimmer-item" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value shimmer-item"></div>
-              <div class="skeleton-line shimmer-item" style="width: 60%;"></div>
-            </div>
-          </div>
-        }
-
-        <!-- Solde actuel -->
-        @defer (on viewport) {
-          <div class="stat-card balance-card">
-            <div class="stat-icon">
-              <i class="bi bi-wallet2"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Solde actuel</span>
-              <h2
-                class="stat-value"
-                [class.negative]="financialStats().balance < 0"
-              >
-                {{ financialStats().balance | number: '1.2-2' }} TND
-              </h2>
-              <span class="stat-detail">
-                @if (financialStats().balance >= 0) {
-                  <i class="bi bi-check-circle text-success"></i> Solde positif
-                } @else {
-                  <i class="bi bi-exclamation-triangle text-danger"></i> Solde négatif
-                }
-              </span>
-            </div>
-          </div>
-        } @placeholder {
-          <div class="stat-card-skeleton">
-            <div class="skeleton-icon"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value"></div>
-              <div class="skeleton-line" style="width: 60%;"></div>
-            </div>
-          </div>
-        } @loading (minimum 300ms) {
-          <div class="stat-card-skeleton shimmer">
-            <div class="skeleton-icon shimmer-item"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line shimmer-item" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value shimmer-item"></div>
-              <div class="skeleton-line shimmer-item" style="width: 60%;"></div>
-            </div>
-          </div>
-        }
-
-        <!-- Paiements en attente -->
-        @defer (on viewport) {
-          <div class="stat-card pending-card">
-            <div class="stat-icon">
-              <i class="bi bi-clock-history"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Paiements en attente</span>
-              <h2 class="stat-value">
-                {{ financialStats().pendingPayments | number: '1.2-2' }} TND
-              </h2>
-              <span class="stat-detail">À recevoir prochainement</span>
-            </div>
-          </div>
-        } @placeholder {
-          <div class="stat-card-skeleton">
-            <div class="skeleton-icon"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value"></div>
-              <div class="skeleton-line" style="width: 60%;"></div>
-            </div>
-          </div>
-        } @loading (minimum 300ms) {
-          <div class="stat-card-skeleton shimmer">
-            <div class="skeleton-icon shimmer-item"></div>
-            <div class="skeleton-content">
-              <div class="skeleton-line shimmer-item" style="width: 50%;"></div>
-              <div class="skeleton-line skeleton-line-value shimmer-item"></div>
-              <div class="skeleton-line shimmer-item" style="width: 60%;"></div>
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </div>
-
-  <!-- Graphique d'évolution -->
-  <div class="chart-section">
-    <div class="section-header">
-      <h3>Évolution des finances</h3>
-      <span class="chart-legend">
-        <span class="legend-item revenue">
-          <i class="bi bi-circle-fill"></i> Revenus
-        </span>
-        <span class="legend-item expense">
-          <i class="bi bi-circle-fill"></i> Dépenses
-        </span>
-      </span>
-    </div>
-    <div class="chart-container">
-      @if (isChartLoading()) {
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Chargement du graphique...</p>
-        </div>
-      } @else if (chartData().length === 0) {
-        <div class="empty-state">
-          <i class="bi bi-graph-up"></i>
-          <p>Aucune donnée disponible</p>
-        </div>
-      } @else {
-        <!-- Graphique simplifié en barres -->
-        <div class="simple-chart">
-          @for (data of chartData(); track trackByMonth($index, data)) {
-            <div class="chart-bar-group">
-              <div class="chart-bars">
-                <div
-                  class="chart-bar revenue"
-                  [style.height.%]="(data.revenue / 5000) * 100"
-                  [title]="'Revenus: ' + data.revenue + ' TND'"
-                >
-                  <span class="bar-value">{{ data.revenue }}</span>
-                </div>
-                <div
-                  class="chart-bar expense"
-                  [style.height.%]="(data.expense / 5000) * 100"
-                  [title]="'Dépenses: ' + data.expense + ' TND'"
-                >
-                  <span class="bar-value">{{ data.expense }}</span>
-                </div>
-              </div>
-              <span class="chart-label">{{ data.month }}</span>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  </div>
-
-  <!-- Filtres et recherche -->
-  <div class="transactions-header">
-    <h3>Historique des transactions</h3>
-    <div class="transactions-filters">
-      <div class="search-box">
-        <i class="bi bi-search"></i>
-        <input
-          type="text"
-          placeholder="Rechercher une transaction..."
-          [value]="searchQuery()"
-          (input)="onSearch($any($event.target).value)"
-          class="search-input"
+      <div class="header-actions">
+        <app-button
+          label="Exporter PDF"
+          variant="ghost"
+          icon="file-earmark-pdf"
+          (clicked)="exportData('pdf')"
+        />
+        <app-button
+          label="Exporter Excel"
+          variant="ghost"
+          icon="file-earmark-excel"
+          (clicked)="exportData('excel')"
+        />
+        <app-button
+          label="Ajouter une transaction"
+          variant="primary"
+          icon="plus-lg"
+          (clicked)="openExpenseModal()"
         />
       </div>
+    </div>
 
-      <select
-        class="filter-select"
-        [value]="selectedTransactionType()"
-        (change)="changeTransactionType($any($event.target).value)"
+    <!-- Filtres de période -->
+    <div class="period-filters">
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod() === 'month'"
+        (click)="changePeriod('month')"
       >
-        <option value="all">Tous les types</option>
-        <option [value]="TransactionType.REVENUE">Revenus</option>
-        <option [value]="TransactionType.EXPENSE">Dépenses</option>
-      </select>
-
-      <select
-        class="filter-select"
-        [value]="selectedCategory()"
-        (change)="changeCategory($any($event.target).value)"
+        Ce mois
+      </button>
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod() === 'quarter'"
+        (click)="changePeriod('quarter')"
       >
-        <option value="all">Toutes les catégories</option>
-        <option [value]="TransactionCategory.MEMBERSHIP">Cotisations</option>
-        <option [value]="TransactionCategory.EVENT">Événements</option>
-        <option [value]="TransactionCategory.DONATION">Dons</option>
-        <option [value]="TransactionCategory.EXPENSE">Dépenses</option>
-      </select>
+        Ce trimestre
+      </button>
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod() === 'year'"
+        (click)="changePeriod('year')"
+      >
+        Cette année
+      </button>
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod() === 'all'"
+        (click)="changePeriod('all')"
+      >
+        Tout
+      </button>
     </div>
-  </div>
 
-  <!-- Liste des transactions -->
-  @if (isLoading()) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Chargement des transactions...</p>
-    </div>
-  } @else if (hasError()) {
-    <div class="error-state">
-      <i class="bi bi-exclamation-triangle"></i>
-      <p>Une erreur est survenue lors du chargement</p>
-      <app-button label="Réessayer" variant="secondary" (clicked)="reloadData()" />
-    </div>
-  } @else if (transactions().length === 0) {
-    <div class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>Aucune transaction trouvée</h3>
-      <p>Aucune transaction ne correspond à vos critères de recherche</p>
-    </div>
-  } @else {
-    <div class="transactions-table">
-      <table>
-        <thead>
-        <tr>
-          <th>Date</th>
-          <th>Référence</th>
-          <th>Description</th>
-          <th>Catégorie</th>
-          <th class="text-right">Montant</th>
-          <th>Statut</th>
-          <th class="text-center">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-          @for (transaction of transactions(); track trackByTransactionId($index, transaction)) {
-            <tr>
-              <td>
-                <span class="transaction-date">
-                  {{ formatDate(transaction.date) }}
-                </span>
-              </td>
-              <td>
-                <span class="transaction-reference">
-                  {{ transaction.reference }}
-                </span>
-              </td>
-              <td>
-                <div class="transaction-description">
-                  <i [class]="getCategoryIcon(transaction.category)"></i>
-                  <span>{{ transaction.description }}</span>
+    <!-- ✅ Statistiques avec defer -->
+    @defer (on viewport) {
+      <div class="stats-section">
+        @if (isStatsLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement des statistiques...</p>
+          </div>
+        } @else {
+          <div class="stats-grid">
+            <!-- Revenus totaux -->
+            <div class="stat-card revenue-card">
+              <div class="stat-icon">
+                <i class="bi bi-arrow-up-circle"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Revenus totaux</span>
+                <h2 class="stat-value">
+                  {{ financialStats().totalRevenue | number: '1.2-2' }} TND
+                </h2>
+                <div class="stat-breakdown">
+                  <span>
+                    <i class="bi bi-people"></i> Cotisations:
+                    {{ financialStats().membershipRevenue | number: '1.2-2' }} TND
+                  </span>
+                  <span>
+                    <i class="bi bi-calendar-event"></i> Événements:
+                    {{ financialStats().eventRevenue | number: '1.2-2' }} TND
+                  </span>
                 </div>
-              </td>
-              <td>
-                <span class="category-badge">
-                  {{ getCategoryLabel(transaction.category) }}
-                </span>
-              </td>
-              <td class="text-right">
-                <span
-                  class="transaction-amount"
-                  [class]="getTransactionTypeClass(transaction.type)"
+              </div>
+            </div>
+
+            <!-- Dépenses totales -->
+            <div class="stat-card expense-card">
+              <div class="stat-icon">
+                <i class="bi bi-arrow-down-circle"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Dépenses totales</span>
+                <h2 class="stat-value">
+                  {{ financialStats().totalExpenses | number: '1.2-2' }} TND
+                </h2>
+                <span class="stat-detail">Sorties d'argent du club</span>
+              </div>
+            </div>
+
+            <!-- Solde actuel -->
+            <div class="stat-card balance-card">
+              <div class="stat-icon">
+                <i class="bi bi-wallet2"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Solde actuel</span>
+                <h2
+                  class="stat-value"
+                  [class.negative]="financialStats().balance < 0"
                 >
-                  {{ transaction.type === TransactionType.EXPENSE ? '-' : '+' }}
-                  {{ transaction.amount | number: '1.2-2' }} TND
+                  {{ financialStats().balance | number: '1.2-2' }} TND
+                </h2>
+                <span class="stat-detail">
+                  @if (financialStats().balance >= 0) {
+                    <i class="bi bi-check-circle text-success"></i> Solde positif
+                  } @else {
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Solde négatif
+                  }
                 </span>
-              </td>
-              <td>
-                <span class="status-badge status-completed">
-                  <i class="bi bi-check-circle"></i>
-                  Complété
-                </span>
-              </td>
-              <td class="text-center">
-                <button
-                  class="btn-action"
-                  (click)="openDetailsModal(transaction)"
-                  title="Voir les détails"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-              </td>
-            </tr>
+              </div>
+            </div>
+
+            <!-- Paiements en attente -->
+            <div class="stat-card pending-card">
+              <div class="stat-icon">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Paiements en attente</span>
+                <h2 class="stat-value">
+                  {{ financialStats().pendingPayments | number: '1.2-2' }} TND
+                </h2>
+                <span class="stat-detail">À recevoir prochainement</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @placeholder {
+      <div class="stats-section-skeleton">
+        <div class="stats-grid">
+          @for (_ of [1, 2, 3, 4]; track $index) {
+            <div class="stat-card-skeleton">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line" style="width: 50%;"></div>
+                <div class="skeleton-line skeleton-line-value"></div>
+                <div class="skeleton-line" style="width: 60%;"></div>
+              </div>
+            </div>
           }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)"
-        >
-          <i class="bi bi-chevron-left"></i>
-          Précédent
-        </button>
-
-        <div class="pagination-info">
-          Page {{ currentPage() }} sur {{ totalPages() }}
-          <span class="separator">•</span>
-          {{ totalTransactions() }} transaction(s)
         </div>
-
-        <button
-          class="pagination-btn"
-          [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)"
-        >
-          Suivant
-          <i class="bi bi-chevron-right"></i>
-        </button>
+      </div>
+    } @loading (minimum 300ms) {
+      <div class="stats-section-skeleton shimmer-section">
+        <div class="stats-grid">
+          @for (_ of [1, 2, 3, 4]; track $index) {
+            <div class="stat-card-skeleton">
+              <div class="skeleton-icon shimmer-item"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line shimmer-item" style="width: 50%;"></div>
+                <div class="skeleton-line skeleton-line-value shimmer-item"></div>
+                <div class="skeleton-line shimmer-item" style="width: 60%;"></div>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     }
-  }
+
+    <!-- ✅ Graphique d'évolution avec defer -->
+    @defer (on viewport) {
+      <div class="chart-section">
+        <div class="section-header">
+          <h3>Évolution des finances</h3>
+          <span class="chart-legend">
+            <span class="legend-item revenue">
+              <i class="bi bi-circle-fill"></i> Revenus
+            </span>
+            <span class="legend-item expense">
+              <i class="bi bi-circle-fill"></i> Dépenses
+            </span>
+          </span>
+        </div>
+        <div class="chart-container">
+          @if (isChartLoading()) {
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Chargement du graphique...</p>
+            </div>
+          } @else if (chartData().length === 0) {
+            <div class="empty-state">
+              <i class="bi bi-graph-up"></i>
+              <p>Aucune donnée disponible</p>
+            </div>
+          } @else {
+            <div class="simple-chart">
+              @for (data of chartData(); track trackByMonth($index, data)) {
+                <div class="chart-bar-group">
+                  <div class="chart-bars">
+                    <div
+                      class="chart-bar revenue"
+                      [style.height.%]="(data.revenue / 5000) * 100"
+                      [title]="'Revenus: ' + data.revenue + ' TND'"
+                    >
+                      <span class="bar-value">{{ data.revenue }}</span>
+                    </div>
+                    <div
+                      class="chart-bar expense"
+                      [style.height.%]="(data.expense / 5000) * 100"
+                      [title]="'Dépenses: ' + data.expense + ' TND'"
+                    >
+                      <span class="bar-value">{{ data.expense }}</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">{{ data.month }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    } @placeholder {
+      <div class="chart-section-skeleton">
+        <div class="skeleton-header">
+          <div class="skeleton-line" style="width: 200px; height: 24px;"></div>
+        </div>
+        <div class="skeleton-chart"></div>
+      </div>
+    } @loading (minimum 300ms) {
+      <div class="chart-section-skeleton shimmer-section">
+        <div class="skeleton-header">
+          <div class="skeleton-line shimmer-item" style="width: 200px; height: 24px;"></div>
+        </div>
+        <div class="skeleton-chart shimmer-item"></div>
+      </div>
+    }
+
+    <!-- ✅ Historique des transactions avec defer -->
+    @defer (on viewport) {
+      <div class="transactions-section">
+        <!-- Filtres et recherche -->
+        <div class="transactions-header">
+          <h3>Historique des transactions</h3>
+          <div class="transactions-filters">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input
+                type="text"
+                placeholder="Rechercher une transaction..."
+                [value]="searchQuery()"
+                (input)="onSearch($any($event.target).value)"
+                class="search-input"
+              />
+            </div>
+
+            <select
+              class="filter-select"
+              [value]="selectedTransactionType()"
+              (change)="changeTransactionType($any($event.target).value)"
+            >
+              <option value="all">Tous les types</option>
+              <option [value]="TransactionType.REVENUE">Revenus</option>
+              <option [value]="TransactionType.EXPENSE">Dépenses</option>
+            </select>
+
+            <select
+              class="filter-select"
+              [value]="selectedCategory()"
+              (change)="changeCategory($any($event.target).value)"
+            >
+              <option value="all">Toutes les catégories</option>
+              <option [value]="TransactionCategory.MEMBERSHIP">Cotisations</option>
+              <option [value]="TransactionCategory.EVENT">Événements</option>
+              <option [value]="TransactionCategory.DONATION">Dons</option>
+              <option [value]="TransactionCategory.EXPENSE">Dépenses</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Liste des transactions -->
+        @if (isLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement des transactions...</p>
+          </div>
+        } @else if (hasError()) {
+          <div class="error-state">
+            <i class="bi bi-exclamation-triangle"></i>
+            <p>Une erreur est survenue lors du chargement</p>
+            <app-button label="Réessayer" variant="secondary" (clicked)="reloadData()" />
+          </div>
+        } @else if (transactions().length === 0) {
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h3>Aucune transaction trouvée</h3>
+            <p>Aucune transaction ne correspond à vos critères de recherche</p>
+          </div>
+        } @else {
+          <div class="transactions-table">
+            <table>
+              <thead>
+              <tr>
+                <th>Date</th>
+                <th>Référence</th>
+                <th>Description</th>
+                <th>Catégorie</th>
+                <th class="text-right">Montant</th>
+                <th>Statut</th>
+                <th class="text-center">Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+                @for (transaction of transactions(); track trackByTransactionId($index, transaction)) {
+                  <tr>
+                    <td>
+                      <span class="transaction-date">
+                        {{ formatDate(transaction.date) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="transaction-reference">
+                        {{ transaction.reference }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="transaction-description">
+                        <i [class]="getCategoryIcon(transaction.category)"></i>
+                        <span>{{ transaction.description }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="category-badge">
+                        {{ getCategoryLabel(transaction.category) }}
+                      </span>
+                    </td>
+                    <td class="text-right">
+                      <span
+                        class="transaction-amount"
+                        [class]="getTransactionTypeClass(transaction.type)"
+                      >
+                        {{ transaction.type === TransactionType.EXPENSE ? '-' : '+' }}
+                        {{ transaction.amount | number: '1.2-2' }} TND
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-badge status-completed">
+                        <i class="bi bi-check-circle"></i>
+                        Complété
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <button
+                        class="btn-action"
+                        (click)="openDetailsModal(transaction)"
+                        title="Voir les détails"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div class="pagination">
+              <button
+                class="pagination-btn"
+                [disabled]="currentPage() === 1"
+                (click)="goToPage(currentPage() - 1)"
+              >
+                <i class="bi bi-chevron-left"></i>
+                Précédent
+              </button>
+
+              <div class="pagination-info">
+                Page {{ currentPage() }} sur {{ totalPages() }}
+                <span class="separator">•</span>
+                {{ totalTransactions() }} transaction(s)
+              </div>
+
+              <button
+                class="pagination-btn"
+                [disabled]="currentPage() === totalPages()"
+                (click)="goToPage(currentPage() + 1)"
+              >
+                Suivant
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          }
+        }
+      </div>
+    } @placeholder {
+      <div class="transactions-section-skeleton">
+        <div class="skeleton-header">
+          <div class="skeleton-line" style="width: 250px; height: 24px;"></div>
+        </div>
+        <div class="skeleton-table"></div>
+      </div>
+    } @loading (minimum 300ms) {
+      <div class="transactions-section-skeleton shimmer-section">
+        <div class="skeleton-header">
+          <div class="skeleton-line shimmer-item" style="width: 250px; height: 24px;"></div>
+        </div>
+        <div class="skeleton-table shimmer-item"></div>
+      </div>
+    }
+  </div>
 </div>
 
-<!-- Modal d'ajout de transaction -->
+<!-- Modals restent en dehors du wrapper -->
 @defer (when isExpenseModalOpen()) {
   <app-modal
     [isOpen]="isExpenseModalOpen()"
@@ -443,13 +431,13 @@
     (closed)="closeExpenseModal()"
   >
     <app-transaction-form
+      [clubId]="clubId()"
       (onSuccess)="onTransactionSuccess()"
       (onCancel)="closeExpenseModal()"
     />
   </app-modal>
 }
 
-<!-- Modal de détails de transaction -->
 @defer (when isDetailsModalOpen()) {
   <app-modal
     [isOpen]="isDetailsModalOpen()"
