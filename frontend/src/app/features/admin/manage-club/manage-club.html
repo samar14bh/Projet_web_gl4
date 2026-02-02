@@ -499,19 +499,21 @@
 }
 
 @defer (when isPresidentModalOpen() && selectedClub()) {
-  <app-modal
-    [isOpen]="isPresidentModalOpen()"
-    [title]="'Administrateur - ' + selectedClub()!.name"
-    size="medium"
-    (closed)="closePresidentModal()"
-  >
-    <app-club-president-modal
-      [clubId]="selectedClub()!.id"
-      [clubName]="selectedClub()!.name"
-      (onClose)="closePresidentModal()"
-      (onSuccess)="onPresidentChanged()"
-    />
-  </app-modal>
+  @if (selectedClub()) {
+    <app-modal
+      [isOpen]="isPresidentModalOpen()"
+      [title]="'Administrateur - ' + selectedClub()!.name"
+      size="medium"
+      (closed)="closePresidentModal()"
+    >
+      <app-club-president-modal
+        [clubId]="selectedClub()!.id"
+        [clubName]="selectedClub()!.name"
+        (onClose)="closePresidentModal()"
+        (onSuccess)="onPresidentChanged()"
+      />
+    </app-modal>
+  }
 }
 
 @defer (when isFormModalOpen()) {

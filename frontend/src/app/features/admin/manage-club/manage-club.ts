@@ -35,7 +35,7 @@ import { ToastService } from '../../../Core/services/toast.service';
   ],
   templateUrl: './manage-club.html',
   styleUrl: './manage-club.css',
-  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ManageClubsComponent {
   // ========== SERVICES ==========
