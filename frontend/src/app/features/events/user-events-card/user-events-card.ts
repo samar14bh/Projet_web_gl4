@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, DestroyRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserEventDto } from '../../../Core/dtos/user-events/user-event.dto';
 import { EventService } from '../../../Core/services/event.service';
@@ -30,6 +30,7 @@ export class UserEventsCard {
   private readonly paymentService = inject(PaymentService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
 
   private readonly USER_ID = Number(this.authService.currentUser()?.id ?? 0);
@@ -46,7 +47,7 @@ export class UserEventsCard {
   onConfirmCancellation() {
     this.showConfirmModal.set(false);
     this.eventService.cancelRegistration(this.event().id, this.USER_ID)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.toastService.success('Inscription annulée avec succès');
@@ -67,7 +68,7 @@ export class UserEventsCard {
     if (!paymentId) return;
 
     this.paymentService.downloadReceipt(paymentId)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob: Blob) => {
           this.paymentService.handleBlobDownload(blob, `recu-event-${this.event().id}.pdf`);
@@ -88,7 +89,7 @@ export class UserEventsCard {
   }
 
   redirectToPayment() {
-    this.showPaymentModal.set(false) ;
+    this.showPaymentModal.set(false);
     this.router.navigate(['/payment'], {
       queryParams: {
         type: 'event',
