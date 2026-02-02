@@ -57,7 +57,17 @@ export class ApplicationResponse {
   }
 
   onPayFees() {
-    console.log('Navigate to payment page');
-
+    const app = this.application.value();
+    if (app?.clubId) {
+      this.router.navigate(['/payment'], {
+        queryParams: {
+          type: 'membership',
+          clubId: app.clubId
+        }
+      });
+    } else {
+      console.error('Club ID not found in application');
+      alert('Impossible de naviguer vers la page de paiement : informations du club manquantes');
+    }
   }
 }

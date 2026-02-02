@@ -12,4 +12,10 @@ export class InitiatePaymentDto {
   @IsOptional()
   @IsNumber()
   eventId?: number;
+
+  @IsOptional()
+  paymentMethodId?: string;
+
+  @IsOptional()
+  saveCard?: boolean;
 }

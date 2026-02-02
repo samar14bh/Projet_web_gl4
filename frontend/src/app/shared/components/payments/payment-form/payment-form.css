@@ -318,3 +318,88 @@
         padding: 12px;
     }
 }
+
+/* ====== SAVED CARDS ====== */
+.saved-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.saved-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.saved-card-item:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.saved-card-item.selected {
+    border-color: #6366f1;
+    background: #eff6ff;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.card-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.card-info i {
+    font-size: 1.5rem;
+    color: #64748b;
+}
+
+.saved-card-item.selected .card-info i {
+    color: #6366f1;
+}
+
+.card-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-last4 {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.card-exp {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.selection-indicator {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-primary {
+    color: #6366f1;
+}
+
+.text-muted {
+    color: #cbd5e1;
+}
+
+.new-card-option {
+    border-style: dashed;
+}
+
+.new-card-option.selected {
+    border-style: solid;
+}

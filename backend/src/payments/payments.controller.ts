@@ -25,7 +25,7 @@ export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly stripeService: StripeService,
-  ) {}
+  ) { }
 
   /**
    * Initiate membership payment - GET Stripe client secret
@@ -97,6 +97,15 @@ export class PaymentsController {
   @Get('stats/:userId')
   async getUserPaymentStats(@Param('userId', ParseIntPipe) userId: number) {
     return this.paymentsService.getUserPaymentStats(userId);
+  }
+
+  /**
+   * Get saved payment methods
+   * GET /payments/saved-methods/:userId
+   */
+  @Get('saved-methods/:userId')
+  async getSavedMethods(@Param('userId', ParseIntPipe) userId: number) {
+    return this.paymentsService.getSavedPaymentMethods(userId);
   }
 
   /**
