@@ -7,7 +7,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, toObservable } from '@angular/core/rxjs-interop';
+import { Observable, map } from 'rxjs';
 import { AdminService } from '../../../Core/services/admin.service';
 import {
   GlobalStats,
@@ -24,8 +25,8 @@ import { ToastService } from '../../../Core/services/toast.service';
 
 /**
  * PAGE 17 : Admin Dashboard
- * Tableau de bord administrateur avec vue d'ensemble globale
- * Optimisé Angular 20 avec Signals et OnPush
+ * Version OPTIMALE : rxResource avec pipe(map()) pour async pipe
+ * Les Observables sont transformés DIRECTEMENT dans le stream de rxResource
  */
 @Component({
   selector: 'app-admin-dashboard',
@@ -33,7 +34,7 @@ import { ToastService } from '../../../Core/services/toast.service';
   imports: [CommonModule, RouterLink, ButtonComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
-  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDashboardComponent {
   // ========== SERVICES ==========
@@ -43,28 +44,29 @@ export class AdminDashboardComponent {
   // ========== SIGNALS D'ÉTAT ==========
   readonly selectedPeriod = signal<'week' | 'month' | 'quarter' | 'year'>('month');
 
-  // ========== RESOURCES (rxResource avec API) ==========
+  // ========== RESOURCES avec pipe(map()) pour OBSERVABLES ==========
 
   /**
    * Resource pour les statistiques globales
+   * Le service retourne Observable<GlobalStats>
    */
   readonly statsResource = rxResource({
-    params: computed(() => ({
-      period: this.selectedPeriod(),
-    })),
-    stream: ({ params }) => this.adminService.getGlobalStats(params.period),
+    params: computed(() => ({ period: this.selectedPeriod() })),
+    stream: ({ params }) =>
+      this.adminService.getGlobalStats(params.period).pipe(
+        map((stats) => stats)
+      ),
   });
 
   /**
    * Resource pour les clubs les plus actifs
    */
   readonly topClubsResource = rxResource({
-    params: computed(() => ({
-      period: this.selectedPeriod(),
-      limit: 4,
-    })),
+    params: computed(() => ({ period: this.selectedPeriod(), limit: 4 })),
     stream: ({ params }) =>
-      this.adminService.getTopClubs(params.period, params.limit),
+      this.adminService.getTopClubs(params.period, params.limit).pipe(
+        map((clubs) => clubs)
+      ),
   });
 
   /**
@@ -72,7 +74,10 @@ export class AdminDashboardComponent {
    */
   readonly activitiesResource = rxResource({
     params: computed(() => ({ limit: 5 })),
-    stream: ({ params }) => this.adminService.getRecentActivities(params.limit),
+    stream: ({ params }) =>
+      this.adminService.getRecentActivities(params.limit).pipe(
+        map((activities) => activities)
+      ),
   });
 
   /**
@@ -80,7 +85,10 @@ export class AdminDashboardComponent {
    */
   readonly membershipTrendResource = rxResource({
     params: computed(() => ({ months: 6 })),
-    stream: ({ params }) => this.adminService.getMembershipTrend(params.months),
+    stream: ({ params }) =>
+      this.adminService.getMembershipTrend(params.months).pipe(
+        map((trend) => trend)
+      ),
   });
 
   /**
@@ -88,7 +96,10 @@ export class AdminDashboardComponent {
    */
   readonly eventsTrendResource = rxResource({
     params: computed(() => ({ months: 6 })),
-    stream: ({ params }) => this.adminService.getEventsTrend(params.months),
+    stream: ({ params }) =>
+      this.adminService.getEventsTrend(params.months).pipe(
+        map((events) => events)
+      ),
   });
 
   /**
@@ -96,7 +107,10 @@ export class AdminDashboardComponent {
    */
   readonly revenueTrendResource = rxResource({
     params: computed(() => ({ months: 6 })),
-    stream: ({ params }) => this.adminService.getRevenueTrend(params.months),
+    stream: ({ params }) =>
+      this.adminService.getRevenueTrend(params.months).pipe(
+        map((revenue) => revenue)
+      ),
   });
 
   /**
@@ -104,7 +118,10 @@ export class AdminDashboardComponent {
    */
   readonly alertsResource = rxResource({
     params: computed(() => ({})),
-    stream: () => this.adminService.getAlerts(),
+    stream: () =>
+      this.adminService.getAlerts().pipe(
+        map((alerts) => alerts)
+      ),
   });
 
   /**
@@ -112,27 +129,95 @@ export class AdminDashboardComponent {
    */
   readonly clubsByCategoryResource = rxResource({
     params: computed(() => ({})),
-    stream: () => this.adminService.getClubsByCategory(),
+    stream: () =>
+      this.adminService.getClubsByCategory().pipe(
+        map((categories) => categories)
+      ),
   });
 
-  // ========== COMPUTED SIGNALS DÉRIVÉS ==========
+  // ========== CONVERSION rxResource → OBSERVABLES pour ASYNC PIPE ==========
 
-  readonly globalStats = computed(
-    () => this.statsResource.value() ?? this.getDefaultStats(),
-  );
-  readonly topClubs = computed(() => this.topClubsResource.value() ?? []);
-  readonly recentActivities = computed(() => this.activitiesResource.value() ?? []);
-  readonly membershipTrend = computed(
-    () => this.membershipTrendResource.value() ?? [],
-  );
-  readonly eventsTrend = computed(() => this.eventsTrendResource.value() ?? []);
-  readonly revenueTrend = computed(() => this.revenueTrendResource.value() ?? []);
-  readonly alerts = computed(() => this.alertsResource.value() ?? []);
-  readonly clubsByCategory = computed(
-    () => this.clubsByCategoryResource.value() ?? [],
+  /**
+   * Observable pour globalStats (utilisé avec async pipe dans template)
+   */
+  readonly globalStats$: Observable<GlobalStats | undefined> = toObservable(
+    computed(() => this.statsResource.value())
   );
 
-  // États de chargement
+  /**
+   * Observable pour topClubs
+   */
+  readonly topClubs$: Observable<TopClub[] | undefined> = toObservable(
+    computed(() => this.topClubsResource.value())
+  );
+
+  /**
+   * Observable pour recentActivities
+   */
+  readonly recentActivities$: Observable<RecentActivity[] | undefined> = toObservable(
+    computed(() => this.activitiesResource.value())
+  );
+
+  /**
+   * Observable pour membershipTrend
+   */
+  readonly membershipTrend$: Observable<MembershipTrendData[] | undefined> = toObservable(
+    computed(() => this.membershipTrendResource.value())
+  );
+
+  /**
+   * Observable pour eventsTrend
+   */
+  readonly eventsTrend$: Observable<EventsTrendData[] | undefined> = toObservable(
+    computed(() => this.eventsTrendResource.value())
+  );
+
+  /**
+   * Observable pour revenueTrend
+   */
+  readonly revenueTrend$: Observable<RevenueTrendData[] | undefined> = toObservable(
+    computed(() => this.revenueTrendResource.value())
+  );
+
+  /**
+   * Observable pour alerts
+   */
+  readonly alerts$: Observable<Alert[] | undefined> = toObservable(
+    computed(() => this.alertsResource.value())
+  );
+
+  /**
+   * Observable pour clubsByCategory
+   */
+  readonly clubsByCategory$: Observable<ClubCategoryDistribution[] | undefined> = toObservable(
+    computed(() => this.clubsByCategoryResource.value())
+  );
+
+  // ========== COMPUTED SIGNALS DÉRIVÉS (Observable) ==========
+
+  /**
+   * Taux de croissance des membres
+   */
+  readonly memberGrowthRate$: Observable<string> = this.membershipTrend$.pipe(
+    map((trend) => {
+      if (!trend || trend.length < 2) return '0.0';
+      const current = trend[trend.length - 1].count;
+      const previous = trend[trend.length - 2].count;
+      return (((current - previous) / previous) * 100).toFixed(1);
+    })
+  );
+
+  /**
+   * Taux de clubs actifs
+   */
+  readonly activeClubsRate$: Observable<string> = this.globalStats$.pipe(
+    map((stats) => {
+      if (!stats || stats.totalClubs === 0) return '0.0';
+      return ((stats.activeClubs / stats.totalClubs) * 100).toFixed(1);
+    })
+  );
+
+  // ========== ÉTATS DE CHARGEMENT (Signals - pas besoin d'async pipe) ==========
   readonly isLoading = computed(
     () => this.statsResource.isLoading() || this.topClubsResource.isLoading(),
   );
@@ -141,30 +226,7 @@ export class AdminDashboardComponent {
     () => !!this.statsResource.error() || !!this.topClubsResource.error(),
   );
 
-  // ========== COMPUTED CALCULATIONS ==========
-
-  /**
-   * Taux de croissance des membres
-   */
-  readonly memberGrowthRate = computed(() => {
-    const trend = this.membershipTrend();
-    if (trend.length < 2) return '0.0';
-    const current = trend[trend.length - 1].count;
-    const previous = trend[trend.length - 2].count;
-    return (((current - previous) / previous) * 100).toFixed(1);
-  });
-
-  /**
-   * Taux de clubs actifs
-   */
-  readonly activeClubsRate = computed(() => {
-    const stats = this.globalStats();
-    if (stats.totalClubs === 0) return '0.0';
-    return ((stats.activeClubs / stats.totalClubs) * 100).toFixed(1);
-  });
-
   // ========== TRACKBY FUNCTIONS ==========
-  // ✅ TrackBy pour optimiser le rendu des listes
   readonly trackByAlertId = (_index: number, alert: Alert) => alert.id;
   readonly trackByClubId = (_index: number, club: TopClub) => club.id;
   readonly trackByActivityId = (_index: number, activity: RecentActivity) =>
@@ -175,16 +237,10 @@ export class AdminDashboardComponent {
 
   // ========== MÉTHODES UTILITAIRES (PURES) ==========
 
-  /**
-   * Formater un nombre avec séparateurs
-   */
   formatNumber(num: number): string {
     return num.toLocaleString('fr-FR');
   }
 
-  /**
-   * Formater un montant en TND
-   */
   formatCurrency(amount: number): string {
     return `${amount.toLocaleString('fr-FR', {
       minimumFractionDigits: 2,
@@ -192,9 +248,6 @@ export class AdminDashboardComponent {
     })} TND`;
   }
 
-  /**
-   * Formater un timestamp relatif
-   */
   formatTimeAgo(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - new Date(date).getTime();
@@ -209,9 +262,6 @@ export class AdminDashboardComponent {
     return `Il y a ${diffDays} jours`;
   }
 
-  /**
-   * Obtenir la classe CSS selon le type d'alerte
-   */
   getAlertClass(type: string): string {
     const classes: Record<string, string> = {
       success: 'alert-success',
@@ -222,16 +272,10 @@ export class AdminDashboardComponent {
     return classes[type] || 'alert-info';
   }
 
-  /**
-   * Obtenir la classe CSS selon le type d'activité
-   */
   getActivityIconClass(color: string): string {
     return `activity-icon activity-icon-${color}`;
   }
 
-  /**
-   * Obtenir les statistiques par défaut (fallback)
-   */
   private getDefaultStats(): GlobalStats {
     return {
       totalClubs: 0,
@@ -247,17 +291,10 @@ export class AdminDashboardComponent {
 
   // ========== ACTIONS ==========
 
-  /**
-   * Changer la période des statistiques
-   */
   changePeriod(period: 'week' | 'month' | 'quarter' | 'year'): void {
     this.selectedPeriod.set(period);
-    // rxResource recharge automatiquement les données
   }
 
-  /**
-   * Rafraîchir toutes les données
-   */
   refreshData(): void {
     this.statsResource.reload();
     this.topClubsResource.reload();
@@ -270,9 +307,6 @@ export class AdminDashboardComponent {
     this.toastService.success('Données actualisées avec succès !');
   }
 
-  /**
-   * Exporter le rapport
-   */
   async exportReport(format: 'pdf' | 'excel'): Promise<void> {
     try {
       const period = this.selectedPeriod();
