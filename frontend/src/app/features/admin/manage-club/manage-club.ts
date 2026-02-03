@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { Observable, map, combineLatest, switchMap } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button';
 import { ModalComponent } from '../../../shared/components/modal/modal';
 import { ClubService } from '../../../Core/services/club.service';
@@ -19,8 +20,7 @@ import { ToastService } from '../../../Core/services/toast.service';
 
 /**
  * PAGE 18 : Manage Clubs
- * Gestion complète des clubs par l'administrateur
- * Optimisé Angular 20 avec Signals et OnPush
+ * Version avec async pipe dans le template
  */
 @Component({
   selector: 'app-manage-clubs',
@@ -69,42 +69,66 @@ export class ManageClubsComponent {
     limit: this.pageSize(),
   }));
 
-  // ========== RX RESOURCES ==========
-
-  /**
-   * Resource pour les clubs
-   */
   readonly clubsResource = rxResource({
     params: this.filters,
-    stream: ({ params }) => this.clubService.getClubs(params),
+    stream: ({ params }) =>
+      this.clubService.getClubs(params).pipe(
+        map(res => res)
+      ),
   });
 
-  /**
-   * Resource pour les statistiques
-   */
   readonly statsResource = rxResource({
-    stream: () => this.clubService.getClubsStats(),
+    stream: () =>
+      this.clubService.getClubsStats().pipe(
+        map(res => res)
+      ),
   });
+
+  readonly categoriesResource = rxResource({
+    stream: () =>
+      this.clubService.getCategories().pipe(
+        map(res => res)
+      ),
+  });
+
+
+  readonly stats$ = this.clubService.getClubsStats().pipe(
+    map(stats => stats || {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      totalMembers: 0,
+      totalEvents: 0,
+      totalRevenue: 0,
+    })
+  );
 
   /**
-   * Resource pour les catégories
+   * Utilisable avec: categories$ | async
    */
-  readonly categoriesResource = rxResource({
-    stream: () => this.clubService.getCategories(),
-  });
+  readonly categories$ = this.clubService.getCategories().pipe(
+    map(categories => categories || [])
+  );
 
-  // ========== COMPUTED SIGNALS ==========
+  /**
+   * Utilisable avec: clubs$ | async
+   */
+  readonly clubs$ = this.clubService.getClubs(this.filters()).pipe(
+    map(response => response.data || [])
+  );
 
-  // Clubs paginés
+  /**
+   * Utilisable avec: totalPages$ | async
+   */
+  readonly totalPages$ = this.clubService.getClubs(this.filters()).pipe(
+    map(response => response.totalPages || 0)
+  );
+
+  // ========== COMPUTED SIGNALS (pour compatibilité) ==========
   readonly clubs = computed(() => this.clubsResource.value()?.data || []);
   readonly totalClubs = computed(() => this.clubsResource.value()?.total || 0);
   readonly totalPages = computed(() => this.clubsResource.value()?.totalPages || 0);
 
-  // États de chargement
-  readonly isLoading = computed(() => this.clubsResource.isLoading());
-  readonly hasError = computed(() => this.clubsResource.error() != null);
-
-  // Statistiques
   readonly stats = computed(
     () =>
       this.statsResource.value() || {
@@ -117,15 +141,17 @@ export class ManageClubsComponent {
       },
   );
 
-  // Catégories
   readonly categories = computed(() => this.categoriesResource.value() || []);
+
+  // États de chargement
+  readonly isLoading = computed(() => this.clubsResource.isLoading());
+  readonly hasError = computed(() => this.clubsResource.error() != null);
 
   // ========== TRACKBY FUNCTIONS ==========
   readonly trackByClubId = (_index: number, club: Club) => club.id;
   readonly trackByCategoryId = (_index: number, category: any) => category.id;
 
   // ========== MÉTHODES UTILITAIRES (PURES) ==========
-
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -153,9 +179,6 @@ export class ManageClubsComponent {
     return num.toLocaleString('fr-FR');
   }
 
-  /**
-   * Obtenir l'URL complète d'une image
-   */
   getImageUrl(path: string | null): string {
     if (!path) {
       return 'https://via.placeholder.com/400x200?text=No+Image';
@@ -167,7 +190,6 @@ export class ManageClubsComponent {
   }
 
   // ========== ACTIONS - FILTRAGE ==========
-
   changeStatus(status: 'all' | 'active' | 'inactive'): void {
     this.selectedStatus.set(status);
     this.currentPage.set(1);
@@ -200,7 +222,6 @@ export class ManageClubsComponent {
   }
 
   // ========== ACTIONS - MODALS ==========
-
   openCreateModal(): void {
     this.selectedClub.set(null);
     this.isFormModalOpen.set(true);
@@ -231,34 +252,22 @@ export class ManageClubsComponent {
     this.isDeleteModalOpen.set(false);
   }
 
-  /**
-   * Ouvrir le modal de gestion du président
-   */
   openPresidentModal(club: Club): void {
     this.selectedClub.set(club);
     this.isPresidentModalOpen.set(true);
   }
 
-  /**
-   * Fermer le modal de président
-   */
   closePresidentModal(): void {
     this.selectedClub.set(null);
     this.isPresidentModalOpen.set(false);
   }
 
-  /**
-   * Gérer le succès de modification du président
-   */
   onPresidentChanged(): void {
     this.closePresidentModal();
     this.refreshData();
     this.toastService.success('Président mis à jour avec succès !');
   }
 
-  /**
-   * Gérer le succès de création/modification
-   */
   onClubCreated(): void {
     this.isFormModalOpen.set(false);
     this.selectedClub.set(null);
@@ -266,7 +275,6 @@ export class ManageClubsComponent {
   }
 
   // ========== ACTIONS - CRUD ==========
-
   deleteClub(): void {
     const club = this.selectedClub();
     if (!club) return;
@@ -299,8 +307,6 @@ export class ManageClubsComponent {
       },
     });
   }
-
-  // ========== UTILITAIRES ==========
 
   refreshData(): void {
     this.clubsResource.reload();
