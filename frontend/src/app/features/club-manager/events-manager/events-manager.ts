@@ -8,7 +8,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, toObservable } from '@angular/core/rxjs-interop';
+import { Observable, map, switchMap } from 'rxjs';
 import { EventService } from '../../../Core/services/event.service';
 import { Event, EventFilters } from '../../../Core/models/event.model';
 import { EventStatus } from '../../../Core/models/event.model';
@@ -38,7 +39,6 @@ export class EventsManagerComponent {
   private readonly eventService = inject(EventService);
   private readonly toastService = inject(ToastService);
 
-  // ✅ CORRIGÉ : Utiliser input() avec transform
   clubId = input<number, string | number>(0, {
     transform: (val: string | number) => Number(val),
   });
@@ -85,15 +85,52 @@ export class EventsManagerComponent {
 
   readonly eventsResource = rxResource({
     params: this.filters,
-    stream: ({ params }) => this.eventService.getEvents(params),
+    stream: ({ params }) =>
+      this.eventService.getEvents(params).pipe(
+        map(res => res)
+      ),
   });
 
-  // Computed signals dérivés de la resource
+  // ========== COMPUTED SIGNALS (pour compatibilité) ==========
   readonly events = computed(() => this.eventsResource.value()?.data ?? []);
   readonly totalEvents = computed(() => this.eventsResource.value()?.total ?? 0);
   readonly totalPages = computed(() => this.eventsResource.value()?.totalPages ?? 0);
   readonly isLoading = computed(() => this.eventsResource.isLoading());
   readonly hasError = computed(() => !!this.eventsResource.error());
+
+  // ========== OBSERVABLES RÉACTIFS pour ASYNC PIPE ==========
+  /**
+   * Se met à jour automatiquement quand filters change
+   */
+  readonly events$: Observable<Event[]> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.eventService.getEvents(filters).pipe(
+        map(response => response.data || [])
+      )
+    )
+  );
+
+  /**
+   * Se met à jour automatiquement quand filters change
+   */
+  readonly totalPages$: Observable<number> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.eventService.getEvents(filters).pipe(
+        map(response => response.totalPages || 0)
+      )
+    )
+  );
+
+  /**
+   * Se met à jour automatiquement quand filters change
+   */
+  readonly totalEvents$: Observable<number> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.eventService.getEvents(filters).pipe(
+        map(response => response.total || 0)
+      )
+    )
+  );
 
   readonly EventStatus = EventStatus;
 
