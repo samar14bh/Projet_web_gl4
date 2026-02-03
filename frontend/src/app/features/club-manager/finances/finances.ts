@@ -8,13 +8,16 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, toObservable } from '@angular/core/rxjs-interop';
+import { Observable, map, switchMap, combineLatest } from 'rxjs';
 import { FinanceService } from '../../../Core/services/finance.service';
 import {
   Transaction,
   TransactionType,
   TransactionCategory,
   TransactionFilters,
+  FinancialStats,
+  MonthlyFinancialData,
 } from '../../../Core/models/finance.model';
 import { ButtonComponent } from '../../../shared/components/button/button';
 import { ModalComponent } from '../../../shared/components/modal/modal';
@@ -25,7 +28,7 @@ import { ToastService } from '../../../Core/services/toast.service';
 /**
  * PAGE 16 : Finances du club
  * Gestion et visualisation des finances du club
- * Optimisé Angular 20 avec Signals et OnPush
+ * Optimisé Angular 20 avec Signals et OnPush + Async Pipe
  */
 @Component({
   selector: 'app-finances',
@@ -47,7 +50,7 @@ export class FinancesComponent {
   private readonly exportService = inject(ExportService);
   private readonly toastService = inject(ToastService);
 
-  // ✅ Récupérer le clubId depuis l'URL (paramètre de route)
+  // Récupérer le clubId depuis l'URL (paramètre de route)
   clubId = input<number, string | number>(0, {
     transform: (val: string | number) => Number(val),
   });
@@ -75,44 +78,45 @@ export class FinancesComponent {
     search: this.searchQuery() || undefined,
     page: this.currentPage(),
     limit: this.pageSize(),
-    clubId: this.clubId(), // ✅ Filtrer par club
+    clubId: this.clubId(),
   }));
 
-  // ========== RESOURCES (rxResource) ==========
+  readonly statsParams = computed(() => ({
+    clubId: this.clubId(),
+    period: this.selectedPeriod(),
+  }));
 
-  /**
-   * Resource pour les transactions avec filtres réactifs
-   */
+  readonly chartParams = computed(() => ({
+    clubId: this.clubId(),
+    months: 6,
+  }));
+
+  // ========== RX RESOURCES avec pipe(map()) ==========
   readonly transactionsResource = rxResource({
     params: this.filters,
-    stream: ({ params }) => this.financeService.getTransactions(params),
+    stream: ({ params }) =>
+      this.financeService.getTransactions(params).pipe(
+        map(res => res)
+      ),
   });
 
-  /**
-   * Resource pour les statistiques financières
-   */
   readonly statsResource = rxResource({
-    params: computed(() => ({
-      clubId: this.clubId(),
-      period: this.selectedPeriod(),
-    })),
+    params: this.statsParams,
     stream: ({ params }) =>
-      this.financeService.getFinancialStats(params.clubId, params.period),
+      this.financeService.getFinancialStats(params.clubId, params.period).pipe(
+        map(res => res)
+      ),
   });
 
-  /**
-   * Resource pour les données mensuelles du graphique
-   */
   readonly chartResource = rxResource({
-    params: computed(() => ({
-      clubId: this.clubId(),
-      months: 6,
-    })),
+    params: this.chartParams,
     stream: ({ params }) =>
-      this.financeService.getMonthlyData(params.clubId, params.months),
+      this.financeService.getMonthlyData(params.clubId, params.months).pipe(
+        map(res => res)
+      ),
   });
 
-  // ========== COMPUTED SIGNALS DÉRIVÉS ==========
+  // ========== COMPUTED SIGNALS (pour compatibilité) ==========
   readonly transactions = computed(
     () => this.transactionsResource.value()?.data ?? [],
   );
@@ -141,6 +145,70 @@ export class FinancesComponent {
   readonly chartData = computed(() => this.chartResource.value() ?? []);
   readonly isStatsLoading = computed(() => this.statsResource.isLoading());
   readonly isChartLoading = computed(() => this.chartResource.isLoading());
+
+  // ========== OBSERVABLES RÉACTIFS pour ASYNC PIPE ==========
+  /**
+   * Se met à jour automatiquement quand filters change
+   */
+  readonly transactions$: Observable<Transaction[]> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.financeService.getTransactions(filters).pipe(
+        map(response => response.data || [])
+      )
+    )
+  );
+
+  /**
+   *  Observable réactif pour totalPages avec switchMap
+   */
+  readonly totalPages$: Observable<number> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.financeService.getTransactions(filters).pipe(
+        map(response => response.totalPages || 0)
+      )
+    )
+  );
+
+  /**
+   * Observable réactif pour totalTransactions avec switchMap
+   */
+  readonly totalTransactions$: Observable<number> = toObservable(this.filters).pipe(
+    switchMap(filters =>
+      this.financeService.getTransactions(filters).pipe(
+        map(response => response.total || 0)
+      )
+    )
+  );
+
+  /**
+   *  Observable réactif pour financialStats avec switchMap
+   */
+  readonly financialStats$: Observable<FinancialStats> = toObservable(this.statsParams).pipe(
+    switchMap(params =>
+      this.financeService.getFinancialStats(params.clubId, params.period).pipe(
+        map(stats => stats || {
+          totalRevenue: 0,
+          totalExpenses: 0,
+          balance: 0,
+          membershipRevenue: 0,
+          eventRevenue: 0,
+          donationRevenue: 0,
+          pendingPayments: 0,
+        })
+      )
+    )
+  );
+
+  /**
+   *  Observable réactif pour chartData avec switchMap
+   */
+  readonly chartData$: Observable<MonthlyFinancialData[]> = toObservable(this.chartParams).pipe(
+    switchMap(params =>
+      this.financeService.getMonthlyData(params.clubId, params.months).pipe(
+        map(data => data || [])
+      )
+    )
+  );
 
   // ========== ÉNUMÉRATIONS POUR LE TEMPLATE ==========
   readonly TransactionType = TransactionType;
